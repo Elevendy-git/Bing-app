@@ -1,0 +1,314 @@
+/* Figma component set 3572:5631 (Light), instance 3707:12385 (Dark). */
+.root,
+.root * {
+  box-sizing: border-box;
+}
+
+.root {
+  display: flex;
+  width: 342px;
+  margin: 0;
+  padding: var(--gnrc-spacing-component-base-300);
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--gnrc-spacing-component-base-400);
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--gnrc-border-radius-card-body);
+  background: var(--gnrc-color-feed-card-surface);
+  box-shadow: inset 0 0 0 var(--gnrc-border-width-card) var(--gnrc-color-feed-card-stroke);
+}
+
+.media {
+  position: relative;
+  display: flex;
+  width: 100%;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: var(--gnrc-border-radius-card-nested);
+  aspect-ratio: 16 / 9;
+}
+
+.image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  object-fit: cover;
+}
+
+.playIndicator {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  display: flex;
+  width: 48px;
+  height: 48px;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--gnrc-border-radius-circular);
+  background: var(--gnrc-color-feed-card-foreground-primary);
+  color: var(--gnrc-color-feed-card-surface);
+  transform: translate(-50%, -50%);
+}
+
+.playIndicator svg {
+  display: block;
+  width: 24px;
+  height: 24px;
+}
+
+.body {
+  display: flex;
+  width: 100%;
+  padding: var(--gnrc-spacing-component-base-050) var(--gnrc-spacing-component-base-200)
+    var(--gnrc-spacing-component-base-200);
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--gnrc-spacing-component-base-100);
+}
+
+.metaRow {
+  display: flex;
+  width: 100%;
+  height: 28px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.metaGroup {
+  display: flex;
+  min-width: 0;
+  height: 28px;
+  align-items: center;
+  gap: var(--gnrc-spacing-component-base-100);
+}
+
+.publisherMark {
+  display: block;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  color: var(--gnrc-color-feed-card-foreground-primary);
+}
+
+.yahooMark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #6001d2;
+  color: #fff;
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.5px;
+}
+
+.metaText {
+  color: var(--gnrc-color-feed-card-foreground-secondary);
+  font-family: var(--gnrc-font-family-functional);
+  font-size: var(--gnrc-font-size-functional-body-small);
+  font-style: normal;
+  font-weight: var(--gnrc-font-weight-functional-regular);
+  line-height: var(--gnrc-line-height-functional-body-small);
+  font-feature-settings: "calt" off;
+  white-space: nowrap;
+}
+
+.adBadge {
+  display: inline-flex;
+  height: 18px;
+  padding: 0 var(--gnrc-spacing-component-base-050);
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--gnrc-color-feed-card-foreground-secondary);
+  border-radius: 3px;
+  color: var(--gnrc-color-feed-card-foreground-secondary);
+  font-family: var(--gnrc-font-family-functional);
+  font-size: 12px;
+  font-weight: var(--gnrc-font-weight-functional-regular);
+  line-height: 16px;
+}
+
+.iconButton {
+  display: flex;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  padding: 0;
+  flex: 0 0 24px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--gnrc-color-feed-card-foreground-primary);
+  cursor: default;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.iconButton svg {
+  display: block;
+  width: 24px;
+  height: 24px;
+}
+
+.titleSlot {
+  width: 100%;
+  height: 52px;
+  padding: 0 var(--gnrc-spacing-component-base-050);
+}
+
+.title {
+  display: -webkit-box;
+  width: 100%;
+  margin: 0;
+  overflow: hidden;
+  color: var(--gnrc-color-feed-card-foreground-primary);
+  font-family: var(--gnrc-font-family-functional);
+  font-size: var(--gnrc-font-size-functional-title-medium);
+  font-style: normal;
+  font-weight: var(--gnrc-font-weight-functional-strong);
+  line-height: var(--gnrc-line-height-functional-title-medium);
+  font-feature-settings: "calt" off;
+  text-overflow: ellipsis;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.multiContainer {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--gnrc-spacing-component-base-200);
+}
+
+.multiViewport {
+  width: 100%;
+  overflow: hidden;
+  border-radius: var(--gnrc-border-radius-card-nested) var(--gnrc-border-radius-card-nested) 0 0;
+  cursor: grab;
+  outline: 0;
+  touch-action: pan-y;
+}
+
+.multiViewport:focus-visible {
+  outline: 2px solid var(--gnrc-color-feed-card-foreground-primary);
+  outline-offset: 2px;
+}
+
+.isDragging {
+  cursor: grabbing;
+  user-select: none;
+}
+
+.multiTrack {
+  display: flex;
+  width: 100%;
+  gap: var(--gnrc-spacing-component-base-300);
+  transition: transform 260ms cubic-bezier(0.33, 1, 0.68, 1);
+  will-change: transform;
+}
+
+.trackDragging {
+  transition: none;
+}
+
+.multiSlide {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  flex: 0 0 100%;
+  flex-direction: column;
+  gap: var(--gnrc-spacing-component-base-400);
+}
+
+.multiSlide .image {
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.pagination {
+  display: flex;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gnrc-spacing-component-base-150);
+}
+
+.paginationActive,
+.paginationDot {
+  display: block;
+  height: 6px;
+  margin: 0;
+  padding: 0;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: var(--gnrc-border-radius-circular);
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.paginationActive {
+  width: 16px;
+  background: var(--gnrc-color-feed-card-foreground-primary);
+}
+
+.paginationDot {
+  width: 6px;
+  background: var(--gnrc-color-feed-card-foreground-disabled);
+}
+
+.mediaSkeleton,
+.skeletonCircle,
+.skeletonPill,
+.skeletonLine {
+  background: var(--gnrc-color-background-card-on-secondary);
+}
+
+.skeletonPublisher {
+  display: flex;
+  width: 100px;
+  height: 28px;
+  align-items: center;
+  gap: var(--gnrc-spacing-component-base-150);
+}
+
+.skeletonCircle {
+  display: block;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  border-radius: var(--gnrc-border-radius-circular);
+}
+
+.skeletonPill {
+  display: block;
+  width: 34px;
+  height: 14px;
+  flex: 0 0 34px;
+  border-radius: var(--gnrc-border-radius-circular);
+}
+
+.skeletonText {
+  display: flex;
+  width: 100%;
+  height: 52px;
+  padding: 0 var(--gnrc-spacing-component-base-050);
+  flex-direction: column;
+  gap: var(--gnrc-spacing-component-base-200);
+}
+
+.skeletonLine {
+  display: block;
+  width: 100%;
+  height: 16px;
+  flex: 0 0 16px;
+  border-radius: var(--gnrc-border-radius-circular);
+}

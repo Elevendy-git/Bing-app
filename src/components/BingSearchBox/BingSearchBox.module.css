@@ -1,0 +1,117 @@
+/* Figma 775:47824 (Light), 775:44984 (Dark) */
+.root,
+.root * {
+  box-sizing: border-box;
+}
+
+.root {
+  display: flex;
+  width: 358px;
+  height: 64px;
+  margin: 0;
+  padding: var(--gnrc-spacing-component-base-300);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  border: 0;
+  border-radius: var(--gnrc-border-radius-circular);
+  background: var(--gnrc-color-surface-neutral-nearer);
+  box-shadow: var(--gnrc-shadow-lowest);
+  -webkit-backdrop-filter: blur(30px);
+  backdrop-filter: blur(30px);
+}
+
+.inputRow {
+  display: flex;
+  width: 334px;
+  height: 48px;
+  flex: 0 0 48px;
+  align-items: center;
+}
+
+.searchSlot {
+  display: flex;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  align-items: center;
+  justify-content: center;
+  color: var(--gnrc-color-foreground-neutral-primary);
+}
+
+.searchSlot svg,
+.action svg {
+  display: block;
+  width: 24px;
+  height: 24px;
+}
+
+.textSlot {
+  display: flex;
+  min-width: 0;
+  min-height: 36px;
+  padding: var(--gnrc-spacing-component-base-100) var(--gnrc-spacing-component-base-150);
+  flex: 1 0 0;
+  align-items: center;
+}
+
+.input {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--gnrc-color-foreground-neutral-secondary);
+  font-family: var(--gnrc-font-family-functional);
+  font-size: var(--gnrc-font-size-functional-body-large);
+  font-style: normal;
+  font-weight: var(--gnrc-font-weight-functional-regular);
+  line-height: var(--gnrc-line-height-functional-body-large);
+  font-feature-settings: "calt" off;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.input::placeholder {
+  color: var(--gnrc-color-foreground-neutral-secondary);
+  opacity: 1;
+}
+
+.input::-webkit-search-decoration,
+.input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.input::-ms-clear {
+  display: none;
+}
+
+.actions {
+  display: flex;
+  width: 96px;
+  height: 48px;
+  flex: 0 0 96px;
+  align-items: center;
+}
+
+.action {
+  display: flex;
+  width: 48px;
+  height: 48px;
+  margin: 0;
+  padding: 0;
+  flex: 0 0 48px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--gnrc-color-foreground-neutral-primary);
+  cursor: default;
+  -webkit-appearance: none;
+  appearance: none;
+}

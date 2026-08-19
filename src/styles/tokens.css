@@ -1,0 +1,63 @@
+:root {
+  color-scheme: light dark;
+
+  --gnrc-color-surface-neutral-farther: #343434;
+  --gnrc-color-surface-neutral-nearer: #ffffff;
+  --gnrc-color-foreground-neutral-primary: #242424;
+  --gnrc-color-foreground-neutral-secondary: #616161;
+  --gnrc-color-foreground-neutral-primary-disabled: rgb(36 36 36 / 16%);
+  --gnrc-color-stroke-divider-on-outline: rgb(0 0 0 / 8%);
+  --gnrc-color-background-card-on-secondary: rgb(204 196 192 / 20%);
+  --gnrc-color-foreground-on-inverse: #ffffff;
+  --gnrc-color-shadow: #000000;
+
+  /* Component semantics keep Feed Card and Search Box themes independently tunable. */
+  --gnrc-color-feed-card-surface: var(--gnrc-color-surface-neutral-nearer);
+  --gnrc-color-feed-card-foreground-primary: var(--gnrc-color-foreground-neutral-primary);
+  --gnrc-color-feed-card-foreground-secondary: var(--gnrc-color-foreground-neutral-secondary);
+  --gnrc-color-feed-card-foreground-disabled: var(
+    --gnrc-color-foreground-neutral-primary-disabled
+  );
+  --gnrc-color-feed-card-stroke: var(--gnrc-color-stroke-divider-on-outline);
+
+  --gnrc-color-app-footer-surface: var(--gnrc-color-surface-neutral-nearer);
+  --gnrc-color-app-footer-divider: var(--gnrc-color-stroke-divider-on-outline);
+  --gnrc-color-app-footer-icon-rest: var(--gnrc-color-foreground-neutral-primary);
+  --gnrc-color-app-footer-icon-selected: #0c59f2;
+
+  --gnrc-shadow-lowest:
+    0 1px 2px rgb(0 0 0 / 5%),
+    0 0 1px rgb(0 0 0 / 8%);
+
+  --gnrc-font-family-functional: "Segoe Sans", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --gnrc-font-size-functional-body-large: 1rem;
+  --gnrc-font-size-functional-body-small: 0.875rem;
+  --gnrc-font-size-functional-title-medium: 1.125rem;
+  --gnrc-font-weight-functional-regular: 400;
+  --gnrc-font-weight-functional-strong: 650;
+  --gnrc-line-height-functional-body-large: 1.5rem;
+  --gnrc-line-height-functional-body-small: 1.25rem;
+  --gnrc-line-height-functional-title-medium: 1.625rem;
+
+  --gnrc-border-radius-circular: 9999px;
+  --gnrc-border-radius-card-body: 30px;
+  --gnrc-border-radius-card-nested: 20px;
+  --gnrc-border-width-card: 0.5px;
+
+  --gnrc-spacing-component-base-050: 2px;
+  --gnrc-spacing-component-base-100: 4px;
+  --gnrc-spacing-component-base-150: 6px;
+  --gnrc-spacing-component-base-200: 8px;
+  --gnrc-spacing-component-base-300: 12px;
+  --gnrc-spacing-component-base-350: 14px;
+  --gnrc-spacing-component-base-400: 16px;
+  --gnrc-spacing-component-base-450: 18px;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+}

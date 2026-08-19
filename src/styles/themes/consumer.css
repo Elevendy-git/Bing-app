@@ -1,0 +1,70 @@
+/* Bing App consumer values from Figma 775:47824 (Light) and 775:44984 (Dark). */
+[data-product="consumer"][data-theme="light"],
+[data-product="consumer"]:not([data-theme]) {
+  --gnrc-color-surface-neutral-farther: #343434;
+  --gnrc-color-surface-neutral-nearer: #ffffff;
+  --gnrc-color-foreground-neutral-primary: #272320;
+  --gnrc-color-foreground-neutral-secondary: #635c57;
+  --gnrc-color-foreground-neutral-primary-disabled: rgb(39 35 32 / 16%);
+  --gnrc-color-stroke-divider-on-outline: rgb(0 0 0 / 8%);
+  --gnrc-color-background-card-on-secondary: rgb(204 196 192 / 20%);
+  --gnrc-color-foreground-on-inverse: #ffffff;
+  --gnrc-color-feed-card-surface: #ffffff;
+  --gnrc-color-feed-card-foreground-primary: #272320;
+  --gnrc-color-feed-card-foreground-secondary: #635c57;
+  --gnrc-color-feed-card-foreground-disabled: rgb(39 35 32 / 16%);
+  --gnrc-color-feed-card-stroke: rgb(0 0 0 / 8%);
+  --gnrc-color-app-footer-surface: #ffffff;
+  --gnrc-color-app-footer-divider: rgb(0 0 0 / 8%);
+  --gnrc-color-app-footer-icon-rest: #272320;
+  --gnrc-color-app-footer-icon-selected: #0c59f2;
+}
+
+[data-product="consumer"][data-theme="dark"] {
+  --gnrc-color-surface-neutral-farther: #343434;
+  --gnrc-color-surface-neutral-nearer: #282d3e;
+  --gnrc-color-foreground-neutral-primary: #e5ebfa;
+  --gnrc-color-foreground-neutral-secondary: #8791b0;
+  --gnrc-color-foreground-neutral-primary-disabled: rgb(229 235 250 / 16%);
+  --gnrc-color-stroke-divider-on-outline: rgb(229 235 250 / 12%);
+  --gnrc-color-background-card-on-secondary: rgb(135 145 176 / 20%);
+  --gnrc-color-foreground-on-inverse: #282d3e;
+  /* Feed Card dark values from Figma 3707:12385. */
+  --gnrc-color-feed-card-surface: #282d3e;
+  --gnrc-color-feed-card-foreground-primary: #e5ebfa;
+  --gnrc-color-feed-card-foreground-secondary: #a4adc8;
+  --gnrc-color-feed-card-foreground-disabled: rgb(255 255 255 / 30%);
+  --gnrc-color-feed-card-stroke: rgb(255 255 255 / 8%);
+  /* App Footer dark values from Figma 1423:53646. */
+  --gnrc-color-app-footer-surface: #1f2431;
+  --gnrc-color-app-footer-divider: rgb(255 255 255 / 8%);
+  --gnrc-color-app-footer-icon-rest: #e5ebfa;
+  --gnrc-color-app-footer-icon-selected: #82aefa;
+  --gnrc-shadow-lowest:
+    0 1px 2px rgb(0 0 0 / 12%),
+    0 0 1px rgb(0 0 0 / 8%);
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-product="consumer"]:not([data-theme]) {
+    --gnrc-color-surface-neutral-nearer: #282d3e;
+    --gnrc-color-foreground-neutral-primary: #e5ebfa;
+    --gnrc-color-foreground-neutral-secondary: #8791b0;
+    --gnrc-color-foreground-neutral-primary-disabled: rgb(229 235 250 / 16%);
+    --gnrc-color-stroke-divider-on-outline: rgb(229 235 250 / 12%);
+    --gnrc-color-background-card-on-secondary: rgb(135 145 176 / 20%);
+    --gnrc-color-foreground-on-inverse: #282d3e;
+    --gnrc-color-feed-card-surface: #282d3e;
+    --gnrc-color-feed-card-foreground-primary: #e5ebfa;
+    --gnrc-color-feed-card-foreground-secondary: #a4adc8;
+    --gnrc-color-feed-card-foreground-disabled: rgb(255 255 255 / 30%);
+    --gnrc-color-feed-card-stroke: rgb(255 255 255 / 8%);
+    --gnrc-color-app-footer-surface: #1f2431;
+    --gnrc-color-app-footer-divider: rgb(255 255 255 / 8%);
+    --gnrc-color-app-footer-icon-rest: #e5ebfa;
+    --gnrc-color-app-footer-icon-selected: #82aefa;
+    --gnrc-shadow-lowest:
+      0 1px 2px rgb(0 0 0 / 12%),
+      0 0 1px rgb(0 0 0 / 8%);
+  }
+}

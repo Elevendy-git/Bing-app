@@ -1,0 +1,39 @@
+{
+  "name": "bing-app-components",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "dev": "vite",
+    "storybook": "STORYBOOK_DISABLE_TELEMETRY=1 storybook dev -p 6007",
+    "check:tokens": "node scripts/check-tokens.mjs",
+    "typecheck": "npm run check:tokens && tsc --noEmit",
+    "test": "vitest run",
+    "build": "npm run check:tokens && tsc --noEmit && vite build",
+    "build-storybook": "npm run check:tokens && STORYBOOK_DISABLE_TELEMETRY=1 storybook build"
+  },
+  "dependencies": {
+    "@fluentui/react-icons": "2.0.270",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@storybook/addon-essentials": "8.6.18",
+    "@storybook/react": "8.6.18",
+    "@storybook/react-vite": "8.6.18",
+    "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/react": "16.3.2",
+    "@types/node": "24.10.1",
+    "@types/react": "18.3.18",
+    "@types/react-dom": "18.3.5",
+    "@vitejs/plugin-react": "4.3.4",
+    "jsdom": "29.1.1",
+    "storybook": "8.6.18",
+    "typescript": "5.7.3",
+    "vite": "5.4.14",
+    "vitest": "4.1.10"
+  }
+}

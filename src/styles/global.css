@@ -1,0 +1,29 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--gnrc-color-surface-neutral-farther);
+  color: var(--gnrc-color-foreground-neutral-primary);
+  font-family: var(--gnrc-font-family-functional);
+  font-size: var(--gnrc-font-size-functional-body-large);
+  font-weight: var(--gnrc-font-weight-functional-regular);
+  line-height: var(--gnrc-line-height-functional-body-large);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input {
+  font: inherit;
+}
+
