@@ -1,0 +1,5 @@
+.preview { margin: auto; flex: none; background: var(--gnrc-ios-background); }
+.status { min-height: var(--gnrc-ios-status-height); border-radius: 27px 27px 0 0; }
+.status[data-activity="true"] { height: 180px; }
+.keyboard { overflow: hidden; border-radius: 27px 27px 0 0; }
+.home { padding-top: 28px; border-radius: 0 0 28px 28px; }

@@ -8,22 +8,21 @@
   },
   "scripts": {
     "dev": "vite",
-    "storybook": "STORYBOOK_DISABLE_TELEMETRY=1 storybook dev -p 6007",
     "check:tokens": "node scripts/check-tokens.mjs",
     "typecheck": "npm run check:tokens && tsc --noEmit",
     "test": "vitest run",
     "build": "npm run check:tokens && tsc --noEmit && vite build",
-    "build-storybook": "npm run check:tokens && STORYBOOK_DISABLE_TELEMETRY=1 storybook build"
+    "preview": "vite preview --host 127.0.0.1 --port 4174 --strictPort"
   },
   "dependencies": {
     "@fluentui/react-icons": "2.0.270",
+    "fast-xml-parser": "5.11.2",
+    "motion": "12.42.2",
+    "parse5": "^8.0.1",
     "react": "18.3.1",
     "react-dom": "18.3.1"
   },
   "devDependencies": {
-    "@storybook/addon-essentials": "8.6.18",
-    "@storybook/react": "8.6.18",
-    "@storybook/react-vite": "8.6.18",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "16.3.2",
     "@types/node": "24.10.1",
@@ -31,7 +30,6 @@
     "@types/react-dom": "18.3.5",
     "@vitejs/plugin-react": "4.3.4",
     "jsdom": "29.1.1",
-    "storybook": "8.6.18",
     "typescript": "5.7.3",
     "vite": "5.4.14",
     "vitest": "4.1.10"

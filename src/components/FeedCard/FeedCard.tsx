@@ -9,6 +9,7 @@ import {
   type CSSProperties,
   type KeyboardEvent,
   type PointerEvent,
+  type MouseEventHandler,
 } from "react";
 import {
   FEED_CARD_AD_IMAGE,
@@ -20,89 +21,109 @@ import styles from "./FeedCard.module.css";
 
 export type FeedCardVariant = "single" | "watch" | "multi" | "ad" | "loading";
 
+export interface FeedFollowTarget {
+  kind: "publisher" | "topic";
+  name: string;
+  /** Stable provider/channel ID when available; otherwise the normalized name is used. */
+  id?: string;
+}
+
+export type FeedMoreOptionsHandler = (target: FeedFollowTarget, trigger: HTMLButtonElement) => void;
+
+export interface FeedCardItem {
+  imageSrc: string;
+  imageAlt: string;
+  imagePosition?: string;
+  publisher: string;
+  publisherLogoSrc?: string | null;
+  elapsedTime: string;
+  title: string;
+  /** Topic/channel cards may override the default publisher target. */
+  followTarget?: FeedFollowTarget;
+}
+
 export interface FeedCardProps {
+  /** Layout and media proportions can be set by an embedding screen. */
+  className?: string;
+  mediaAspectRatio?: number;
   /** Visual form from the Figma Feed Cards component set. */
   variant?: FeedCardVariant;
   /** Article image. The matching bundled Figma example is used when omitted. */
   imageSrc?: string;
   /** Accessible description for the article image. */
   imageAlt?: string;
+  /** Focal position supplied by live media metadata; defaults to centered artwork. */
+  imagePosition?: string;
   /** Publisher displayed in the attribution row. */
   publisher?: string;
+  /** Omitted uses the design mark; null means the data source supplied no logo. */
+  publisherLogoSrc?: string | null;
   /** Relative publish time. */
   elapsedTime?: string;
   /** Two-line article headline. */
   title?: string;
+  /** Optional data set for the Multi-cards carousel. */
+  slides?: FeedCardItem[];
+  /** Optional controlled slide supplied by an embedding screen. */
+  activeSlideIndex?: number;
+  onActiveSlideChange?: (index: number) => void;
+  followTarget?: FeedFollowTarget;
+  onMoreOptions?: FeedMoreOptionsHandler;
 }
 
-interface FeedCardContent {
-  imageSrc: string;
-  imageAlt: string;
-  publisher: string;
-  elapsedTime: string;
-  title: string;
-}
-
-const DEFAULT_CONTENT: Record<Exclude<FeedCardVariant, "loading">, FeedCardContent> = {
+const DEFAULT_CONTENT: Record<Exclude<FeedCardVariant, "loading">, FeedCardItem> = {
   single: {
     imageSrc: FEED_CARD_SINGLE_IMAGE,
     imageAlt: "Two Adirondack chairs facing a quiet ocean",
-    publisher: "Medium",
+    publisher: "Travel + Leisure",
     elapsedTime: "31m",
-    title: "Why UX Designers Are Shifting Away From Their Careers",
+    title: "7 Quiet Beach Towns That Are Even Better After Summer Ends",
   },
   multi: {
-    imageSrc: FEED_CARD_MULTI_IMAGE,
-    imageAlt: "Colorful illustration of people walking in different directions",
-    publisher: "Medium",
-    elapsedTime: "31m",
-    title: "How Emerging Technologies are Reshaping the Future of Work",
+    imageSrc: FEED_CARD_SINGLE_IMAGE,
+    imageAlt: "Two Adirondack chairs facing a quiet ocean",
+    publisher: "Condé Nast Traveler",
+    elapsedTime: "52m",
+    title: "The Seaside Towns Keeping Summer Going Long After Labor Day",
   },
   ad: {
     imageSrc: FEED_CARD_AD_IMAGE,
     imageAlt: "Colorful collectible characters standing on a surreal landscape",
-    publisher: "Reddit",
+    publisher: "POP MART",
     elapsedTime: "2h",
-    title: "How Emerging Technologies are Reshaping the Future of Work",
+    title: "Meet the Monsters: A Colorful New Collection Has Landed",
   },
   watch: {
     imageSrc: FEED_CARD_WATCH_IMAGE,
     imageAlt: "Sunlight streaming through a rainforest beside a river",
-    publisher: "Yahoo!",
-    elapsedTime: "31m",
-    title: "Designing for Forgiveness: How to Create Error-Tolerant Interfaces",
+    publisher: "BBC Earth",
+    elapsedTime: "48m",
+    title: "Watch: A Rare Dawn Chorus Returns to the Restored Rainforest",
   },
 };
 
-const DEFAULT_MULTI_SLIDES: FeedCardContent[] = [
+const DEFAULT_MULTI_SLIDES: FeedCardItem[] = [
   DEFAULT_CONTENT.multi,
-  {
-    imageSrc: FEED_CARD_SINGLE_IMAGE,
-    imageAlt: "Two Adirondack chairs facing a quiet ocean",
-    publisher: "Medium",
-    elapsedTime: "48m",
-    title: "The Quiet Design Lessons Hidden in Everyday Travel",
-  },
   {
     imageSrc: FEED_CARD_WATCH_IMAGE,
     imageAlt: "Sunlight streaming through a rainforest beside a river",
-    publisher: "Medium",
-    elapsedTime: "1h",
-    title: "Designing for Forgiveness in a World Full of Interruptions",
-  },
-  {
-    imageSrc: FEED_CARD_AD_IMAGE,
-    imageAlt: "Colorful collectible characters standing on a surreal landscape",
-    publisher: "Medium",
+    publisher: "National Geographic",
     elapsedTime: "2h",
-    title: "How Digital Communities Are Shaping the Next Creative Era",
+    title: "The Rainforest Corridor Bringing Wildlife Back to the River",
   },
   {
     imageSrc: FEED_CARD_MULTI_IMAGE,
     imageAlt: "Colorful illustration of people walking in different directions",
-    publisher: "Medium",
+    publisher: "Fast Company",
+    elapsedTime: "2h",
+    title: "Why Walking Meetings Are Finding Their Way Back Into the Workday",
+  },
+  {
+    imageSrc: FEED_CARD_AD_IMAGE,
+    imageAlt: "Colorful collectible characters standing on a surreal landscape",
+    publisher: "Hypebeast",
     elapsedTime: "3h",
-    title: "Five Signals That the Future of Work Is Already Here",
+    title: "How Collectible Art Toys Became This Year’s Surprise Design Obsession",
   },
 ];
 
@@ -137,14 +158,16 @@ function FeedMedia({
   variant,
   imageSrc,
   imageAlt,
-}: Pick<Required<FeedCardProps>, "variant" | "imageSrc" | "imageAlt">) {
+  imagePosition,
+}: Pick<Required<FeedCardProps>, "variant" | "imageSrc" | "imageAlt"> & Pick<FeedCardProps, "imagePosition">) {
   if (variant === "loading") {
     return <div className={`${styles.media} ${styles.mediaSkeleton}`} aria-hidden="true" />;
   }
 
   return (
     <div className={styles.media}>
-      <img className={styles.image} src={imageSrc} alt={imageAlt} />
+      <img className={styles.image} src={imageSrc} alt={imageAlt}
+        style={imagePosition ? { objectPosition: imagePosition } : undefined} />
       {variant === "watch" ? (
         <span className={styles.playIndicator} aria-hidden="true">
           <Play24Filled />
@@ -200,16 +223,24 @@ function Pagination({
 function CardBody({
   variant,
   publisher,
+  publisherLogoSrc,
   elapsedTime,
   title,
-}: Pick<Required<FeedCardProps>, "variant" | "publisher" | "elapsedTime" | "title">) {
+  onMoreOptions,
+}: Pick<Required<FeedCardProps>, "variant" | "publisher" | "elapsedTime" | "title"> &
+  Pick<FeedCardProps, "publisherLogoSrc"> & { onMoreOptions?: MouseEventHandler<HTMLButtonElement> }) {
   return (
     <div className={styles.body}>
       <div className={styles.metaRow}>
         <span className={styles.metaGroup}>
-          {variant === "ad" ? (
-            <span className={styles.adBadge}>Ad</span>
-          ) : variant === "watch" ? (
+          {variant === "ad" ? <span className={styles.adBadge}>Ad</span> : null}
+          {publisherLogoSrc === null ? null : publisherLogoSrc ? (
+            <img
+              className={`${styles.publisherMark} ${styles.publisherLogo}`}
+              src={publisherLogoSrc}
+              alt=""
+            />
+          ) : variant === "ad" ? null : variant === "watch" ? (
             <YahooMark />
           ) : (
             <MediumMark />
@@ -225,6 +256,8 @@ function CardBody({
           className={styles.iconButton}
           type="button"
           aria-label={variant === "ad" ? "Open sponsored story" : "More options"}
+          aria-haspopup={variant !== "ad" && onMoreOptions ? "dialog" : undefined}
+          onClick={variant !== "ad" ? onMoreOptions : undefined}
         >
           {variant === "ad" ? <Send24Regular /> : <MoreHorizontal24Regular />}
         </button>
@@ -237,9 +270,11 @@ function CardBody({
   );
 }
 
-function MultiCardCarousel({ firstSlide }: { firstSlide: FeedCardContent }) {
-  const slides = [firstSlide, ...DEFAULT_MULTI_SLIDES.slice(1)];
-  const [activeIndex, setActiveIndex] = useState(0);
+function MultiCardCarousel({ slides, activeSlideIndex, onActiveSlideChange, onMoreOptions }: {
+  slides: FeedCardItem[];
+} & Pick<FeedCardProps, "activeSlideIndex" | "onActiveSlideChange" | "onMoreOptions">) {
+  const [internalIndex, setInternalIndex] = useState(0);
+  const activeIndex = Math.max(0, Math.min(slides.length - 1, activeSlideIndex ?? internalIndex));
   const [dragOffset, setDragOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -247,7 +282,9 @@ function MultiCardCarousel({ firstSlide }: { firstSlide: FeedCardContent }) {
   const dragOffsetRef = useRef(0);
 
   const moveTo = (index: number) => {
-    setActiveIndex(Math.max(0, Math.min(slides.length - 1, index)));
+    const nextIndex = Math.max(0, Math.min(slides.length - 1, index));
+    if (activeSlideIndex === undefined) setInternalIndex(nextIndex);
+    onActiveSlideChange?.(nextIndex);
     dragOffsetRef.current = 0;
     setDragOffset(0);
   };
@@ -335,14 +372,17 @@ function MultiCardCarousel({ firstSlide }: { firstSlide: FeedCardContent }) {
             <div
               className={styles.multiSlide}
               aria-hidden={index !== activeIndex}
+              {...(index !== activeIndex ? { inert: "" } : {})}
               key={`${slide.title}-${index}`}
             >
-              <FeedMedia variant="multi" imageSrc={slide.imageSrc} imageAlt={slide.imageAlt} />
+              <FeedMedia variant="multi" imageSrc={slide.imageSrc} imageAlt={slide.imageAlt} imagePosition={slide.imagePosition} />
               <CardBody
                 variant="multi"
                 publisher={slide.publisher}
+                publisherLogoSrc={slide.publisherLogoSrc}
                 elapsedTime={slide.elapsedTime}
                 title={slide.title}
+                onMoreOptions={onMoreOptions ? event => onMoreOptions(slide.followTarget ?? { kind: "publisher", name: slide.publisher }, event.currentTarget) : undefined}
               />
             </div>
           ))}
@@ -361,9 +401,18 @@ export function FeedCard({
   variant = "single",
   imageSrc,
   imageAlt,
+  imagePosition,
   publisher,
+  publisherLogoSrc,
   elapsedTime,
   title,
+  slides,
+  activeSlideIndex,
+  onActiveSlideChange,
+  followTarget,
+  onMoreOptions,
+  className,
+  mediaAspectRatio,
 }: FeedCardProps) {
   const isLoading = variant === "loading";
   const defaults = variant === "loading" ? DEFAULT_CONTENT.single : DEFAULT_CONTENT[variant];
@@ -375,31 +424,47 @@ export function FeedCard({
 
   return (
     <article
-      className={styles.root}
+      className={[styles.root, className].filter(Boolean).join(" ")}
+      style={mediaAspectRatio === undefined ? undefined : { "--gnrc-feed-card-media-aspect-ratio": mediaAspectRatio } as CSSProperties}
       aria-label={isLoading ? "Loading feed card" : resolvedTitle}
       aria-busy={isLoading || undefined}
     >
       {variant === "multi" ? (
         <MultiCardCarousel
-          firstSlide={{
-            imageSrc: resolvedImage,
-            imageAlt: resolvedImageAlt,
-            publisher: resolvedPublisher,
-            elapsedTime: resolvedElapsedTime,
-            title: resolvedTitle,
-          }}
+          activeSlideIndex={activeSlideIndex}
+          onActiveSlideChange={onActiveSlideChange}
+          onMoreOptions={onMoreOptions}
+          slides={
+            slides?.length
+              ? slides
+              : [
+                  {
+                    imageSrc: resolvedImage,
+                    imageAlt: resolvedImageAlt,
+                    imagePosition,
+                    publisher: resolvedPublisher,
+                    publisherLogoSrc,
+                    elapsedTime: resolvedElapsedTime,
+                    title: resolvedTitle,
+                    followTarget,
+                  },
+                  ...DEFAULT_MULTI_SLIDES.slice(1),
+                ]
+          }
         />
       ) : (
         <>
-          <FeedMedia variant={variant} imageSrc={resolvedImage} imageAlt={resolvedImageAlt} />
+          <FeedMedia variant={variant} imageSrc={resolvedImage} imageAlt={resolvedImageAlt} imagePosition={imagePosition} />
           {isLoading ? (
             <SkeletonBody />
           ) : (
             <CardBody
               variant={variant}
               publisher={resolvedPublisher}
+              publisherLogoSrc={publisherLogoSrc}
               elapsedTime={resolvedElapsedTime}
               title={resolvedTitle}
+              onMoreOptions={onMoreOptions ? event => onMoreOptions(followTarget ?? { kind: "publisher", name: resolvedPublisher }, event.currentTarget) : undefined}
             />
           )}
         </>

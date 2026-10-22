@@ -1,0 +1,48 @@
+/* Figma 3312:51594: four 40 px variants and three 64 px variants. */
+.root {
+  display: inline-flex;
+  box-sizing: border-box;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: var(--gnrc-border-radius-circular);
+  background: var(--gnrc-color-avatar-surface);
+  color: var(--gnrc-color-avatar-person);
+  vertical-align: middle;
+}
+
+.root[data-size="large"] { width: 64px; height: 64px; }
+.root[data-variant="image"] { background: transparent; }
+.root[data-variant="initials"] { color: var(--gnrc-color-avatar-initials); }
+.root[data-variant="initials"][data-size="large"] { color: var(--gnrc-color-avatar-initials-large); }
+.root[data-variant="private"] {
+  background: var(--gnrc-color-avatar-private-surface);
+  color: var(--gnrc-color-avatar-private-foreground);
+}
+
+.icon { display: block; width: 24px; height: 24px; flex: none; }
+.root[data-size="large"] .icon { width: 28px; height: 28px; }
+.image { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+.initials {
+  max-width: 100%;
+  overflow: hidden;
+  font-family: var(--gnrc-font-family-functional);
+  font-size: 20px;
+  font-weight: var(--gnrc-font-weight-functional-strong);
+  line-height: 26px;
+  font-variation-settings: "opsz" 36;
+  letter-spacing: 0;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.root[data-size="large"] .initials {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 28px;
+  font-variation-settings: "opsz" 10.5;
+}

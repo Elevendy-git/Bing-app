@@ -10,6 +10,34 @@
   --gnrc-color-background-card-on-secondary: rgb(204 196 192 / 20%);
   --gnrc-color-foreground-on-inverse: #ffffff;
   --gnrc-color-shadow: #000000;
+  --gnrc-color-ios-island-surface: #000000;
+  --gnrc-color-ios-island-foreground: #ffffff;
+  --gnrc-color-ios-status-on-dark: #ffffff;
+  --gnrc-color-homepage-wallpaper-overlay: rgb(0 0 0 / 0%);
+  --gnrc-color-app-search-background: rgb(0 0 0 / 5%);
+  --gnrc-color-app-search-input-text: #000000;
+  --gnrc-color-app-search-dismiss: #4c4642;
+  --gnrc-color-app-search-progress: #0c59f2;
+  --gnrc-color-search-private-background: #151a28;
+  /* Switcher: C2 3326:52693. Preserve the supplied six-state palette. */
+  --gnrc-color-switcher-track: rgb(0 0 0 / 20%);
+  --gnrc-color-switcher-track-selected: #32ad52;
+  --gnrc-color-switcher-thumb: #ffffffe5;
+  --gnrc-color-switcher-thumb-active: #ffffff;
+  --gnrc-color-switcher-thumb-disabled: rgb(255 255 255 / 40%);
+  --gnrc-shadow-switcher-thumb:
+    0 0 0 1px rgb(0 0 0 / 4%),
+    0 3px 1px rgb(0 0 0 / 6%),
+    0 3px 8px rgb(0 0 0 / 15%);
+  --gnrc-font-family-ios: "Bing iOS SF Pro", -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Avatar: C2 Figma 3312:51594; private mode keeps its inverse appearance. */
+  --gnrc-color-avatar-surface: var(--gnrc-color-surface-neutral-nearer);
+  --gnrc-color-avatar-person: #0c59f2;
+  --gnrc-color-avatar-initials: var(--gnrc-color-foreground-neutral-primary);
+  --gnrc-color-avatar-initials-large: rgb(0 0 0 / 85.882353%);
+  --gnrc-color-avatar-private-surface: #282d3e;
+  --gnrc-color-avatar-private-foreground: #e5ebfa;
 
   /* Component semantics keep Feed Card and Search Box themes independently tunable. */
   --gnrc-color-feed-card-surface: var(--gnrc-color-surface-neutral-nearer);
@@ -25,6 +53,46 @@
   --gnrc-color-app-footer-icon-rest: var(--gnrc-color-foreground-neutral-primary);
   --gnrc-color-app-footer-icon-selected: #0c59f2;
 
+  --gnrc-color-app-list-surface: var(--gnrc-color-surface-neutral-nearer);
+  --gnrc-color-app-list-foreground-primary: var(--gnrc-color-foreground-neutral-primary);
+  --gnrc-color-app-list-foreground-secondary: #4c4642;
+  --gnrc-color-app-list-icon: var(--gnrc-color-foreground-neutral-primary);
+  --gnrc-color-app-list-divider: rgb(0 0 0 / 10%);
+  --gnrc-color-app-list-accent: #0c59f2;
+  --gnrc-color-app-list-section-action: #0c4df2;
+  --gnrc-color-app-list-logo: var(--gnrc-color-foreground-neutral-primary);
+  --gnrc-color-app-list-logo-on: var(--gnrc-color-surface-neutral-nearer);
+  --gnrc-color-app-list-showcase-label: var(--gnrc-color-foreground-neutral-secondary);
+  --gnrc-color-app-list-card-surface: var(--gnrc-color-surface-neutral-nearer);
+  --gnrc-color-app-list-card-stroke: var(--gnrc-color-stroke-divider-on-outline);
+  --gnrc-color-app-list-favicon-stroke: #e2ddd9;
+
+  /* Tabs card: C2 Figma 878:30997. */
+  --gnrc-menu-icon: none;
+  --gnrc-color-menu-stroke: rgb(255 255 255 / 90%);
+  --gnrc-color-menu-danger: #ac1922;
+  --gnrc-color-toast-success: #19b17c;
+  --gnrc-color-tabs-card-surface: var(--gnrc-color-surface-neutral-nearer);
+  --gnrc-color-tabs-card-foreground: var(--gnrc-color-foreground-neutral-primary);
+  --gnrc-color-tabs-card-icon: #4c4642;
+  --gnrc-color-tabs-card-favicon-surface: #ffffff;
+  --gnrc-color-tabs-card-stroke: var(--gnrc-color-stroke-divider-on-outline);
+  --gnrc-color-tabs-card-selected: #0c4df2;
+  --gnrc-shadow-tabs-card: 0 1px 2px rgb(0 0 0 / 5%);
+
+  /* Glance Card: Figma 5826:53496; Sports 5912:35288 retains its distinct border without a shadow. */
+  --gnrc-color-glance-card-surface: var(--gnrc-color-surface-neutral-nearer);
+  --gnrc-color-glance-card-foreground: var(--gnrc-color-foreground-neutral-primary);
+  --gnrc-color-glance-card-stroke: var(--gnrc-color-stroke-divider-on-outline);
+  --gnrc-color-glance-card-sports-stroke: rgb(0 0 0 / 12%);
+  --gnrc-color-glance-card-schedule: rgb(0 0 0 / 86%);
+  --gnrc-color-glance-card-next-background: rgb(243 195 87 / 20%);
+  --gnrc-color-glance-card-next-foreground: #a25a02;
+  --gnrc-color-glance-card-live-background: rgb(255 181 174 / 20%);
+  --gnrc-color-glance-card-live-foreground: #ac1922;
+  --gnrc-color-glance-card-final-background: #efeae7;
+  --gnrc-color-glance-card-clock: rgb(0 0 0 / 64%);
+
   --gnrc-shadow-lowest:
     0 1px 2px rgb(0 0 0 / 5%),
     0 0 1px rgb(0 0 0 / 8%);
@@ -33,21 +101,29 @@
   --gnrc-font-size-functional-body-large: 1rem;
   --gnrc-font-size-functional-body-small: 0.875rem;
   --gnrc-font-size-functional-title-medium: 1.125rem;
+  --gnrc-font-size-functional-caption: 0.75rem;
   --gnrc-font-weight-functional-regular: 400;
+  --gnrc-font-weight-functional-medium: 550;
   --gnrc-font-weight-functional-strong: 650;
   --gnrc-line-height-functional-body-large: 1.5rem;
   --gnrc-line-height-functional-body-small: 1.25rem;
   --gnrc-line-height-functional-title-medium: 1.625rem;
+  --gnrc-line-height-functional-caption: 1.125rem;
+  --gnrc-line-height-functional-caption-compact: 1rem;
 
   --gnrc-border-radius-circular: 9999px;
   --gnrc-border-radius-card-body: 30px;
   --gnrc-border-radius-card-nested: 20px;
+  --gnrc-border-radius-list-thumbnail: 8px;
+  --gnrc-border-radius-list-card: 16px;
+  --gnrc-border-radius-control-small: 4px;
   --gnrc-border-width-card: 0.5px;
 
   --gnrc-spacing-component-base-050: 2px;
   --gnrc-spacing-component-base-100: 4px;
   --gnrc-spacing-component-base-150: 6px;
   --gnrc-spacing-component-base-200: 8px;
+  --gnrc-spacing-component-base-250: 10px;
   --gnrc-spacing-component-base-300: 12px;
   --gnrc-spacing-component-base-350: 14px;
   --gnrc-spacing-component-base-400: 16px;

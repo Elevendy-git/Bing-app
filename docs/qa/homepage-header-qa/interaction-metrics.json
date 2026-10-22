@@ -1,0 +1,399 @@
+{
+  "feed": {
+    "heightTransition": "height 0.2s cubic-bezier(0.22, 1, 0.36, 1)",
+    "lead": {
+      "height": 315.3671875,
+      "width": 353,
+      "x": 20,
+      "y": 67
+    },
+    "mask": {
+      "height": 138,
+      "maskImage": "url(\"http://127.0.0.1:6007/src/screens/Homepage/assets/search-header-mask.svg\")",
+      "opacity": "1",
+      "width": 393,
+      "x": 0,
+      "y": 0
+    },
+    "overscrollBehavior": "none",
+    "scrollTop": 555,
+    "search": {
+      "height": 56,
+      "width": 358,
+      "x": 17.5,
+      "y": 62
+    },
+    "searchOutsideScroller": true
+  },
+  "returnedTop": {
+    "height": 64,
+    "scrollTop": 0,
+    "transition": "height 0.2s cubic-bezier(0.22, 1, 0.36, 1)",
+    "value": "weekend ideas",
+    "y": 394
+  },
+  "heightSamples": [
+    {
+      "height": 64,
+      "scrollTop": 0,
+      "y": 394
+    },
+    {
+      "height": 64,
+      "scrollTop": 852,
+      "y": 62
+    },
+    {
+      "height": 62.546875,
+      "scrollTop": 852,
+      "y": 62
+    },
+    {
+      "height": 62.546875,
+      "scrollTop": 852,
+      "y": 62
+    },
+    {
+      "height": 61.328125,
+      "scrollTop": 852,
+      "y": 62
+    },
+    {
+      "height": 60.2578125,
+      "scrollTop": 852,
+      "y": 62
+    },
+    {
+      "height": 59.2734375,
+      "scrollTop": 852,
+      "y": 62
+    },
+    {
+      "height": 58.4609375,
+      "scrollTop": 852,
+      "y": 62
+    },
+    {
+      "height": 58.4609375,
+      "scrollTop": 852,
+      "y": 62
+    },
+    {
+      "height": 57.8828125,
+      "scrollTop": 852,
+      "y": 62
+    },
+    {
+      "height": 57.4140625,
+      "scrollTop": 852,
+      "y": 62
+    },
+    {
+      "height": 57.4140625,
+      "scrollTop": 852,
+      "y": 62
+    },
+    {
+      "height": 57.0859375,
+      "scrollTop": 852,
+      "y": 62
+    },
+    {
+      "height": 57.0859375,
+      "scrollTop": 852,
+      "y": 62
+    },
+    {
+      "height": 56.7890625,
+      "scrollTop": 852,
+      "y": 62
+    },
+    {
+      "height": 56.5859375,
+      "scrollTop": 852,
+      "y": 62
+    },
+    {
+      "height": 56.5859375,
+      "scrollTop": 852,
+      "y": 62
+    },
+    {
+      "height": 56.4296875,
+      "scrollTop": 852,
+      "y": 62
+    },
+    {
+      "height": 56.3125,
+      "scrollTop": 852,
+      "y": 62
+    },
+    {
+      "height": 56.21875,
+      "scrollTop": 852,
+      "y": 62
+    },
+    {
+      "height": 56.1484375,
+      "scrollTop": 852,
+      "y": 62
+    },
+    {
+      "height": 56.1015625,
+      "scrollTop": 852,
+      "y": 62
+    },
+    {
+      "height": 56.1015625,
+      "scrollTop": 852,
+      "y": 62
+    },
+    {
+      "height": 56.0625,
+      "scrollTop": 852,
+      "y": 62
+    },
+    {
+      "height": 56.0390625,
+      "scrollTop": 852,
+      "y": 62
+    },
+    {
+      "height": 56.0234375,
+      "scrollTop": 852,
+      "y": 62
+    },
+    {
+      "height": 56.0234375,
+      "scrollTop": 852,
+      "y": 62
+    },
+    {
+      "height": 56.0078125,
+      "scrollTop": 852,
+      "y": 62
+    },
+    {
+      "height": 56.0078125,
+      "scrollTop": 852,
+      "y": 62
+    },
+    {
+      "height": 56,
+      "scrollTop": 852,
+      "y": 62
+    },
+    {
+      "height": 56,
+      "scrollTop": 852,
+      "y": 62
+    },
+    {
+      "height": 56,
+      "scrollTop": 852,
+      "y": 62
+    },
+    {
+      "height": 56,
+      "scrollTop": 852,
+      "y": 62
+    },
+    {
+      "height": 56,
+      "scrollTop": 852,
+      "y": 62
+    },
+    {
+      "height": 56,
+      "scrollTop": 852,
+      "y": 62
+    },
+    {
+      "height": 56,
+      "scrollTop": 852,
+      "y": 62
+    },
+    {
+      "height": 56,
+      "scrollTop": 852,
+      "y": 62
+    },
+    {
+      "height": 56,
+      "scrollTop": 852,
+      "y": 62
+    },
+    {
+      "height": 56,
+      "scrollTop": 852,
+      "y": 62
+    },
+    {
+      "height": 56,
+      "scrollTop": 852,
+      "y": 62
+    }
+  ],
+  "overscrollSamples": [
+    {
+      "height": 56,
+      "scrollTop": 1485.5,
+      "y": 62
+    },
+    {
+      "height": 56,
+      "scrollTop": 1485.5,
+      "y": 62
+    },
+    {
+      "height": 56,
+      "scrollTop": 1485.5,
+      "y": 62
+    },
+    {
+      "height": 56,
+      "scrollTop": 1485.5,
+      "y": 62
+    },
+    {
+      "height": 56,
+      "scrollTop": 1485.5,
+      "y": 62
+    },
+    {
+      "height": 56,
+      "scrollTop": 1485.5,
+      "y": 62
+    },
+    {
+      "height": 56,
+      "scrollTop": 1485.5,
+      "y": 62
+    },
+    {
+      "height": 56,
+      "scrollTop": 1485.5,
+      "y": 62
+    },
+    {
+      "height": 56,
+      "scrollTop": 1485.5,
+      "y": 62
+    },
+    {
+      "height": 56,
+      "scrollTop": 1485.5,
+      "y": 62
+    },
+    {
+      "height": 56,
+      "scrollTop": 1485.5,
+      "y": 62
+    },
+    {
+      "height": 56,
+      "scrollTop": 1485.5,
+      "y": 62
+    },
+    {
+      "height": 56,
+      "scrollTop": 1485.5,
+      "y": 62
+    },
+    {
+      "height": 56,
+      "scrollTop": 1485.5,
+      "y": 62
+    },
+    {
+      "height": 56,
+      "scrollTop": 1485.5,
+      "y": 62
+    },
+    {
+      "height": 56,
+      "scrollTop": 1485.5,
+      "y": 62
+    },
+    {
+      "height": 56,
+      "scrollTop": 1485.5,
+      "y": 62
+    },
+    {
+      "height": 56,
+      "scrollTop": 1485.5,
+      "y": 62
+    },
+    {
+      "height": 56,
+      "scrollTop": 1485.5,
+      "y": 62
+    },
+    {
+      "height": 56,
+      "scrollTop": 1485.5,
+      "y": 62
+    },
+    {
+      "height": 56,
+      "scrollTop": 1485.5,
+      "y": 62
+    },
+    {
+      "height": 56,
+      "scrollTop": 1485.5,
+      "y": 62
+    },
+    {
+      "height": 56,
+      "scrollTop": 1485.5,
+      "y": 62
+    },
+    {
+      "height": 56,
+      "scrollTop": 1485.5,
+      "y": 62
+    },
+    {
+      "height": 56,
+      "scrollTop": 1485.5,
+      "y": 62
+    },
+    {
+      "height": 56,
+      "scrollTop": 1485.5,
+      "y": 62
+    },
+    {
+      "height": 56,
+      "scrollTop": 1485.5,
+      "y": 62
+    },
+    {
+      "height": 56,
+      "scrollTop": 1485.5,
+      "y": 62
+    },
+    {
+      "height": 56,
+      "scrollTop": 1485.5,
+      "y": 62
+    },
+    {
+      "height": 56,
+      "scrollTop": 1485.5,
+      "y": 62
+    },
+    {
+      "height": 56,
+      "scrollTop": 1485.5,
+      "y": 62
+    },
+    {
+      "height": 56,
+      "scrollTop": 1485.5,
+      "y": 62
+    }
+  ]
+}

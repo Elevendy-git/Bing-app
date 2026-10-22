@@ -1,3 +1,30 @@
+@import "./ios.css";
+@import "./layout.css";
+
+@font-face {
+  font-family: "Segoe Sans";
+  font-style: normal;
+  font-weight: 400 599;
+  font-display: swap;
+  src:
+    local("Segoe Sans"),
+    local("Segoe UI"),
+    url("https://static2.sharepointonline.com/files/fabric/assets/fonts/segoeui-westeuropean/segoeui-regular.woff")
+      format("woff");
+}
+
+@font-face {
+  font-family: "Segoe Sans";
+  font-style: normal;
+  font-weight: 600 700;
+  font-display: swap;
+  src:
+    local("Segoe Sans Semibold"),
+    local("Segoe UI Semibold"),
+    url("https://static2.sharepointonline.com/files/fabric/assets/fonts/segoeui-westeuropean/segoeui-semibold.woff")
+      format("woff");
+}
+
 *,
 *::before,
 *::after {
@@ -26,4 +53,3 @@ button,
 input {
   font: inherit;
 }
-

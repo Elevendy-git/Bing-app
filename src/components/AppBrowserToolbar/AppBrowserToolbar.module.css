@@ -1,0 +1,8 @@
+.root { display: flex; width: 100%; height: 52px; flex: none; color: var(--gnrc-color-app-footer-icon-rest); }
+.action { display: flex; min-width: 0; height: 100%; padding: 8px 0; flex: 1; align-items: center; justify-content: center; border: 0; background: transparent; color: inherit; }
+.action svg { display: block; width: 24px; height: 24px; }
+button.action { cursor: pointer; }
+button.action:focus-visible { outline: 2px solid var(--gnrc-color-app-list-accent); outline-offset: -4px; border-radius: 8px; }
+.unavailable { opacity: .35; }
+.selected { color: var(--gnrc-color-app-footer-icon-selected); }
+.copilot { display: block; width: 22px; height: 22px; background: currentColor; mask: url("./assets/copilot-outline.svg") center / 22px 22px no-repeat; }

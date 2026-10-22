@@ -1,0 +1,69 @@
+@font-face {
+  font-family: "Bing iOS SF Pro";
+  font-style: normal;
+  font-weight: 1 1000;
+  font-display: swap;
+  src: url("./assets/sf-pro-variable.woff2") format("woff2-variations");
+}
+
+.root {
+  position: relative;
+  width: 100%;
+  flex: none;
+  font-family: var(--gnrc-font-family-ios);
+  user-select: none;
+  color: var(--gnrc-ios-foreground);
+  font-variation-settings: normal;
+}
+
+.light { color: #fff; }
+.levels { display: block; width: 85.329px; height: 13px; flex: none; background: currentColor; mask: url("./assets/ios27-levels.svg") center / auto no-repeat; }
+
+.phoneChrome {
+  display: flex;
+  width: 100%;
+  height: var(--gnrc-ios-status-height);
+  padding: 2.333px 9px 0;
+  align-items: center;
+}
+
+.timeSlot,
+.phoneIndicators {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+}
+
+.timeSlot { padding-right: 6px; }
+.phoneIndicators { gap: 7px; padding-right: 1px; }
+
+.time {
+  font-size: 17px;
+  font-weight: 590;
+  line-height: 22px;
+  letter-spacing: 0;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.cameraSpacer,
+.activitySpacer { height: 10px; flex: none; }
+.cameraSpacer { width: 125px; height: 37px; }
+.camera { border-radius: 100px; background: #000; }
+.activitySpacer { width: 230px; }
+.expandedSpacer { height: var(--gnrc-ios-status-height); }
+
+.activityLayer {
+  position: absolute;
+  top: 11px;
+  right: 0;
+  left: 0;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.activityContent { pointer-events: auto; }

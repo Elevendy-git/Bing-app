@@ -1,0 +1,32 @@
+[
+  {
+    "file": "create.svg",
+    "bytes": 3261,
+    "sha256": "7c050f60e84780429cffde9c68e162a3b7c8cdcc1e2895a55896dc734212fd5e"
+  },
+  {
+    "file": "jets.png",
+    "bytes": 18771,
+    "sha256": "7f77ec217fd429ff561e6df1abe8e5bff3b6602f0b9ddf7ca9e92f0eb2aef711"
+  },
+  {
+    "file": "money.svg",
+    "bytes": 2707,
+    "sha256": "2958a6741c9914f9e5b3b1143f80ba7f4306e9a82714b45b3daaf64b0b9a6424"
+  },
+  {
+    "file": "patriots.png",
+    "bytes": 72094,
+    "sha256": "ca4c70c0090f4e905b7f5d2b7b860e2f5c14ae1987c2509ce6faacfbd7048651"
+  },
+  {
+    "file": "rewards.svg",
+    "bytes": 5728,
+    "sha256": "58e372ed23154a8d201e6f8c258d1283a5432315543934d618049cd8d23996a4"
+  },
+  {
+    "file": "team-background.png",
+    "bytes": 438597,
+    "sha256": "9be99e7cad3fe3ddbda1239f52c9b2e31d882f03b7896c2f2b7629c11b0a13b6"
+  }
+]

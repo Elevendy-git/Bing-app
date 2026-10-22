@@ -1,0 +1,117 @@
+/* C2 Search page 402:18101 and Recent 1117:73172. */
+.root, .root * { box-sizing: border-box; }
+
+.root {
+  display: flex;
+  width: 358px;
+  height: 56px;
+  padding: var(--gnrc-spacing-component-base-300);
+  align-items: center;
+  border-radius: var(--gnrc-border-radius-circular);
+  background: var(--gnrc-color-app-search-background);
+  color: var(--gnrc-color-foreground-neutral-primary);
+  font-family: var(--gnrc-font-family-functional);
+  font-size: var(--gnrc-font-size-functional-body-large);
+  font-weight: var(--gnrc-font-weight-functional-regular);
+  line-height: var(--gnrc-line-height-functional-body-large);
+  font-feature-settings: "calt" off;
+  font-variation-settings: "opsz" 5;
+}
+
+.recent {
+  height: 48px;
+  padding: var(--gnrc-spacing-component-base-150) var(--gnrc-spacing-component-base-250);
+  font-size: var(--gnrc-font-size-functional-body-small);
+  font-weight: 450;
+  line-height: var(--gnrc-line-height-functional-body-small);
+  font-feature-settings: normal;
+  font-variation-settings: "opsz" 10.5;
+}
+
+/* Shareout 1:20524: App-owned composer above the Bing web viewport. */
+.serp { position: relative; height: 48px; padding: 0 8px 0 12px; gap: 4px; }
+.progressClip { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none; }
+.progressFill { position: absolute; inset: auto 0 0; height: 2px; background: var(--gnrc-color-app-search-progress); transform-origin: left center; }
+.bingSlot { display: flex; padding: 2px; flex: none; }
+.bingSlot img { display: block; width: 28px; height: 28px; }
+.serp:has(.input), .serp .input[readonly] { cursor: text; }
+
+.iconSlot, .actionSlot {
+  display: flex;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.iconSlot svg, .actionSlot svg { display: block; width: 24px; height: 24px; }
+.actionSlot { width: var(--gnrc-search-action-width, 44px); }
+.actions { display: flex; flex: none; }
+.dismiss { color: var(--gnrc-color-app-search-dismiss); }
+
+.textSlot {
+  display: flex;
+  min-width: 0;
+  height: 36px;
+  padding: var(--gnrc-spacing-component-base-100) var(--gnrc-spacing-component-base-250)
+    var(--gnrc-spacing-component-base-100) var(--gnrc-spacing-component-base-050);
+  padding-left: var(--gnrc-search-text-inset-start, var(--gnrc-spacing-component-base-050));
+  padding-right: var(--gnrc-search-text-inset-end, var(--gnrc-spacing-component-base-250));
+  flex: 1;
+  align-items: center;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.recent .textSlot { padding-left: var(--gnrc-spacing-component-base-100); }
+.placeholder { min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--gnrc-color-foreground-neutral-secondary); }
+.value { min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--gnrc-color-app-search-input-text); }
+
+/* Original Figma SVGs, kept at their intrinsic size. Cursor is a static state marker. */
+.caret {
+  width: 0;
+  height: 21px;
+  flex: none;
+  position: relative;
+  color: var(--gnrc-color-app-search-input-text);
+}
+
+.caret::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 1px;
+  background: currentColor;
+  mask: url("./assets/caret.svg") center / 1px 21px no-repeat;
+}
+
+.microphone {
+  display: block;
+  width: 24px;
+  height: 24px;
+  background: currentColor;
+  mask: url("./assets/copilot-mic.svg") center / 24px 24px no-repeat;
+}
+
+.input {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--gnrc-color-app-search-input-text);
+  font: inherit;
+  font-feature-settings: inherit;
+  font-variation-settings: inherit;
+  border-radius: 0;
+  appearance: none;
+}
+.input::placeholder { color: var(--gnrc-color-foreground-neutral-secondary); opacity: 1; }
+.serp .input, .serp .value { color: inherit; }
+.input::-webkit-search-cancel-button { display: none; }
+button.iconSlot { padding: 0; border: 0; background: transparent; color: inherit; cursor: pointer; }
+button.dismiss { color: var(--gnrc-color-app-search-dismiss); }
+button.iconSlot:focus-visible { outline: 2px solid var(--gnrc-color-app-list-accent); outline-offset: -2px; border-radius: 50%; }

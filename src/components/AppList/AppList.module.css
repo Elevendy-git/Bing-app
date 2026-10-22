@@ -1,0 +1,461 @@
+/* Bing App List component set 375:9897. */
+/* Keep Figma's 550 weight while avoiding the shared Regular fallback for 400–599. */
+@font-face {
+  font-family: "Bing List Section";
+  font-style: normal;
+  font-weight: 550;
+  font-display: swap;
+  src:
+    local("Segoe Sans Text Semibold"),
+    local("Segoe UI Semibold"),
+    url("https://static2.sharepointonline.com/files/fabric/assets/fonts/segoeui-westeuropean/segoeui-semibold.woff")
+      format("woff");
+}
+
+.root,
+.root * {
+  box-sizing: border-box;
+}
+
+.root {
+  --gnrc-list-section-padding-top: 24px;
+  --gnrc-list-section-padding-bottom: 12px;
+  --gnrc-list-section-title-inset: 4px;
+  --gnrc-list-section-inline-padding: 20px;
+  display: flex;
+  width: 390px;
+  margin: 0;
+  padding: 0;
+  flex-direction: column;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--gnrc-color-app-list-foreground-primary);
+  font-family: var(--gnrc-font-family-functional);
+  text-align: left;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+button.root {
+  cursor: pointer;
+}
+
+.content {
+  display: flex;
+  width: 100%;
+  padding-right: var(--gnrc-list-row-inline-padding, var(--gnrc-spacing-component-base-300));
+  padding-left: var(--gnrc-list-row-inline-padding, var(--gnrc-spacing-component-base-300));
+  align-items: center;
+  gap: 10px;
+}
+
+.yml .content,
+.as .content {
+  min-height: 48px;
+  padding-top: var(--gnrc-spacing-component-base-300);
+  padding-bottom: var(--gnrc-spacing-component-base-300);
+}
+
+.as-hub-page .content {
+  min-height: 48px;
+  padding-top: var(--gnrc-spacing-component-base-200);
+  padding-bottom: var(--gnrc-spacing-component-base-200);
+}
+
+.trending .content {
+  min-height: 64px;
+  padding-top: var(--gnrc-spacing-component-base-200);
+  padding-bottom: var(--gnrc-spacing-component-base-200);
+}
+
+.bing-search-history .content,
+.copilot-history .content {
+  min-height: 58px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.leading {
+  display: flex;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  align-items: center;
+  justify-content: center;
+  color: var(--gnrc-color-app-list-icon);
+}
+
+.leading > svg {
+  display: block;
+  width: 24px;
+  height: 24px;
+}
+
+.as .leading > svg {
+  width: 20px;
+  height: 20px;
+}
+
+.as-hub-page .leading,
+.copilot-history .leading {
+  width: 32px;
+  height: 32px;
+  flex-basis: 32px;
+}
+
+.as .leading,
+.as-hub-page .leading,
+.copilot-history .leading {
+  color: var(--gnrc-color-app-list-foreground-secondary);
+}
+
+.as-hub-page .leading > svg,
+.copilot-history .leading > svg {
+  width: 24px;
+  height: 24px;
+}
+
+.logoImage {
+  display: block;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.ymlMark {
+  display: block;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.mediumMark {
+  display: inline-flex;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 6px;
+  box-shadow: 0 0 0 0.5px var(--gnrc-color-app-list-favicon-stroke);
+}
+
+.mediumMark > img {
+  display: block;
+  flex-shrink: 0;
+}
+
+.bing-search-history .leading {
+  width: 32px;
+  height: 32px;
+  flex-basis: 32px;
+}
+
+.bing-search-history .mediumMark {
+  width: 32px;
+  height: 32px;
+  flex-basis: 32px;
+  border-radius: 12px;
+}
+
+.bing-search-history .logoImage {
+  width: 32px;
+  height: 32px;
+  flex-basis: 32px;
+  border: 0.5px solid var(--gnrc-color-app-list-favicon-stroke);
+  border-radius: 12px;
+}
+
+.suggestionLogo {
+  display: flex;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Figma exports include the 0.5 px outer stroke around the 24 px logo slot. */
+.suggestionLogo > img {
+  display: block;
+  max-width: 25px;
+  max-height: 25px;
+  flex: none;
+  object-fit: cover;
+}
+
+.copy {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.title,
+.subtitle {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.title {
+  color: var(--gnrc-color-app-list-foreground-primary);
+  font-feature-settings: "calt" off;
+  font-size: 16px;
+  font-weight: 450;
+  line-height: 22px;
+}
+
+.titleEmphasis {
+  font-weight: var(--gnrc-font-weight-functional-strong);
+  font-variation-settings: "opsz" 10.5;
+}
+
+.as .title,
+.as-hub-page .title { font-variation-settings: "opsz" 10.5; }
+
+.trending .title {
+  display: -webkit-box;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.bing-search-history .title,
+.copilot-history .title {
+  font-size: 16px;
+  font-weight: 450;
+  line-height: 22px;
+}
+
+.subtitle {
+  color: var(--gnrc-color-app-list-foreground-secondary);
+  font-size: 12px;
+  font-weight: 450;
+  font-variation-settings: "opsz" 5;
+  line-height: 16px;
+}
+
+.rank {
+  display: flex;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  align-items: center;
+  justify-content: center;
+  color: var(--gnrc-color-app-list-foreground-primary);
+  font-size: 14px;
+  font-weight: 650;
+  font-variation-settings: "opsz" 10.5;
+  line-height: 20px;
+}
+
+.rightControl {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  color: var(--gnrc-color-app-list-icon);
+}
+
+.rightControl:empty {
+  display: none;
+}
+
+.rightControl > svg {
+  display: block;
+  width: 24px;
+  height: 24px;
+}
+
+.bing-search-history .rightControl,
+.copilot-history .rightControl {
+  width: 24px;
+  height: 24px;
+}
+
+.bing-search-history .rightControl > svg,
+.copilot-history .rightControl > svg {
+  width: 20px;
+  height: 20px;
+}
+
+.asControls {
+  display: flex;
+  height: 24px;
+  align-items: center;
+  gap: 10px;
+}
+
+.actionIcon {
+  display: flex;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  align-items: center;
+  justify-content: center;
+}
+
+.actionIcon > svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+}
+
+.thumbnailImage,
+.thumbnailArtwork {
+  display: flex;
+  width: 84px;
+  height: 48px;
+  flex: 0 0 84px;
+  border-radius: var(--gnrc-border-radius-list-thumbnail);
+}
+
+.thumbnailImage {
+  object-fit: cover;
+}
+
+.thumbnailArtwork {
+  overflow: hidden;
+}
+
+.thumbnailLayers {
+  position: relative;
+  width: 84px;
+  height: 48px;
+  overflow: hidden;
+  transform: scaleX(-1);
+}
+
+.thumbnailBackground {
+  position: absolute;
+  top: -4.17%;
+  left: 0;
+  width: 100%;
+  height: 108.49%;
+}
+
+.thumbnailForeground {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.dividerSlot {
+  display: flex;
+  width: 100%;
+  height: 8px;
+  padding-left: var(--gnrc-list-divider-inset, 46px);
+  flex: 0 0 8px;
+  align-items: center;
+}
+
+.as-hub-page .dividerSlot,
+.bing-search-history .dividerSlot,
+.copilot-history .dividerSlot {
+  padding-left: 54px;
+}
+
+.divider {
+  display: block;
+  width: 100%;
+  height: 1px;
+  background: var(--gnrc-color-app-list-divider);
+}
+
+.section-header {
+  min-height: var(--gnrc-list-section-min-height, 58px);
+}
+
+.sectionContent {
+  display: flex;
+  width: 100%;
+  min-height: var(--gnrc-list-section-min-height, 58px);
+  padding: var(--gnrc-list-section-padding-top) var(--gnrc-list-section-inline-padding) var(--gnrc-list-section-padding-bottom);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sectionTitle {
+  margin: 0 0 0 var(--gnrc-list-section-title-inset);
+  color: var(--gnrc-list-section-title-color, var(--gnrc-color-app-list-foreground-primary));
+  font-feature-settings: "calt" off;
+  font-size: 16px;
+  font-family: "Bing List Section", var(--gnrc-font-family-functional);
+  font-weight: var(--gnrc-font-weight-functional-medium);
+  font-variation-settings: "opsz" 10.5;
+  line-height: 22px;
+}
+
+.sectionAction {
+  display: inline-flex;
+  height: 22px;
+  align-items: center;
+  gap: var(--gnrc-spacing-component-base-100);
+  color: var(--gnrc-color-app-list-section-action);
+  font-feature-settings: "calt" off;
+  font-size: 16px;
+  font-family: "Bing List Section", var(--gnrc-font-family-functional);
+  font-weight: var(--gnrc-font-weight-functional-medium);
+  font-variation-settings: "opsz" 10.5;
+  line-height: 22px;
+}
+
+.sectionChevron {
+  display: flex;
+  padding-bottom: 2px;
+}
+
+.sectionChevron > svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+}
+
+.actionRow { position: relative; }
+.rowAction {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  cursor: pointer;
+}
+.controlSpace { width: 24px; height: 24px; flex: none; }
+.trailingAction {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  display: grid;
+  width: 36px;
+  height: 44px;
+  padding: 0;
+  transform: translateY(-50%);
+  place-items: center;
+  border: 0;
+  border-radius: var(--gnrc-border-radius-control-small);
+  background: transparent;
+  color: var(--gnrc-color-app-list-icon);
+  cursor: pointer;
+}
+.rowAction:focus-visible,
+.trailingAction:focus-visible,
+button.root:focus-visible {
+  outline: 2px solid var(--gnrc-color-app-list-accent);
+  outline-offset: -2px;
+}

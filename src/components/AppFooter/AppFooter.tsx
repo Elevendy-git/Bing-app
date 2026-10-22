@@ -11,11 +11,15 @@ export interface FooterTabProps {
   destination: FooterDestination;
   /** Applies the Figma selected treatment. */
   selected?: boolean;
+  /** Host-specific name for an icon destination. */
+  label?: string;
   /** Called when the destination is chosen. */
   onSelect?: (destination: SelectableFooterDestination) => void;
 }
 
 export interface AppFooterProps {
+  /** Width belongs to the embedding screen. */
+  className?: string;
   /** Controlled selected destination. */
   selectedTab?: SelectableFooterDestination;
   /** Initial destination for the uncontrolled footer. */
@@ -24,6 +28,7 @@ export interface AppFooterProps {
   onSelectedTabChange?: (destination: SelectableFooterDestination) => void;
   /** Accessible label for the footer navigation. */
   navigationLabel?: string;
+  labels?: Partial<Record<FooterDestination, string>>;
 }
 
 const DESTINATION_LABELS: Record<FooterDestination, string> = {
@@ -44,7 +49,7 @@ function CopilotIcon() {
   );
 }
 
-function CollectionsEmptyIcon({ selected }: { selected: boolean }) {
+export function CollectionsEmptyIcon({ selected }: { selected: boolean }) {
   if (selected) {
     return (
       <svg
@@ -96,13 +101,13 @@ function DestinationIcon({
 }
 
 /** Footer action. Copilot is fixed at 78 px; edge destinations fill their row. */
-export function FooterTab({ destination, selected = false, onSelect }: FooterTabProps) {
+export function FooterTab({ destination, selected = false, onSelect, label }: FooterTabProps) {
   if (destination === "copilot") {
     return (
       <span
         className={`${styles.tab} ${styles.staticTab}`}
         role="img"
-        aria-label={DESTINATION_LABELS[destination]}
+        aria-label={label ?? DESTINATION_LABELS[destination]}
         data-destination={destination}
         data-state="single"
       >
@@ -115,7 +120,7 @@ export function FooterTab({ destination, selected = false, onSelect }: FooterTab
     <button
       className={`${styles.tab} ${selected ? styles.selected : ""}`}
       type="button"
-      aria-label={DESTINATION_LABELS[destination]}
+      aria-label={label ?? DESTINATION_LABELS[destination]}
       aria-current={selected ? "page" : undefined}
       data-destination={destination}
       data-state={selected ? "selected" : "rest"}
@@ -135,6 +140,8 @@ export function AppFooter({
   defaultSelectedTab = "home",
   onSelectedTabChange,
   navigationLabel = "Bing app navigation",
+  labels,
+  className,
 }: AppFooterProps) {
   const [internalSelectedTab, setInternalSelectedTab] =
     useState<SelectableFooterDestination>(defaultSelectedTab);
@@ -146,11 +153,12 @@ export function AppFooter({
   };
 
   return (
-    <footer className={styles.root} aria-label={navigationLabel}>
+    <footer className={[styles.root, className].filter(Boolean).join(" ")} aria-label={navigationLabel}>
       <nav className={styles.actions} aria-label={navigationLabel}>
         {(["home", "copilot", "collections"] as const).map((destination) => (
           <FooterTab
             destination={destination}
+            label={labels?.[destination]}
             selected={currentTab === destination}
             onSelect={selectTab}
             key={destination}

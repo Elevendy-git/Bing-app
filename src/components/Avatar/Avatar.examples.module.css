@@ -1,0 +1,30 @@
+.comparison { width: 100%; container-type: inline-size; }
+
+.variants {
+  display: grid;
+  width: max-content;
+  margin-inline: auto;
+  grid-template-columns: repeat(4, 96px);
+  gap: 24px;
+}
+
+.variants[data-size="large"] { grid-template-columns: repeat(3, 96px); }
+.variant { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.label {
+  color: var(--gnrc-color-foreground-neutral-secondary);
+  font-size: 13px;
+  font-weight: var(--gnrc-font-weight-functional-regular);
+  line-height: 20px;
+}
+
+@container (max-width: 455px) {
+  .variants { grid-template-columns: repeat(2, 96px); }
+}
+
+@container (max-width: 335px) {
+  .variants[data-size="large"] { grid-template-columns: repeat(2, 96px); }
+}
+
+@container (max-width: 215px) {
+  .variants, .variants[data-size="large"] { grid-template-columns: 96px; }
+}

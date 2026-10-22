@@ -1,0 +1,7 @@
+/* Screen insets stay fixed while the available content width fills the device. */
+/* Existing 24px spacing remains local and must not be normalized to these values. */
+:root {
+  --gnrc-layout-search-inset: 16px;
+  --gnrc-layout-toast-inset: 16px;
+  --gnrc-layout-content-inset: 20px;
+}

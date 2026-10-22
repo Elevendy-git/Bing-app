@@ -24,10 +24,15 @@
 
 .inputRow {
   display: flex;
-  width: 334px;
+  width: 100%;
   height: 48px;
   flex: 0 0 48px;
   align-items: center;
+}
+
+.compact {
+  height: 56px;
+  box-shadow: inset 0 0 0 1px var(--gnrc-color-stroke-divider-on-outline);
 }
 
 .searchSlot {
@@ -52,6 +57,8 @@
   min-width: 0;
   min-height: 36px;
   padding: var(--gnrc-spacing-component-base-100) var(--gnrc-spacing-component-base-150);
+  padding-left: var(--gnrc-search-text-inset-start, var(--gnrc-spacing-component-base-150));
+  padding-right: var(--gnrc-search-text-inset-end, var(--gnrc-spacing-component-base-150));
   flex: 1 0 0;
   align-items: center;
 }
@@ -91,19 +98,19 @@
 
 .actions {
   display: flex;
-  width: 96px;
+  width: calc(2 * var(--gnrc-search-action-width, 48px));
   height: 48px;
-  flex: 0 0 96px;
+  flex: 0 0 calc(2 * var(--gnrc-search-action-width, 48px));
   align-items: center;
 }
 
 .action {
   display: flex;
-  width: 48px;
+  width: var(--gnrc-search-action-width, 48px);
   height: 48px;
   margin: 0;
   padding: 0;
-  flex: 0 0 48px;
+  flex: 0 0 var(--gnrc-search-action-width, 48px);
   align-items: center;
   justify-content: center;
   border: 0;

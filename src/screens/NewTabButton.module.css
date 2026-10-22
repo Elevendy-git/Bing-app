@@ -1,0 +1,3 @@
+.root { position: absolute; right: var(--gnrc-layout-content-inset); bottom: calc(72px + var(--gnrc-ios-safe-bottom)); z-index: 2; display: grid; width: 56px; height: 56px; padding: 0; place-items: center; border: 0; border-radius: var(--gnrc-border-radius-circular); background: var(--gnrc-color-app-list-section-action); color: #fff; box-shadow: 0 8px 16px rgb(0 0 0 / 12%), 0 0 2px rgb(0 0 0 / 4%); }
+button.root { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+button.root:focus-visible { outline: 2px solid var(--gnrc-color-app-list-section-action); outline-offset: 4px; }

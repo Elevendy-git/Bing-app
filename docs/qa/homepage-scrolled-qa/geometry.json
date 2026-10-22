@@ -1,0 +1,165 @@
+{
+  "background": "rgb(241, 244, 248)",
+  "feed": {
+    "height": 315.3671875,
+    "width": 353,
+    "x": 20,
+    "y": 238
+  },
+  "footer": {
+    "height": 52,
+    "width": 393,
+    "x": 0,
+    "y": 774.25
+  },
+  "glance": {
+    "height": 84,
+    "width": 140,
+    "x": 20,
+    "y": 138
+  },
+  "images": [
+    {
+      "complete": true,
+      "src": "http://127.0.0.1:6007/src/screens/Homepage/assets/avatar.jpeg",
+      "width": 480
+    },
+    {
+      "complete": true,
+      "src": "http://127.0.0.1:6007/src/screens/Homepage/assets/sunny.svg",
+      "width": 20
+    },
+    {
+      "complete": true,
+      "src": "http://127.0.0.1:6007/src/components/GlanceCard/assets/rewards.svg",
+      "width": 20
+    },
+    {
+      "complete": true,
+      "src": "http://127.0.0.1:6007/src/components/GlanceCard/assets/create.svg",
+      "width": 20
+    },
+    {
+      "complete": true,
+      "src": "http://127.0.0.1:6007/src/components/GlanceCard/assets/money.svg",
+      "width": 16
+    },
+    {
+      "complete": true,
+      "src": "http://127.0.0.1:6007/src/screens/Homepage/assets/feed-beach.png",
+      "width": 800
+    },
+    {
+      "complete": true,
+      "src": "http://127.0.0.1:6007/src/screens/Homepage/assets/medium.svg",
+      "width": 17
+    },
+    {
+      "complete": true,
+      "src": "http://127.0.0.1:6007/src/screens/Homepage/assets/feed-technology.png",
+      "width": 800
+    },
+    {
+      "complete": true,
+      "src": "http://127.0.0.1:6007/src/screens/Homepage/assets/medium.svg",
+      "width": 17
+    },
+    {
+      "complete": true,
+      "src": "http://127.0.0.1:6007/src/screens/Homepage/assets/feed-technology.png",
+      "width": 800
+    },
+    {
+      "complete": true,
+      "src": "http://127.0.0.1:6007/src/screens/Homepage/assets/medium.svg",
+      "width": 17
+    },
+    {
+      "complete": true,
+      "src": "http://127.0.0.1:6007/src/screens/Homepage/assets/feed-technology.png",
+      "width": 800
+    },
+    {
+      "complete": true,
+      "src": "http://127.0.0.1:6007/src/screens/Homepage/assets/medium.svg",
+      "width": 17
+    },
+    {
+      "complete": true,
+      "src": "http://127.0.0.1:6007/src/screens/Homepage/assets/feed-technology.png",
+      "width": 800
+    },
+    {
+      "complete": true,
+      "src": "http://127.0.0.1:6007/src/screens/Homepage/assets/medium.svg",
+      "width": 17
+    },
+    {
+      "complete": true,
+      "src": "http://127.0.0.1:6007/src/screens/Homepage/assets/feed-technology.png",
+      "width": 800
+    },
+    {
+      "complete": true,
+      "src": "http://127.0.0.1:6007/src/screens/Homepage/assets/medium.svg",
+      "width": 17
+    },
+    {
+      "complete": true,
+      "src": "http://127.0.0.1:6007/src/screens/Homepage/assets/feed-ad.png",
+      "width": 2048
+    },
+    {
+      "complete": true,
+      "src": "http://127.0.0.1:6007/src/screens/Homepage/assets/event-style.png",
+      "width": 2340
+    },
+    {
+      "complete": true,
+      "src": "http://127.0.0.1:6007/src/screens/Homepage/assets/event-design.png",
+      "width": 988
+    },
+    {
+      "complete": true,
+      "src": "http://127.0.0.1:6007/src/screens/Homepage/assets/event-innovation.png",
+      "width": 2519
+    },
+    {
+      "complete": true,
+      "src": "http://127.0.0.1:6007/src/screens/Homepage/assets/event-design.png",
+      "width": 988
+    },
+    {
+      "complete": true,
+      "src": "http://127.0.0.1:6007/src/screens/Homepage/assets/feed-forgiveness.png",
+      "width": 2816
+    },
+    {
+      "complete": true,
+      "src": "http://127.0.0.1:6007/src/screens/Homepage/assets/yahoo.svg",
+      "width": 17
+    },
+    {
+      "complete": true,
+      "src": "http://127.0.0.1:6007/src/components/AppFooter/assets/copilot.png",
+      "width": 96
+    }
+  ],
+  "scrollTop": 384,
+  "search": {
+    "height": 56,
+    "width": 361,
+    "x": 16,
+    "y": 62
+  },
+  "second": {
+    "height": 347.3671875,
+    "width": 353,
+    "x": 20,
+    "y": 565.3671875
+  },
+  "viewport": {
+    "height": 852,
+    "width": 393
+  }
+}

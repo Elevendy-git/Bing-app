@@ -1,0 +1,10 @@
+.root {
+  display: contents;
+}
+
+/* Also suppress hover/pressed styling, including descendants that opt into hit testing. */
+.root,
+.root * {
+  pointer-events: none !important;
+  user-select: none;
+}

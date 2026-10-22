@@ -1,0 +1,41 @@
+.root {
+  --gnrc-color-app-footer-icon-selected: var(--gnrc-color-app-list-section-action);
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  padding-bottom: calc(52px + var(--gnrc-ios-safe-bottom));
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--gnrc-color-homepage-feed-background);
+  color: var(--gnrc-color-foreground-neutral-primary);
+  font-family: var(--gnrc-font-family-functional);
+}
+.root, .root * { box-sizing: border-box; }
+.browserFooter { position: absolute; inset: auto 0 0; z-index: 3; background: var(--gnrc-color-app-footer-surface); }
+.header { flex: none; background: var(--gnrc-color-homepage-feed-background); }
+.statusBar { height: var(--gnrc-ios-status-height); }
+/* Shareout 81:19455: the 8 px gap belongs to the fixed header, not the scroller. */
+.searchRegion { padding: 0 var(--gnrc-layout-search-inset) 8px; }
+.searchRegion .search { width: 100%; }
+/* Last row can scroll fully above the floating New tab action. */
+.scrollContent { min-height: 0; flex: 1; padding-bottom: 96px; overflow: hidden auto; overscroll-behavior: none; scrollbar-width: none; }
+.scrollContent::-webkit-scrollbar, .tabStrip::-webkit-scrollbar { display: none; }
+.sectionHeader { --gnrc-list-section-min-height: 0px; --gnrc-list-section-inline-padding: var(--gnrc-layout-content-inset); width: 100%; }
+.tabStrip { display: flex; width: 100%; padding-inline: var(--gnrc-layout-content-inset); gap: 12px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; }
+.tab { --gnrc-shadow-tabs-card: none; }
+.tab[inert], .tab[inert] * { pointer-events: none; }
+.viewAllTabs { display: flex; width: 120px; height: 160px; padding: 0; flex: none; flex-direction: column; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 20px; background: transparent; color: inherit; font: 400 16px / 22px var(--gnrc-font-family-functional); }
+.viewAllTabs > span { display: grid; width: 36px; height: 36px; place-items: center; border-radius: var(--gnrc-border-radius-circular); background: var(--gnrc-color-app-search-background); }
+button.viewAllTabs { cursor: pointer; }
+button.viewAllTabs:focus-visible { outline: 2px solid var(--gnrc-color-app-list-section-action); outline-offset: -3px; }
+.cardInset { padding-inline: var(--gnrc-layout-content-inset); }
+/* Figma's card stroke is inset, so its 198 px height excludes stroke width. */
+.listCard { width: 100%; border: 0; box-shadow: inset 0 0 0 var(--gnrc-border-width-card) var(--gnrc-color-app-list-card-stroke); }
+/* C2 970:13652 centers the empty message on the entire mobile canvas. */
+.emptyContent { padding-bottom: 0; overflow: hidden; }
+.empty { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; pointer-events: none; }
+.empty > img { display: block; width: 128px; height: 128px; flex: none; object-fit: contain; }
+.emptyText { display: flex; width: 100%; padding-inline: 40px; flex-direction: column; gap: 8px; text-align: center; }
+.emptyText h3 { margin: 0; color: var(--gnrc-color-app-list-foreground-primary); font: var(--gnrc-font-weight-functional-strong) 20px / 26px var(--gnrc-font-family-functional); font-variation-settings: "opsz" 10.5; }
+.emptyText p { margin: 0; color: var(--gnrc-color-app-list-foreground-secondary); font: var(--gnrc-font-weight-functional-regular) 16px / 22px var(--gnrc-font-family-functional); font-feature-settings: "calt" 0; }

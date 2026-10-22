@@ -1,0 +1,111 @@
+{
+  "source": "MSN local mock",
+  "generatedAt": "2026-09-01T06:00:00Z",
+  "items": [
+    {
+      "id": "msn-single-001",
+      "story": "single",
+      "imageAsset": "single",
+      "imageAlt": "Two Adirondack chairs facing a quiet ocean",
+      "publisher": "Travel + Leisure",
+      "publisherLogo": {
+        "text": "T+L",
+        "background": "#111111",
+        "foreground": "#ffffff"
+      },
+      "publishedAt": "2026-09-01T05:29:00Z",
+      "elapsedTime": "31m",
+      "title": "7 Quiet Beach Towns That Are Even Better After Summer Ends"
+    },
+    {
+      "id": "msn-watch-001",
+      "story": "watch",
+      "imageAsset": "watch",
+      "imageAlt": "Sunlight streaming through a rainforest beside a river",
+      "publisher": "BBC Earth",
+      "publisherLogo": {
+        "text": "BBC",
+        "background": "#bb1919",
+        "foreground": "#ffffff"
+      },
+      "publishedAt": "2026-09-01T05:12:00Z",
+      "elapsedTime": "48m",
+      "title": "Watch: A Rare Dawn Chorus Returns to the Restored Rainforest"
+    },
+    {
+      "id": "msn-multi-001",
+      "story": "multi",
+      "imageAsset": "single",
+      "imageAlt": "Two Adirondack chairs facing a quiet ocean",
+      "publisher": "Condé Nast Traveler",
+      "publisherLogo": {
+        "text": "CNT",
+        "background": "#111111",
+        "foreground": "#ffffff"
+      },
+      "publishedAt": "2026-09-01T05:08:00Z",
+      "elapsedTime": "52m",
+      "title": "The Seaside Towns Keeping Summer Going Long After Labor Day"
+    },
+    {
+      "id": "msn-multi-002",
+      "story": "multi",
+      "imageAsset": "watch",
+      "imageAlt": "Sunlight streaming through a rainforest beside a river",
+      "publisher": "National Geographic",
+      "publisherLogo": {
+        "text": "NG",
+        "background": "#ffd900",
+        "foreground": "#111111"
+      },
+      "publishedAt": "2026-09-01T04:44:00Z",
+      "elapsedTime": "1h",
+      "title": "The Rainforest Corridor Bringing Wildlife Back to the River"
+    },
+    {
+      "id": "msn-multi-003",
+      "story": "multi",
+      "imageAsset": "multi",
+      "imageAlt": "Colorful illustration of people walking in different directions",
+      "publisher": "Fast Company",
+      "publisherLogo": {
+        "text": "FC",
+        "background": "#e21c2a",
+        "foreground": "#ffffff"
+      },
+      "publishedAt": "2026-09-01T04:02:00Z",
+      "elapsedTime": "2h",
+      "title": "Why Walking Meetings Are Finding Their Way Back Into the Workday"
+    },
+    {
+      "id": "msn-multi-004",
+      "story": "multi",
+      "imageAsset": "ad",
+      "imageAlt": "Colorful collectible characters standing on a surreal landscape",
+      "publisher": "Hypebeast",
+      "publisherLogo": {
+        "text": "H",
+        "background": "#111111",
+        "foreground": "#ffffff"
+      },
+      "publishedAt": "2026-09-01T03:11:00Z",
+      "elapsedTime": "3h",
+      "title": "How Collectible Art Toys Became This Year’s Surprise Design Obsession"
+    },
+    {
+      "id": "msn-ad-001",
+      "story": "ad",
+      "imageAsset": "ad",
+      "imageAlt": "Colorful collectible characters standing on a surreal landscape",
+      "publisher": "POP MART",
+      "publisherLogo": {
+        "text": "PM",
+        "background": "#009cde",
+        "foreground": "#ffffff"
+      },
+      "publishedAt": "2026-09-01T04:00:00Z",
+      "elapsedTime": "2h",
+      "title": "Meet the Monsters: A Colorful New Collection Has Landed"
+    }
+  ]
+}

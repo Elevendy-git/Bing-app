@@ -1,0 +1,172 @@
+.showcase {
+  width: 100%;
+  min-width: 0;
+  container: preview-configurator / inline-size;
+}
+
+.layout {
+  display: grid;
+  min-height: 252px;
+  grid-template-columns: minmax(0, 1fr) 244px;
+  grid-template-areas: "preview controls";
+  gap: 24px;
+}
+
+.configurator {
+  display: flex;
+  min-width: 0;
+  padding: 16px 8px 16px 24px;
+  border-left: 1px solid var(--gnrc-color-app-list-card-stroke);
+  flex-direction: column;
+  gap: 24px;
+  grid-area: controls;
+}
+
+.field {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+}
+
+.modeSwitch {
+  display: grid;
+  padding: var(--gnrc-spacing-component-base-050);
+  border-radius: var(--gnrc-border-radius-circular);
+  background: var(--gnrc-color-background-card-on-secondary);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.modeButton {
+  min-height: 36px;
+  padding: var(--gnrc-spacing-component-base-200)
+    var(--gnrc-spacing-component-base-300);
+  border: 0;
+  border-radius: var(--gnrc-border-radius-circular);
+  background: transparent;
+  color: var(--gnrc-color-app-list-foreground-secondary);
+  cursor: pointer;
+  font-family: var(--gnrc-font-family-functional);
+  font-size: var(--gnrc-font-size-functional-body-small);
+  font-weight: var(--gnrc-font-weight-functional-strong);
+  line-height: var(--gnrc-line-height-functional-body-small);
+}
+
+.modeButton[aria-pressed="true"] {
+  background: var(--gnrc-color-app-list-card-surface);
+  box-shadow:
+    inset 0 0 0 var(--gnrc-border-width-card)
+      var(--gnrc-color-app-list-card-stroke),
+    var(--gnrc-shadow-lowest);
+  color: var(--gnrc-color-app-list-accent);
+}
+
+.fieldLabel {
+  color: var(--gnrc-color-app-list-showcase-label);
+  font-family: var(--gnrc-font-family-functional);
+  font-size: 13px;
+  font-weight: var(--gnrc-font-weight-functional-regular);
+  line-height: 20px;
+  white-space: nowrap;
+}
+
+.selectControl {
+  position: relative;
+  display: block;
+  min-width: 0;
+}
+
+.typeSelect {
+  width: 100%;
+  min-height: 40px;
+  padding: var(--gnrc-spacing-component-base-200)
+    36px var(--gnrc-spacing-component-base-200)
+    var(--gnrc-spacing-component-base-300);
+  border: 0;
+  border-radius: 12px;
+  appearance: none;
+  background: var(--gnrc-color-app-list-card-surface);
+  box-shadow: inset 0 0 0 var(--gnrc-border-width-card)
+    var(--gnrc-color-app-list-card-stroke);
+  color: var(--gnrc-color-app-list-foreground-primary);
+  cursor: pointer;
+  font-family: var(--gnrc-font-family-functional);
+  font-size: var(--gnrc-font-size-functional-body-small);
+  font-weight: var(--gnrc-font-weight-functional-strong);
+  line-height: var(--gnrc-line-height-functional-body-small);
+}
+
+.typeSelect:hover {
+  box-shadow: inset 0 0 0 var(--gnrc-border-width-card)
+    var(--gnrc-color-app-list-card-stroke);
+}
+
+.typeSelect:focus-visible,
+.modeButton:focus-visible {
+  outline: 2px solid var(--gnrc-color-app-list-accent);
+  outline-offset: 2px;
+}
+
+.selectChevron {
+  position: absolute;
+  top: 50%;
+  right: var(--gnrc-spacing-component-base-300);
+  width: 20px;
+  height: 20px;
+  color: var(--gnrc-color-app-list-foreground-secondary);
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.selectChevron path {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.5;
+}
+
+
+.previewArea {
+  display: flex;
+  min-width: 0;
+  padding-block: 16px;
+  overflow: auto;
+  grid-area: preview;
+}
+
+.nativePreview {
+  margin: auto;
+  flex: none;
+}
+
+@container preview-configurator (max-width: 679px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "controls" "preview";
+    gap: 16px;
+  }
+
+  .configurator {
+    display: grid;
+    padding: 0 0 20px;
+    border-left: 0;
+    border-bottom: 1px solid var(--gnrc-color-app-list-card-stroke);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+  }
+
+  .previewArea { min-height: 160px; }
+}
+
+@container preview-configurator (max-width: 439px) {
+  .configurator {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .field {
+    grid-template-columns: 64px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+  }
+}

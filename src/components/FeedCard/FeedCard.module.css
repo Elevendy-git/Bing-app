@@ -5,6 +5,10 @@
 }
 
 .root {
+  --gnrc-feed-card-media-aspect-ratio: 16 / 9;
+  --gnrc-feed-card-publisher-size: 20px;
+  --gnrc-feed-card-attribution-inset: 0px;
+  --gnrc-feed-card-publisher-radius: var(--gnrc-border-radius-circular);
   display: flex;
   width: 342px;
   margin: 0;
@@ -28,7 +32,7 @@
   justify-content: center;
   overflow: hidden;
   border-radius: var(--gnrc-border-radius-card-nested);
-  aspect-ratio: 16 / 9;
+  aspect-ratio: var(--gnrc-feed-card-media-aspect-ratio);
 }
 
 .image {
@@ -80,6 +84,7 @@
 .metaGroup {
   display: flex;
   min-width: 0;
+  padding-left: var(--gnrc-feed-card-attribution-inset);
   height: 28px;
   align-items: center;
   gap: var(--gnrc-spacing-component-base-100);
@@ -87,10 +92,15 @@
 
 .publisherMark {
   display: block;
-  width: 20px;
-  height: 20px;
-  flex: 0 0 20px;
+  width: var(--gnrc-feed-card-publisher-size);
+  height: var(--gnrc-feed-card-publisher-size);
+  flex: 0 0 var(--gnrc-feed-card-publisher-size);
   color: var(--gnrc-color-feed-card-foreground-primary);
+}
+
+.publisherLogo {
+  border-radius: var(--gnrc-feed-card-publisher-radius);
+  object-fit: cover;
 }
 
 .yahooMark {

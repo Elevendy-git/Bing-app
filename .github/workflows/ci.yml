@@ -1,4 +1,4 @@
-name: Component checks
+name: Workbench checks
 
 on:
   pull_request:
@@ -29,8 +29,8 @@ jobs:
       - name: Check types and design tokens
         run: npm run typecheck
 
-      - name: Run component tests
+      - name: Run workbench and component tests
         run: npm test
 
-      - name: Build Storybook
-        run: npm run build-storybook
+      - name: Build workbench
+        run: npm run build

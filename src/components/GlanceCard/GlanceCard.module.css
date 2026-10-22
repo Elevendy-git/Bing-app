@@ -1,0 +1,262 @@
+.card {
+  appearance: none;
+  position: relative;
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: var(--gnrc-spacing-component-base-100);
+  width: 140px;
+  height: 84px;
+  min-width: 0;
+  padding: 10px var(--gnrc-spacing-component-base-300) var(--gnrc-spacing-component-base-200);
+  overflow: clip;
+  border: 0;
+  border-radius: var(--gnrc-border-radius-list-card);
+  background: var(--gnrc-color-glance-card-surface);
+  color: var(--gnrc-color-glance-card-foreground);
+  font-family: var(--gnrc-font-family-functional);
+  font-size: var(--gnrc-font-size-functional-body-small);
+  font-weight: 450;
+  line-height: var(--gnrc-line-height-functional-body-small);
+  font-variation-settings: "opsz" 10.5;
+  font-feature-settings: "calt" 0;
+  text-align: start;
+  cursor: pointer;
+  scroll-snap-align: start;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Figma strokes sit inside the frame without adding to padding or changing text widths. */
+.card::after {
+  position: absolute;
+  inset: 0;
+  border: var(--gnrc-border-width-card) solid var(--gnrc-color-glance-card-stroke);
+  border-radius: inherit;
+  pointer-events: none;
+  content: "";
+}
+
+.card:focus-visible {
+  outline: 2px solid var(--gnrc-color-app-list-accent);
+  outline-offset: -3px;
+}
+
+.card:active:not(:disabled) {
+  filter: brightness(0.97);
+}
+
+.card:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.header {
+  display: flex;
+  flex: 0 0 20px;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-width: 0;
+}
+
+.heading {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.content {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--gnrc-spacing-component-base-200);
+  min-height: 0;
+  padding-right: var(--gnrc-spacing-component-base-100);
+}
+
+.value,
+.description {
+  flex: 1;
+  min-width: 0;
+}
+
+.value {
+  overflow: hidden;
+  font-size: 20px;
+  font-weight: var(--gnrc-font-weight-functional-strong);
+  line-height: var(--gnrc-line-height-functional-title-medium);
+  font-variation-settings: "opsz" 36;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.rewards .value {
+  letter-spacing: -0.2px;
+}
+
+.money .value {
+  letter-spacing: 0;
+}
+
+.description {
+  display: -webkit-box;
+  overflow: hidden;
+  font-weight: 550;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.icon {
+  display: flex;
+  flex: 0 0 20px;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+}
+
+.icon img,
+.icon svg {
+  display: block;
+  flex: none;
+}
+
+.settings {
+  padding-bottom: 10px;
+}
+
+.sports {
+  width: 160px;
+}
+
+.sports::after {
+  border-color: var(--gnrc-color-glance-card-sports-stroke);
+}
+
+.sports[data-sports-state="cold-start"] {
+  width: 141px;
+}
+
+.sports[data-sports-state="cold-start"] .description {
+  white-space: pre-line;
+}
+
+.badge {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--gnrc-spacing-component-base-100);
+  padding: 1px var(--gnrc-spacing-component-base-150);
+  border-radius: var(--gnrc-border-radius-circular);
+  background: var(--gnrc-color-glance-card-next-background);
+  color: var(--gnrc-color-glance-card-next-foreground);
+  font-size: var(--gnrc-font-size-functional-caption);
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+.sports[data-sports-state="live"] .badge {
+  background: var(--gnrc-color-glance-card-live-background);
+  color: var(--gnrc-color-glance-card-live-foreground);
+}
+
+.sports[data-sports-state="final"] .badge {
+  background: var(--gnrc-color-glance-card-final-background);
+  color: var(--gnrc-color-glance-card-foreground);
+}
+
+.liveDot {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  background: currentColor;
+  mask: url("./assets/live-dot.svg") center / contain no-repeat;
+}
+
+.game {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 0;
+}
+
+.schedule {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  color: var(--gnrc-color-glance-card-schedule);
+  text-align: center;
+}
+
+.schedule span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.scoreContent {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.score {
+  font-size: var(--gnrc-font-size-functional-body-large);
+  font-weight: var(--gnrc-font-weight-functional-strong);
+  line-height: 22px;
+  white-space: nowrap;
+}
+
+.clock {
+  color: var(--gnrc-color-glance-card-clock);
+  font-size: var(--gnrc-font-size-functional-caption);
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+.teamLogo {
+  position: relative;
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  overflow: hidden;
+  border-radius: var(--gnrc-border-radius-circular);
+}
+
+.teamLogo::after {
+  position: absolute;
+  inset: 0;
+  border: var(--gnrc-border-width-card) solid var(--gnrc-color-app-list-favicon-stroke);
+  border-radius: inherit;
+  content: "";
+}
+
+.teamLogo img {
+  position: absolute;
+  inset: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: inherit;
+  object-fit: contain;
+}
+
+.group {
+  display: flex;
+  gap: var(--gnrc-spacing-component-base-200);
+  width: max-content;
+  /* Preserve existing scroll insets and card alignment within the 84 px layout. */
+  box-sizing: content-box;
+  padding: 1px 0 3px;
+  margin: -1px 0 -3px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+}
+
+.group::-webkit-scrollbar {
+  display: none;
+}

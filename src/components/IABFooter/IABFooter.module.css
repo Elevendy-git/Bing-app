@@ -1,0 +1,8 @@
+.root {
+  --gnrc-color-app-footer-icon-selected: var(--gnrc-color-app-list-section-action);
+  box-sizing: border-box;
+  width: 100%;
+  flex: none;
+  background: var(--gnrc-color-app-footer-surface);
+  box-shadow: 0 -.5px var(--gnrc-color-app-footer-divider);
+}

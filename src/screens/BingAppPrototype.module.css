@@ -1,0 +1,7 @@
+.screen { position: absolute; inset: 0; isolation: isolate; }
+.screen[hidden] { display: none; }
+.tabsScreen, .detailScreen { z-index: 1; }
+.searchScreen { z-index: 2; }
+.resultScreen { z-index: 1; }
+/* Keep the real result field measurable and preserve its iframe while editing. */
+.concealedScreen { visibility: hidden; pointer-events: none; }

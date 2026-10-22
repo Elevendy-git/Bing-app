@@ -1,0 +1,34 @@
+.comparison {
+  width: 100%;
+  container-type: inline-size;
+}
+
+.states {
+  display: grid;
+  width: max-content;
+  margin-inline: auto;
+  grid-template-columns: repeat(4, 160px);
+  gap: 24px;
+}
+
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.label {
+  color: var(--gnrc-color-foreground-neutral-secondary);
+  font-size: 13px;
+  font-weight: var(--gnrc-font-weight-functional-regular);
+  line-height: 20px;
+}
+
+@container (max-width: 711px) {
+  .states { grid-template-columns: repeat(2, 160px); }
+}
+
+@container (max-width: 343px) {
+  .states { grid-template-columns: 160px; }
+}

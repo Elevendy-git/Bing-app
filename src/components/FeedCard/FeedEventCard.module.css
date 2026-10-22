@@ -1,0 +1,19 @@
+.root { width: 160px; height: 276px; flex: 0 0 160px; }
+.image { display: block; width: 136px; height: 136px; border-radius: var(--gnrc-border-radius-card-nested); object-fit: cover; }
+.body { display: flex; width: 100%; padding: 0 2px 4px; flex-direction: column; gap: 6px; }
+.title {
+  display: -webkit-box;
+  height: 44px;
+  margin: 0;
+  overflow: hidden;
+  font-family: var(--gnrc-font-family-functional);
+  font-size: 16px;
+  font-weight: var(--gnrc-font-weight-functional-strong);
+  line-height: 22px;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.details { display: flex; flex-direction: column; gap: 6px; }
+.details p { display: flex; min-width: 0; margin: 0; align-items: center; gap: 4px; font-size: 14px; font-weight: 550; line-height: 20px; }
+.details svg { width: 16px; height: 16px; flex: 0 0 16px; }
+.details span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

@@ -1,0 +1,135 @@
+[
+  {
+    "assets": [
+      {
+        "height": 20,
+        "kind": "IMG",
+        "loaded": true,
+        "naturalHeight": 20,
+        "naturalWidth": 20,
+        "source": "http://127.0.0.1:6007/src/components/GlanceCard/assets/rewards.svg",
+        "width": 20,
+        "x": 104,
+        "y": 45
+      }
+    ],
+    "background": "rgb(255, 255, 255)",
+    "foreground": "rgb(39, 35, 32)",
+    "height": 84,
+    "variant": "rewards",
+    "width": 140
+  },
+  {
+    "assets": [
+      {
+        "height": 24,
+        "kind": "IMG",
+        "loaded": true,
+        "naturalHeight": 2564,
+        "naturalWidth": 3840,
+        "source": "http://127.0.0.1:6007/src/components/GlanceCard/assets/team-background.png",
+        "width": 24,
+        "x": 12,
+        "y": 43
+      },
+      {
+        "height": 24,
+        "kind": "IMG",
+        "loaded": true,
+        "naturalHeight": 624,
+        "naturalWidth": 1280,
+        "source": "http://127.0.0.1:6007/src/components/GlanceCard/assets/patriots.png",
+        "width": 24,
+        "x": 12,
+        "y": 43
+      },
+      {
+        "height": 24,
+        "kind": "IMG",
+        "loaded": true,
+        "naturalHeight": 2564,
+        "naturalWidth": 3840,
+        "source": "http://127.0.0.1:6007/src/components/GlanceCard/assets/team-background.png",
+        "width": 24,
+        "x": 124,
+        "y": 43
+      },
+      {
+        "height": 24,
+        "kind": "IMG",
+        "loaded": true,
+        "naturalHeight": 244,
+        "naturalWidth": 408,
+        "source": "http://127.0.0.1:6007/src/components/GlanceCard/assets/jets.png",
+        "width": 24,
+        "x": 124,
+        "y": 43
+      }
+    ],
+    "background": "rgb(255, 255, 255)",
+    "foreground": "rgb(39, 35, 32)",
+    "height": 84,
+    "variant": "sports",
+    "width": 160
+  },
+  {
+    "assets": [
+      {
+        "height": 20,
+        "kind": "IMG",
+        "loaded": true,
+        "naturalHeight": 20,
+        "naturalWidth": 20,
+        "source": "http://127.0.0.1:6007/src/components/GlanceCard/assets/create.svg",
+        "width": 20,
+        "x": 104,
+        "y": 45
+      }
+    ],
+    "background": "rgb(255, 255, 255)",
+    "foreground": "rgb(39, 35, 32)",
+    "height": 84,
+    "variant": "create",
+    "width": 140
+  },
+  {
+    "assets": [
+      {
+        "height": 15.6015625,
+        "kind": "IMG",
+        "loaded": true,
+        "naturalHeight": 16,
+        "naturalWidth": 16,
+        "source": "http://127.0.0.1:6007/src/components/GlanceCard/assets/money.svg",
+        "width": 15.625,
+        "x": 106.1875,
+        "y": 47.1953125
+      }
+    ],
+    "background": "rgb(255, 255, 255)",
+    "foreground": "rgb(39, 35, 32)",
+    "height": 84,
+    "variant": "money",
+    "width": 140
+  },
+  {
+    "assets": [
+      {
+        "height": 20,
+        "kind": "svg",
+        "loaded": true,
+        "naturalHeight": 0,
+        "naturalWidth": 0,
+        "source": null,
+        "width": 20,
+        "x": 104,
+        "y": 44
+      }
+    ],
+    "background": "rgb(255, 255, 255)",
+    "foreground": "rgb(39, 35, 32)",
+    "height": 84,
+    "variant": "settings",
+    "width": 140
+  }
+]

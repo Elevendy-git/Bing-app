@@ -1,0 +1,45 @@
+/* OS Native uses Apple's palette independently of Bing product colors. */
+@font-face {
+  font-family: "Bing iOS SF Compact";
+  font-style: normal;
+  font-weight: 100 1000;
+  font-display: swap;
+  src: url("../components/IOSKeyboard/assets/sf-compact-latin.woff2") format("woff2");
+}
+
+:root {
+  --gnrc-ios-status-height: 62px;
+  --gnrc-ios-safe-bottom: 34px;
+  --gnrc-ios-home-width: 144px;
+  --gnrc-ios-home-height: 5px;
+  --gnrc-ios-home-bottom: 8px;
+  --gnrc-ios-keyboard-height: 332px;
+  --gnrc-font-family-ios-compact: "Bing iOS SF Compact", var(--gnrc-font-family-ios);
+}
+
+:root, [data-theme="light"], [data-ios-appearance="light"] {
+  --gnrc-ios-foreground: #000;
+  --gnrc-ios-background: #fff;
+  /* Opaque web fallback for the kit's layered keyboard material. */
+  --gnrc-ios-keyboard-surface: #bfc2c6;
+  --gnrc-ios-keyboard-key: rgb(255 255 255 / 80%);
+  --gnrc-ios-keyboard-suggestion: #1a1a1a;
+  --gnrc-ios-keyboard-separator: rgb(204 204 204 / 10%);
+  --gnrc-ios-keyboard-inset: rgb(0 0 0 / 5%);
+  --gnrc-ios-keyboard-prominent: #0088ff;
+  --gnrc-ios-light-artwork: block;
+  --gnrc-ios-dark-artwork: none;
+}
+
+[data-theme="dark"], [data-ios-appearance="dark"] {
+  --gnrc-ios-foreground: #fff;
+  --gnrc-ios-background: #000;
+  --gnrc-ios-keyboard-surface: #262626;
+  --gnrc-ios-keyboard-key: rgb(237 237 237 / 17%);
+  --gnrc-ios-keyboard-suggestion: #f5f5f5;
+  --gnrc-ios-keyboard-separator: rgb(51 51 51 / 10%);
+  --gnrc-ios-keyboard-inset: rgb(0 0 0 / 10%);
+  --gnrc-ios-keyboard-prominent: #0091ff;
+  --gnrc-ios-light-artwork: none;
+  --gnrc-ios-dark-artwork: block;
+}

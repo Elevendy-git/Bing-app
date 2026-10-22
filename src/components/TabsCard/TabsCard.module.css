@@ -1,0 +1,150 @@
+.root,
+.root * {
+  box-sizing: border-box;
+}
+
+.root {
+  position: relative;
+  width: 140px;
+  height: 160px;
+  flex: none;
+  border-radius: var(--gnrc-border-radius-list-card);
+  background: var(--gnrc-color-tabs-card-surface);
+  box-shadow: var(--gnrc-shadow-tabs-card);
+  color: var(--gnrc-color-tabs-card-foreground);
+}
+
+/* Figma strokes sit inside the card and never reflow the artwork or header. */
+.root::after {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  border: var(--gnrc-border-width-card) solid var(--gnrc-color-tabs-card-stroke);
+  border-radius: inherit;
+  pointer-events: none;
+  content: "";
+}
+
+.root[data-state="selected"]::after {
+  border: 3px solid var(--gnrc-color-tabs-card-selected);
+}
+
+.select,
+.close {
+  margin: 0;
+  border: 0;
+  appearance: none;
+  color: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  background: transparent;
+  text-align: left;
+}
+
+.select:focus-visible {
+  outline: 2px solid var(--gnrc-color-tabs-card-selected);
+  outline-offset: 3px;
+}
+
+.preview {
+  position: absolute;
+  top: 34px;
+  left: 0;
+  width: 100%;
+  height: calc(100% - 34px);
+  object-fit: cover;
+  object-position: center top;
+  pointer-events: none;
+}
+
+/* Preserve the source image-fill transform, independently of the selection stroke. */
+.designPreview {
+  top: -53.08%;
+  left: -6.87%;
+  width: 113.75%;
+  max-width: none;
+  height: 246.17%;
+  object-fit: fill;
+}
+
+.header {
+  position: absolute;
+  inset: 0 0 auto;
+  display: flex;
+  height: 34px;
+  padding-left: var(--gnrc-spacing-component-base-300);
+  align-items: center;
+  gap: var(--gnrc-spacing-component-base-200);
+  background: var(--gnrc-color-tabs-card-surface);
+}
+
+.identity {
+  display: flex;
+  height: 100%;
+  min-width: 0;
+  padding-top: var(--gnrc-spacing-component-base-050);
+  flex: 1;
+  align-items: center;
+  gap: var(--gnrc-spacing-component-base-100);
+}
+
+.favicon {
+  display: block;
+  width: 16px;
+  height: 16px;
+  flex: none;
+  border-radius: var(--gnrc-border-radius-control-small);
+  background: var(--gnrc-color-tabs-card-favicon-surface);
+  object-fit: cover;
+}
+
+.title {
+  min-width: 0;
+  overflow: hidden;
+  font-family: var(--gnrc-font-family-functional);
+  font-size: var(--gnrc-font-size-functional-caption);
+  font-weight: var(--gnrc-font-weight-functional-medium);
+  line-height: var(--gnrc-line-height-functional-caption-compact);
+  font-variation-settings: "opsz" 10.5;
+  font-feature-settings: "calt" 0;
+  letter-spacing: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.closeSpace,
+.close {
+  width: 40px;
+  height: 34px;
+  flex: none;
+}
+
+.close {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  right: 0;
+  display: grid;
+  padding: var(--gnrc-spacing-component-base-050) 0 0;
+  place-items: center;
+  border-radius: var(--gnrc-border-radius-control-small);
+  background: transparent;
+  color: var(--gnrc-color-tabs-card-icon);
+}
+
+.close:focus-visible {
+  outline: 2px solid var(--gnrc-color-tabs-card-selected);
+  outline-offset: -4px;
+}
+
+.close:active { opacity: 0.6; }

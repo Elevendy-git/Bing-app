@@ -1,0 +1,316 @@
+{
+  "entry": [
+    {
+      "height": "55.77px",
+      "keyboard": "translateY(9.54556px)",
+      "layers": [
+        {
+          "opacity": "0",
+          "variant": "serp"
+        },
+        {
+          "opacity": "1",
+          "variant": "search"
+        }
+      ],
+      "margin": "1.09256px",
+      "y": "translateY(-1.94112e-07px)"
+    },
+    {
+      "height": "55.824px",
+      "keyboard": "translateY(7.30324px)",
+      "layers": [
+        {
+          "opacity": "0",
+          "variant": "serp"
+        },
+        {
+          "opacity": "1",
+          "variant": "search"
+        }
+      ],
+      "margin": "0.835913px",
+      "y": "translateY(-1.48514e-07px)"
+    },
+    {
+      "height": "55.8825px",
+      "keyboard": "translateY(4.87616px)",
+      "layers": [
+        {
+          "opacity": "0",
+          "variant": "serp"
+        },
+        {
+          "opacity": "1",
+          "variant": "search"
+        }
+      ],
+      "margin": "0.558115px",
+      "y": "translateY(-9.91581e-08px)"
+    },
+    {
+      "height": "55.9004px",
+      "keyboard": "translateY(4.13272px)",
+      "layers": [
+        {
+          "opacity": "0",
+          "variant": "serp"
+        },
+        {
+          "opacity": "1",
+          "variant": "search"
+        }
+      ],
+      "margin": "0.473022px",
+      "y": "translateY(-8.404e-08px)"
+    },
+    {
+      "height": "55.9276px",
+      "keyboard": "translateY(3.00388px)",
+      "layers": [
+        {
+          "opacity": "0",
+          "variant": "serp"
+        },
+        {
+          "opacity": "1",
+          "variant": "search"
+        }
+      ],
+      "margin": "0.343817px",
+      "y": "translateY(-6.10847e-08px)"
+    },
+    {
+      "height": "55.9402px",
+      "keyboard": "translateY(2.48177px)",
+      "layers": [
+        {
+          "opacity": "0",
+          "variant": "serp"
+        },
+        {
+          "opacity": "1",
+          "variant": "search"
+        }
+      ],
+      "margin": "0.284058px",
+      "y": "translateY(-5.04676e-08px)"
+    },
+    {
+      "height": "55.9602px",
+      "keyboard": "translateY(1.6522px)",
+      "layers": [
+        {
+          "opacity": "0",
+          "variant": "serp"
+        },
+        {
+          "opacity": "1",
+          "variant": "search"
+        }
+      ],
+      "margin": "0.189107px",
+      "y": "translateY(-3.35979e-08px)"
+    },
+    {
+      "height": "55.968px",
+      "keyboard": "translateY(1.32968px)",
+      "layers": [
+        {
+          "opacity": "0",
+          "variant": "serp"
+        },
+        {
+          "opacity": "1",
+          "variant": "search"
+        }
+      ],
+      "margin": "0.152193px",
+      "y": "translateY(-2.70395e-08px)"
+    },
+    {
+      "height": "55.9806px",
+      "keyboard": "translateY(0.805353px)",
+      "layers": [
+        {
+          "opacity": "0",
+          "variant": "serp"
+        },
+        {
+          "opacity": "1",
+          "variant": "search"
+        }
+      ],
+      "margin": "0.0921789px",
+      "y": "translateY(-1.63771e-08px)"
+    },
+    {
+      "height": "55.9853px",
+      "keyboard": "translateY(0.611793px)",
+      "layers": [
+        {
+          "opacity": "0",
+          "variant": "serp"
+        },
+        {
+          "opacity": "1",
+          "variant": "search"
+        }
+      ],
+      "margin": "0.0700245px",
+      "y": "translateY(-1.2441e-08px)"
+    }
+  ],
+  "exit": [
+    {
+      "height": "48.244px",
+      "keyboard": "translateY(321.872px)",
+      "layers": [
+        {
+          "opacity": "1",
+          "variant": "serp"
+        },
+        {
+          "opacity": "0",
+          "variant": "search"
+        }
+      ],
+      "margin": "36.8408px"
+    },
+    {
+      "height": "48.1882px",
+      "keyboard": "translateY(324.189px)",
+      "layers": [
+        {
+          "opacity": "1",
+          "variant": "serp"
+        },
+        {
+          "opacity": "0",
+          "variant": "search"
+        }
+      ],
+      "margin": "37.1059px"
+    },
+    {
+      "height": "48.1447px",
+      "keyboard": "translateY(325.994px)",
+      "layers": [
+        {
+          "opacity": "1",
+          "variant": "serp"
+        },
+        {
+          "opacity": "0",
+          "variant": "search"
+        }
+      ],
+      "margin": "37.3125px"
+    },
+    {
+      "height": "48.1071px",
+      "keyboard": "translateY(327.556px)",
+      "layers": [
+        {
+          "opacity": "1",
+          "variant": "serp"
+        },
+        {
+          "opacity": "0",
+          "variant": "search"
+        }
+      ],
+      "margin": "37.4914px"
+    },
+    {
+      "height": "48.0924px",
+      "keyboard": "translateY(328.167px)",
+      "layers": [
+        {
+          "opacity": "1",
+          "variant": "serp"
+        },
+        {
+          "opacity": "0",
+          "variant": "search"
+        }
+      ],
+      "margin": "37.5613px"
+    },
+    {
+      "height": "48.0656px",
+      "keyboard": "translateY(329.277px)",
+      "layers": [
+        {
+          "opacity": "1",
+          "variant": "serp"
+        },
+        {
+          "opacity": "0",
+          "variant": "search"
+        }
+      ],
+      "margin": "37.6884px"
+    },
+    {
+      "height": "48.0549px",
+      "keyboard": "translateY(329.723px)",
+      "layers": [
+        {
+          "opacity": "1",
+          "variant": "serp"
+        },
+        {
+          "opacity": "0",
+          "variant": "search"
+        }
+      ],
+      "margin": "37.7394px"
+    },
+    {
+      "height": "48.0358px",
+      "keyboard": "translateY(330.513px)",
+      "layers": [
+        {
+          "opacity": "1",
+          "variant": "serp"
+        },
+        {
+          "opacity": "0",
+          "variant": "search"
+        }
+      ],
+      "margin": "37.8299px"
+    },
+    {
+      "height": "48.0276px",
+      "keyboard": "translateY(330.854px)",
+      "layers": [
+        {
+          "opacity": "1",
+          "variant": "serp"
+        },
+        {
+          "opacity": "0",
+          "variant": "search"
+        }
+      ],
+      "margin": "37.8688px"
+    },
+    {
+      "height": "48.0163px",
+      "keyboard": "translateY(331.322px)",
+      "layers": [
+        {
+          "opacity": "1",
+          "variant": "serp"
+        },
+        {
+          "opacity": "0",
+          "variant": "search"
+        }
+      ],
+      "margin": "37.9224px"
+    }
+  ]
+}

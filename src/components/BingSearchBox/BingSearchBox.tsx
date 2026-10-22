@@ -26,25 +26,37 @@ function VoiceSearchIcon() {
 }
 
 export interface BingSearchBoxProps {
+  /** Compact composer used once the Homepage search reaches the top. */
+  compact?: boolean;
+  /** Let a screen size the search box without changing the library example. */
+  className?: string;
   /** Text displayed in the empty search field. */
   placeholder?: string;
   /** Accessible name announced for the search field. */
   ariaLabel?: string;
+  /** Preserve the original text when rendering the inert navigation artwork. */
+  defaultValue?: string;
+  /** Homepage entry into the supplied Search flow. */
+  onOpenSearch?: () => void;
 }
 
 /**
  * Bing App homepage search box, matched to the default/rest states in Figma
  * 775:47824 (Light) and 775:44984 (Dark).
- * No hover, pressed, animation, or alternate visual states are implemented.
+ * The compact 56 px state comes from Homepage 6233:27222.
  */
 export function BingSearchBox({
   placeholder = "Ask anything",
   ariaLabel = "Search Bing",
+  className,
+  compact = false,
+  defaultValue,
+  onOpenSearch,
 }: BingSearchBoxProps) {
   const preventSubmit = (event: FormEvent<HTMLFormElement>) => event.preventDefault();
 
   return (
-    <form className={styles.root} role="search" onSubmit={preventSubmit}>
+    <form className={[styles.root, compact && styles.compact, className].filter(Boolean).join(" ")} role="search" data-compact={compact} onSubmit={preventSubmit}>
       <div className={styles.inputRow}>
         <span className={styles.searchSlot} aria-hidden="true">
           <Search24Regular />
@@ -56,6 +68,8 @@ export function BingSearchBox({
             type="search"
             aria-label={ariaLabel}
             placeholder={placeholder}
+            defaultValue={defaultValue}
+            onFocus={onOpenSearch}
           />
         </span>
 

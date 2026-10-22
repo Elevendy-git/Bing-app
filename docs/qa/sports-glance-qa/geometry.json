@@ -1,0 +1,157 @@
+{
+  "cards": [
+    {
+      "content": "Sports\nFollow your\nfavorite team",
+      "height": 84,
+      "state": "cold-start",
+      "width": 141,
+      "x": 124,
+      "y": 184
+    },
+    {
+      "content": "NEP vs NYJ\nNext\nSat, 16 Jul\n1:00 PM",
+      "height": 84,
+      "state": "upcoming",
+      "width": 160,
+      "x": 308,
+      "y": 184
+    },
+    {
+      "content": "NEP vs NYJ\nLive\n28 - 24\nQ4 03:24",
+      "height": 84,
+      "state": "live",
+      "width": 160,
+      "x": 492,
+      "y": 184
+    },
+    {
+      "content": "NEP vs NYJ\nFinal\n28 - 24",
+      "height": 84,
+      "state": "final",
+      "width": 160,
+      "x": 676,
+      "y": 184
+    }
+  ],
+  "wide": {
+    "cards": [
+      {
+        "bottom": 942,
+        "height": 84,
+        "left": 414.5,
+        "right": 555.5,
+        "state": "cold-start",
+        "top": 858,
+        "width": 141,
+        "x": 414.5,
+        "y": 858
+      },
+      {
+        "bottom": 942,
+        "height": 84,
+        "left": 598.5,
+        "right": 758.5,
+        "state": "upcoming",
+        "top": 858,
+        "width": 160,
+        "x": 598.5,
+        "y": 858
+      },
+      {
+        "bottom": 942,
+        "height": 84,
+        "left": 782.5,
+        "right": 942.5,
+        "state": "live",
+        "top": 858,
+        "width": 160,
+        "x": 782.5,
+        "y": 858
+      },
+      {
+        "bottom": 942,
+        "height": 84,
+        "left": 966.5,
+        "right": 1126.5,
+        "state": "final",
+        "top": 858,
+        "width": 160,
+        "x": 966.5,
+        "y": 858
+      }
+    ],
+    "columns": "160px 160px 160px 160px",
+    "viewport": 1600
+  },
+  "medium": {
+    "cards": [
+      {
+        "height": 84,
+        "state": "cold-start",
+        "width": 141,
+        "x": 200.5,
+        "y": 555
+      },
+      {
+        "height": 84,
+        "state": "upcoming",
+        "width": 160,
+        "x": 384.5,
+        "y": 555
+      },
+      {
+        "height": 84,
+        "state": "live",
+        "width": 160,
+        "x": 200.5,
+        "y": 695
+      },
+      {
+        "height": 84,
+        "state": "final",
+        "width": 160,
+        "x": 384.5,
+        "y": 695
+      }
+    ],
+    "columns": "160px 160px",
+    "pageOverflow": false,
+    "viewport": 760
+  },
+  "narrow": {
+    "cards": [
+      {
+        "height": 84,
+        "state": "cold-start",
+        "width": 141,
+        "x": 109,
+        "y": 345
+      },
+      {
+        "height": 84,
+        "state": "upcoming",
+        "width": 160,
+        "x": 109,
+        "y": 485
+      },
+      {
+        "height": 84,
+        "state": "live",
+        "width": 160,
+        "x": 109,
+        "y": 625
+      },
+      {
+        "height": 84,
+        "state": "final",
+        "width": 160,
+        "x": 109,
+        "y": 765
+      }
+    ],
+    "columns": "160px",
+    "pageOverflow": false,
+    "previewOverflow": false,
+    "viewport": 393
+  }
+}

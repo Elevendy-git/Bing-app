@@ -1,0 +1,54 @@
+/* Figma 3326:52693: 40 × 24 track, 2 px inset, 20 / 24 px thumb. */
+.root {
+  display: inline-flex;
+  box-sizing: border-box;
+  width: 40px;
+  height: 24px;
+  padding: var(--gnrc-spacing-component-base-050);
+  flex: none;
+  align-items: center;
+  overflow: hidden;
+  border-radius: var(--gnrc-border-radius-circular);
+  background: var(--gnrc-color-switcher-track);
+  vertical-align: middle;
+}
+
+.root[data-selected="true"] {
+  justify-content: flex-end;
+  background: var(--gnrc-color-switcher-track-selected);
+}
+
+.thumb {
+  display: block;
+  width: 20px;
+  height: 20px;
+  flex: none;
+  border-radius: var(--gnrc-border-radius-circular);
+  background: var(--gnrc-color-switcher-thumb);
+  box-shadow: var(--gnrc-shadow-switcher-thumb);
+}
+
+.root[data-selected="true"] .thumb,
+.root[data-state="pressed"] .thumb { background: var(--gnrc-color-switcher-thumb-active); }
+.root[data-state="pressed"] .thumb { width: 24px; }
+.root[data-state="disabled"] { background: var(--gnrc-color-switcher-track); }
+.root[data-state="disabled"] .thumb {
+  background: var(--gnrc-color-switcher-thumb-disabled);
+  box-shadow: none;
+}
+
+.root.interactive {
+  margin: 0;
+  border: 0;
+  appearance: none;
+  justify-content: flex-start;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.interactive:active:not(:disabled) .thumb { background: var(--gnrc-color-switcher-thumb-active); }
+.interactive:disabled { cursor: default; }
+.interactive:focus-visible {
+  outline: 2px solid var(--gnrc-color-app-list-accent);
+  outline-offset: 3px;
+}

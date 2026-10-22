@@ -1,6 +1,33 @@
 /* Bing App consumer values from Figma 775:47824 (Light) and 775:44984 (Dark). */
+[data-product="consumer"] {
+  --gnrc-color-avatar-surface: var(--gnrc-color-surface-neutral-nearer);
+  --gnrc-color-avatar-initials: var(--gnrc-color-foreground-neutral-primary);
+  --gnrc-color-tabs-card-surface: var(--gnrc-color-surface-neutral-nearer);
+  --gnrc-color-tabs-card-foreground: var(--gnrc-color-foreground-neutral-primary);
+  --gnrc-color-tabs-card-stroke: var(--gnrc-color-stroke-divider-on-outline);
+  --gnrc-color-glance-card-surface: var(--gnrc-color-surface-neutral-nearer);
+  --gnrc-color-glance-card-foreground: var(--gnrc-color-foreground-neutral-primary);
+  --gnrc-color-glance-card-stroke: var(--gnrc-color-stroke-divider-on-outline);
+}
+
+/* InPrivate is a screen mode with a fixed palette, independent of workbench appearance. */
+[data-product="consumer"][data-theme="dark"][data-private-mode="true"] {
+  --gnrc-color-homepage-feed-background: var(--gnrc-color-search-private-background);
+  --gnrc-color-app-search-background: var(--gnrc-color-surface-neutral-nearer);
+  --gnrc-color-app-search-input-text: #ffffff;
+  --gnrc-color-app-search-dismiss: var(--gnrc-color-app-list-foreground-secondary);
+}
+
 [data-product="consumer"][data-theme="light"],
 [data-product="consumer"]:not([data-theme]) {
+  --gnrc-color-avatar-person: #0c59f2;
+  --gnrc-color-avatar-initials-large: rgb(0 0 0 / 85.882353%);
+  --gnrc-color-homepage-feed-background: #f1f4f8;
+  --gnrc-color-homepage-wallpaper-overlay: rgb(0 0 0 / 0%);
+  --gnrc-color-app-search-background: rgb(0 0 0 / 5%);
+  --gnrc-color-app-search-input-text: #000000;
+  --gnrc-color-app-search-dismiss: #4c4642;
+  --gnrc-color-app-search-progress: #0c59f2;
   --gnrc-color-surface-neutral-farther: #343434;
   --gnrc-color-surface-neutral-nearer: #ffffff;
   --gnrc-color-foreground-neutral-primary: #272320;
@@ -18,9 +45,40 @@
   --gnrc-color-app-footer-divider: rgb(0 0 0 / 8%);
   --gnrc-color-app-footer-icon-rest: #272320;
   --gnrc-color-app-footer-icon-selected: #0c59f2;
+  --gnrc-color-app-list-surface: #ffffff;
+  --gnrc-color-app-list-foreground-primary: #272320;
+  --gnrc-color-app-list-foreground-secondary: #4c4642;
+  --gnrc-color-app-list-icon: #272320;
+  --gnrc-color-app-list-divider: rgb(0 0 0 / 10%);
+  --gnrc-color-app-list-accent: #0c59f2;
+  --gnrc-color-app-list-section-action: #0c4df2;
+  --gnrc-color-app-list-logo: #272320;
+  --gnrc-color-app-list-logo-on: #ffffff;
+  --gnrc-color-app-list-showcase-label: #635c57;
+  --gnrc-color-app-list-card-surface: #ffffff;
+  --gnrc-color-app-list-card-stroke: rgb(0 0 0 / 8%);
+  --gnrc-color-app-list-favicon-stroke: #e2ddd9;
+  --gnrc-color-tabs-card-icon: #4c4642;
+  --gnrc-color-tabs-card-selected: #0c4df2;
+  --gnrc-color-glance-card-sports-stroke: rgb(0 0 0 / 12%);
+  --gnrc-color-glance-card-schedule: rgb(0 0 0 / 86%);
+  --gnrc-color-glance-card-next-foreground: #a25a02;
+  --gnrc-color-glance-card-live-foreground: #ac1922;
+  --gnrc-color-glance-card-final-background: #efeae7;
+  --gnrc-color-glance-card-clock: rgb(0 0 0 / 64%);
 }
 
 [data-product="consumer"][data-theme="dark"] {
+  --gnrc-color-menu-stroke: rgb(229 235 250 / 12%);
+  --gnrc-color-menu-danger: #ffb5ae;
+  --gnrc-color-avatar-person: #82aefa;
+  --gnrc-color-avatar-initials-large: var(--gnrc-color-foreground-neutral-primary);
+  --gnrc-color-homepage-feed-background: #1f2431;
+  --gnrc-color-homepage-wallpaper-overlay: rgb(0 0 0 / 5%);
+  --gnrc-color-app-search-background: rgb(255 255 255 / 6%);
+  --gnrc-color-app-search-input-text: var(--gnrc-color-foreground-neutral-primary);
+  --gnrc-color-app-search-dismiss: var(--gnrc-color-foreground-neutral-secondary);
+  --gnrc-color-app-search-progress: #82aefa;
   --gnrc-color-surface-neutral-farther: #343434;
   --gnrc-color-surface-neutral-nearer: #282d3e;
   --gnrc-color-foreground-neutral-primary: #e5ebfa;
@@ -40,6 +98,27 @@
   --gnrc-color-app-footer-divider: rgb(255 255 255 / 8%);
   --gnrc-color-app-footer-icon-rest: #e5ebfa;
   --gnrc-color-app-footer-icon-selected: #82aefa;
+  --gnrc-color-app-list-surface: #282d3e;
+  --gnrc-color-app-list-foreground-primary: #e5ebfa;
+  --gnrc-color-app-list-foreground-secondary: #a4adc8;
+  --gnrc-color-app-list-icon: #e5ebfa;
+  --gnrc-color-app-list-divider: rgb(229 235 250 / 12%);
+  --gnrc-color-app-list-accent: #82aefa;
+  --gnrc-color-app-list-section-action: #82aefa;
+  --gnrc-color-app-list-logo: #e5ebfa;
+  --gnrc-color-app-list-logo-on: #282d3e;
+  --gnrc-color-app-list-showcase-label: #a4adc8;
+  --gnrc-color-app-list-card-surface: #282d3e;
+  --gnrc-color-app-list-card-stroke: rgb(255 255 255 / 8%);
+  --gnrc-color-app-list-favicon-stroke: rgb(229 235 250 / 16%);
+  --gnrc-color-tabs-card-icon: #a4adc8;
+  --gnrc-color-tabs-card-selected: #82aefa;
+  --gnrc-color-glance-card-sports-stroke: rgb(255 255 255 / 12%);
+  --gnrc-color-glance-card-schedule: #e5ebfa;
+  --gnrc-color-glance-card-next-foreground: #f3c357;
+  --gnrc-color-glance-card-live-foreground: #ffb5ae;
+  --gnrc-color-glance-card-final-background: rgb(135 145 176 / 20%);
+  --gnrc-color-glance-card-clock: #a4adc8;
   --gnrc-shadow-lowest:
     0 1px 2px rgb(0 0 0 / 12%),
     0 0 1px rgb(0 0 0 / 8%);
@@ -47,6 +126,14 @@
 
 @media (prefers-color-scheme: dark) {
   [data-product="consumer"]:not([data-theme]) {
+    --gnrc-color-avatar-person: #82aefa;
+    --gnrc-color-avatar-initials-large: var(--gnrc-color-foreground-neutral-primary);
+    --gnrc-color-homepage-feed-background: #1f2431;
+    --gnrc-color-homepage-wallpaper-overlay: rgb(0 0 0 / 5%);
+    --gnrc-color-app-search-background: rgb(255 255 255 / 6%);
+    --gnrc-color-app-search-input-text: var(--gnrc-color-foreground-neutral-primary);
+    --gnrc-color-app-search-dismiss: var(--gnrc-color-foreground-neutral-secondary);
+    --gnrc-color-app-search-progress: #82aefa;
     --gnrc-color-surface-neutral-nearer: #282d3e;
     --gnrc-color-foreground-neutral-primary: #e5ebfa;
     --gnrc-color-foreground-neutral-secondary: #8791b0;
@@ -63,6 +150,29 @@
     --gnrc-color-app-footer-divider: rgb(255 255 255 / 8%);
     --gnrc-color-app-footer-icon-rest: #e5ebfa;
     --gnrc-color-app-footer-icon-selected: #82aefa;
+    --gnrc-color-app-list-surface: #282d3e;
+    --gnrc-color-app-list-foreground-primary: #e5ebfa;
+    --gnrc-color-app-list-foreground-secondary: #a4adc8;
+    --gnrc-color-app-list-icon: #e5ebfa;
+    --gnrc-color-app-list-divider: rgb(229 235 250 / 12%);
+    --gnrc-color-app-list-accent: #82aefa;
+    --gnrc-color-app-list-section-action: #82aefa;
+    --gnrc-color-app-list-logo: #e5ebfa;
+    --gnrc-color-app-list-logo-on: #282d3e;
+    --gnrc-color-app-list-showcase-label: #a4adc8;
+    --gnrc-color-app-list-card-surface: #282d3e;
+    --gnrc-color-app-list-card-stroke: rgb(255 255 255 / 8%);
+    --gnrc-color-app-list-favicon-stroke: rgb(229 235 250 / 16%);
+    --gnrc-color-tabs-card-icon: #a4adc8;
+    --gnrc-color-tabs-card-selected: #82aefa;
+    --gnrc-color-glance-card-sports-stroke: rgb(255 255 255 / 12%);
+    --gnrc-color-glance-card-schedule: #e5ebfa;
+    --gnrc-color-glance-card-next-foreground: #f3c357;
+    --gnrc-color-glance-card-live-foreground: #ffb5ae;
+    --gnrc-color-menu-stroke: rgb(229 235 250 / 12%);
+    --gnrc-color-menu-danger: #ffb5ae;
+    --gnrc-color-glance-card-final-background: rgb(135 145 176 / 20%);
+    --gnrc-color-glance-card-clock: #a4adc8;
     --gnrc-shadow-lowest:
       0 1px 2px rgb(0 0 0 / 12%),
       0 0 1px rgb(0 0 0 / 8%);

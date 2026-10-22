@@ -1,7 +1,0 @@
-.page {
-  display: grid;
-  min-height: 100vh;
-  place-items: center;
-  background: var(--gnrc-color-surface-neutral-farther);
-}
-

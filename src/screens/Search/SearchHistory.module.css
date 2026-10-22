@@ -1,0 +1,22 @@
+.root { display: flow-root; width: 100%; overflow: clip; }
+.inset { position: relative; margin-inline: var(--gnrc-layout-content-inset); }
+.measure { position: absolute; inset: 0 0 auto; display: flex; flex-wrap: wrap; gap: 8px; visibility: hidden; pointer-events: none; }
+/* Leave room for the 20 px delete glyph extending 6 px beyond each pill. */
+.viewport { margin: -6px; padding: 6px; overflow: clip; }
+.pills { position: relative; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 8px; }
+.pill { position: relative; max-width: 100%; min-width: 0; height: 38px; }
+.query { overflow: hidden; text-overflow: ellipsis; }
+.deleteAction, .editActions button, .remove, button.expand { appearance: none; margin: 0; border: 0; font-family: inherit; cursor: pointer; }
+.deleteAction { display: grid; width: 20px; height: 22px; padding: 0; place-items: center; background: transparent; }
+.actions { display: grid; height: 22px; align-items: center; justify-items: end; }
+.actionLayer { grid-area: 1 / 1; }
+.actionLayer[inert], .remove:disabled, .pill[inert] { pointer-events: none; }
+.editActions { display: inline-flex; height: 22px; align-items: center; gap: 4px; }
+.editActions button { padding: 0; background: transparent; color: var(--gnrc-color-app-list-foreground-secondary); font-size: 14px; font-weight: 450; line-height: 20px; }
+.editActions button.done { color: var(--gnrc-color-app-list-section-action); }
+.actionDivider { display: block; width: 20px; height: 20px; background: var(--gnrc-color-app-list-icon); mask: url("./assets/history-action-divider.svg") center / 20px 20px no-repeat; }
+.remove { position: absolute; top: -6px; right: -6px; display: grid; width: 20px; height: 20px; padding: 0; place-items: center; background: transparent; color: var(--gnrc-color-app-list-foreground-secondary); }
+.remove svg { display: block; width: 20px; height: 20px; }
+.expand { width: 38px; height: 38px; padding: 8px; justify-content: center; color: inherit; }
+.expand svg { display: block; width: 20px; height: 20px; }
+.root button:focus-visible { outline: 2px solid var(--gnrc-color-app-list-accent); outline-offset: 2px; }

@@ -1,0 +1,12 @@
+.regionMarker {
+  display: grid;
+  height: 100%;
+  min-width: 0;
+  overflow: hidden;
+  place-items: center;
+  color: var(--gnrc-color-ios-island-foreground);
+  font-size: 12px;
+  font-weight: 590;
+  line-height: 16px;
+  letter-spacing: 0;
+}

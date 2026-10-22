@@ -1,0 +1,23 @@
+/* Card shells 3153:57140 (single) and 3153:57062 (multiple). */
+.root,
+.root * {
+  box-sizing: border-box;
+}
+
+.root {
+  display: flex;
+  width: 350px;
+  max-width: 100%;
+  padding-block: var(--gnrc-spacing-component-base-100);
+  flex-direction: column;
+  overflow: hidden;
+  border: var(--gnrc-border-width-card) solid
+    var(--gnrc-color-app-list-card-stroke);
+  border-radius: var(--gnrc-border-radius-list-card);
+  background: var(--gnrc-color-app-list-card-surface);
+}
+
+.root > * {
+  width: 100%;
+  max-width: 100%;
+}
