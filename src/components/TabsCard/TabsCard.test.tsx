@@ -41,6 +41,23 @@ describe("TabsCard", () => {
     expect(container.querySelector("img")).toBeNull();
   });
 
+  it("previews the loaded page without enabling its links, scripts, or sample artwork", () => {
+    const onSelect = vi.fn();
+    const { container } = render(<TabsCard title="Bing search" onSelect={onSelect} faviconSrc={null} pageSnapshot={{
+      html: "<p>Actual loaded result</p>", sourceUrl: "https://www.bing.com/search?q=test", faviconUrl: null,
+      fetchedAt: "2026-10-22T08:00:00Z", viewportWidth: 402, viewportHeight: 668,
+    }} />);
+    const frame = screen.getByTitle("Page preview: Bing search");
+    expect(frame).toHaveAttribute("srcdoc", "<p>Actual loaded result</p>");
+    expect(frame).toHaveAttribute("sandbox", "");
+    expect(frame).toHaveAttribute("tabindex", "-1");
+    expect(frame.closest("[inert]")).not.toBeNull();
+    expect(frame.closest("button")).toBeNull();
+    expect(container.querySelector("img")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Select tab: Bing search" }));
+    expect(onSelect).toHaveBeenCalledOnce();
+  });
+
   it("changes the Library preview only from side controls and never closes it", () => {
     render(<TabsCardOverview />);
     const preview = within(screen.getByRole("group", { name: "Tabs card preview" }));

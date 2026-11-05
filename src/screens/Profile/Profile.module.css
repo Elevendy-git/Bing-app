@@ -2,7 +2,8 @@
   position: relative;
   width: 100%;
   height: 100%;
-  overflow: hidden;
+  /* The oversized background must clip without creating a focus-scrollable root. */
+  overflow: clip;
   isolation: isolate;
   background: var(--gnrc-color-homepage-feed-background);
   color: var(--gnrc-color-foreground-neutral-primary);
@@ -25,6 +26,12 @@
 .email { display: flex; align-items: center; justify-content: center; color: var(--gnrc-color-foreground-neutral-secondary); font-size: 16px; font-weight: 450; line-height: 26px; }
 .email span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .email svg { width: 16px; height: 16px; flex: none; }
+.accountAction { padding: 0; border: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; pointer-events: auto; }
+.accountAction:focus-visible { outline: 2px solid var(--gnrc-color-app-list-accent); outline-offset: 4px; border-radius: 4px; }
+.accountAction:disabled { cursor: default; opacity: 0.6; }
+.authFeedback { margin: 0; max-width: 100%; color: var(--gnrc-color-foreground-neutral-secondary); font-size: 13px; font-weight: 450; line-height: 18px; text-align: center; overflow-wrap: anywhere; }
+.authRetry { color: var(--gnrc-color-app-list-accent); font-size: 13px; line-height: 18px; }
+.email.accountAction { max-width: 100%; margin-inline: auto; color: var(--gnrc-color-foreground-neutral-secondary); }
 .signIn { display: flex; align-items: center; gap: 2px; }
 .signIn svg { width: 20px; height: 20px; }
 .content { padding: 20px var(--gnrc-layout-content-inset) 0; }
@@ -33,12 +40,15 @@
 .rewards { display: flex; min-height: 106px; padding: 12px 0; gap: 6px; }
 .stat { display: flex; min-width: 0; padding: 6px 8px; flex: 1; flex-direction: column; align-items: center; gap: 4px; }
 .stat img { display: block; flex: none; }
-.stat strong { font-size: 16px; font-weight: var(--gnrc-font-weight-functional-strong); line-height: 22px; }
-.stat span { color: var(--gnrc-color-foreground-neutral-secondary); font-size: 12px; font-weight: 450; line-height: 16px; white-space: nowrap; }
+.stat strong, .stat span { width: 100%; text-align: center; overflow-wrap: anywhere; }
+.stat strong { font-size: 16px; font-weight: var(--gnrc-font-weight-functional-strong); line-height: 22px; font-feature-settings: "calt" 0; }
+.stat span { color: var(--gnrc-color-foreground-neutral-secondary); font-size: 12px; font-weight: 450; line-height: 16px; letter-spacing: 0; }
 .promo { position: relative; height: 128px; overflow: hidden; padding: 16px; }
 .promoCopy { position: relative; z-index: 1; display: flex; width: calc(100% - 114px); height: 96px; flex-direction: column; align-items: flex-start; gap: 12px; }
 .promoCopy p { margin: 0; font-size: 16px; font-weight: 450; line-height: 26px; }
-.explore { display: grid; width: 100px; height: 32px; flex: none; place-items: center; border-radius: 12px; background: #0c59f2; color: #fff; font-size: 14px; font-weight: 420; line-height: 20px; }
+.explore { display: grid; width: 100px; height: 32px; padding: 0; border: 0; flex: none; place-items: center; border-radius: 12px; background: #0c59f2; color: #fff; font-family: inherit; font-size: 14px; font-weight: 420; line-height: 20px; }
+button.explore { cursor: pointer; }
+.explore:focus-visible { outline: 2px solid var(--gnrc-color-app-list-accent); outline-offset: 3px; }
 .gifts { position: absolute; top: 3px; right: 0; width: 130px; height: 122px; }
 .sectionHeader { --gnrc-list-section-inline-padding: 0px; --gnrc-list-section-title-color: var(--gnrc-color-app-list-foreground-secondary); width: 100%; }
 .listCard { --gnrc-list-row-inline-padding: 16px; --gnrc-list-divider-inset: 54px; width: 100%; }

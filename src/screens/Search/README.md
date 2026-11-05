@@ -1,74 +1,82 @@
 # Search / Query entry
 
-Figma: Bing App Shareout, [Zero input](https://www.figma.com/design/yClrtwNrFJhE7W5waPRmkv/?node-id=1-20487),
-[Keyboard](https://www.figma.com/design/yClrtwNrFJhE7W5waPRmkv/?node-id=1-20495),
-[Input](https://www.figma.com/design/yClrtwNrFJhE7W5waPRmkv/?node-id=1-20502).
+Figma: C2 [Empty](https://www.figma.com/design/vA59dRO3b38EcRK1JY8N6w/?node-id=3347-45837),
+[Zero input](https://www.figma.com/design/vA59dRO3b38EcRK1JY8N6w/?node-id=1039-29433),
+[Keyboard](https://www.figma.com/design/vA59dRO3b38EcRK1JY8N6w/?node-id=395-14844),
+[Input](https://www.figma.com/design/vA59dRO3b38EcRK1JY8N6w/?node-id=400-15387).
+
+History deletion: [Edit](https://www.figma.com/design/vA59dRO3b38EcRK1JY8N6w/?node-id=475-25871),
+[Clear confirmation](https://www.figma.com/design/vA59dRO3b38EcRK1JY8N6w/?node-id=400-18480).
+`initialHistoryState` exposes both as passive Key screen specimens.
 
 InPrivate: [Zero input](https://www.figma.com/design/yClrtwNrFJhE7W5waPRmkv/?node-id=1-20449),
 [Keyboard](https://www.figma.com/design/yClrtwNrFJhE7W5waPRmkv/?node-id=1-20428),
 [Input](https://www.figma.com/design/yClrtwNrFJhE7W5waPRmkv/?node-id=1-20441).
 
 `Search` composes `AppSearchBox`, `AppList`, `AppListCard`, `IOSStatusBar`,
-`IOSKeyboard`, `IOSHomeIndicator` and `Switcher`. Its three `initialState` presets and their
+`IOSKeyboard`, `IOSHomeIndicator` and `Switcher`. Its three `initialState` presets, the empty-history preset and the
 `initialPrivateMode` counterparts are passive in Key screens.
 `interactive` enables Query text entry and the InPrivate switch in Prototype, with `onBack` returning
 to the preserved Homepage. It also enables the history controls described below.
 Library previews and Recent search remain passive.
 
-Prototype can supply `discovery` resources prefetched by `useSearchDiscovery`.
-You might like displays three real MSN TopStories suggestions, while What's
-trending displays six Google Trends US topics in source order, using readable
-English article headlines and matching photos from those topics. The original
-queries remain in the data and provide a fallback when no headline is supplied.
-Both sections reuse List components; their rows remain passive. See
-[Search discovery data](../../../docs/search-discovery.md).
-
 ## Search history
 
-The delete states follow C2 [collapsed](https://www.figma.com/design/vA59dRO3b38EcRK1JY8N6w/?node-id=392-16459),
-[expanded](https://www.figma.com/design/vA59dRO3b38EcRK1JY8N6w/?node-id=526-24486), and
-[confirmation](https://www.figma.com/design/vA59dRO3b38EcRK1JY8N6w/?node-id=437-37180).
-`SearchHistory` reuses the shared `AppList` section header and Search pill styling.
-It measures the actual pills with `ResizeObserver`, showing at most two rows and
-reserving the trailing arrow only when more rows exist. Expanding reveals every
-item; collapsing restores two rows. Resizing, font loading and deletion recompute
-the fit. The eight fixtures include repeated visits with distinct IDs so deleting
-one never deletes another matching query. Pill text remains passive.
+Zero-input Search contains only Recent searches. Quick features, You might like,
+What's trending and their discovery requests have been removed. Empty history
+renders no section, title, card or placeholder. The five design fixtures are
+Weather, Weather forecast, Weather today, Weather hk and Weather Nanning.
 
-The trash control enters editing. Individual 20 px Fluent dismiss icons sit at
-top/right -6 px. Clear all / Done remain available in either expanded or collapsed
-editing states. Clear all opens the supplied confirmation; Keep or Escape preserves
-history, while the destructive action removes the history section. Focus stays
-inside the dialog and returns to its trigger or the Search content after clearing.
-History actions dismiss the keyboard; the modal makes the underlying phone controls inert.
+`SearchHistory` composes the existing `AppList` section header and `AppListCard`.
+Rows reuse the AS layout with a History icon, regular query text and no trailing
+completion arrow or logo. All records are shown in one scrollable content area;
+there is no chip wrapping, two-line clipping or expand control. Only rows with a
+following record display a divider.
 
-The 390 × 844 reference adapts to 402 × 874 without scaling its typography or
-spacing. History retains 20 px insets, while the dialog retains its original 24 px
-outer and inner insets: 354 × 194 at x=24/y=323, centered above the 34 px bottom safe
-area. The original 20 × 20 action-divider SVG is used as an unchanged mask. The
-external Code Connect button from `src/serp.ts` has no local equivalent; the dialog
-uses a scoped neutral button matching its 40 px height, 12 px corner and 14 px label.
-History controls crossfade over 200 ms; dismiss badges fade and scale in with editing.
-Deleted pills fade to 96% scale over 160 ms while remaining pills reflow over 200 ms.
-Layout measurements compensate for the workbench's phone scale to avoid a jump at
-the start of reflow. The final history section fades and collapses when emptied.
-History expansion and the dialog use the same shared motion presets. All these
-transitions respect reduced motion, and departing controls immediately become inert.
+The header begins directly below the search field at y=118, with 20 px top and
+12 px bottom padding. Titles retain their 24 px x-position. The card starts at
+y=172 and fills the 20 px content insets: width 362 on the 402 px phone. It has
+4 px vertical padding, a 16 px corner and a 0.5 px inset stroke. Each AS row has
+12 px inner padding, a 24 px icon slot containing History20Regular, a 10 px text
+gap and a regular 16/22 label. The five-row specimen is 280 px tall.
+
+Existing history interactions remain: selecting a row submits its query through
+the same flow as the keyboard and AS; pointer-down preserves input focus until
+navigation. Trash enters editing while retaining input focus and the current
+keyboard state. Clear all / Done crossfade in the section header; each row has
+an independent `Dismiss20Regular` control while query selection is disabled.
+Individual removal and Done also retain input focus and the keyboard. Clear all
+dismisses the keyboard and hides the InPrivate strip as the confirmation appears.
+Keep or Escape preserves history and returns to editing with the keyboard hidden.
+Confirmation empties the content area and restores focus there. The dialog has
+24 px outer/inner insets, a 20/26 title and a 16/26 body. On the 402 × 874 phone,
+it is 354 × 202 and centers above the 34 px bottom safe area. The single shared
+home indicator remains above the scrim. Passive dialog previews never take focus.
+The outlined Clear all action uses the shared danger token (#ac1922 in Light,
+#ffb5ae in Dark), matching the design's status color and retaining dark-mode contrast.
+
+Deletion fades the departing row and collapses its height in flow using the
+shared item-exit and list-collapse presets. This moves following rows and the
+card edge together without scaling text or needing workbench zoom compensation.
+Reduced motion makes changes immediate; outgoing rows become inert. See
+[Motion references](../../../docs/motion.md#search-history-list).
 
 Prototype starts with empty history and owns records created by submitted normal-mode
 queries. Typing, cancellation and private queries do not add records. Repeated
-queries move to the front without duplicate chips. Records and edits survive
+queries move to the front without duplicate rows. Records and edits survive
 navigation for that prototype session. The workbench's Reset button clears activity
-and returns Home; reloading also starts empty. Key screens keep the original fixtures.
+and returns Home; reloading also starts empty. Key screens keep the five design fixtures.
 These controls do not read or delete actual account history or browser history.
 
 At 402 × 874 the header is 118 px (62 + 56), with 16 px search insets. Content
 uses 20 px insets and fills to 362 px; section titles retain their 24 px start.
 The InPrivate introduction retains its original 24 px padding. The InPrivate strip is 48 px high; below it sits either a
 34 px safe area or the 332 px iOS keyboard. Only the content scrolls.
-An 8 px page-colored cover extends below the search field, like Recent's fixed
-header gap. It sits outside layout flow, preserving the original 20 px discovery
-gap and 12 px suggestion gap, and fades with the header during navigation.
+The top 8 px of the scrolling content is clipped, like Recent's fixed header
+gap. This preserves the 20 px history-header gap and 12 px suggestion gap
+without adding layout space. It exposes the single page background instead of
+painting a second fading cover, which would create a lighter stripe during entry.
+The InPrivate strip also uses that same background; only its controls fade.
 
 InPrivate uses a fixed dark palette (#151a28 page, #282d3e composer and card),
 white status artwork and home indicator, and the shared green On switch.
@@ -117,8 +125,13 @@ owned by the mounted Search session; nothing is written to browser storage.
 A new uncached query has no AS card until its real results arrive. Failure also
 leaves the card absent; the input can still be submitted using the keyboard.
 There is no single-row entered-query placeholder or fabricated completion.
-The response contains no history or logos, so live
-rows use the prediction icon and omit logos. `SearchSuggestions` still delegates
+The response contains no personal history or logos. In normal Prototype mode,
+received suggestions that exactly match local submitted query history use the
+history icon (ignoring case and normalized whitespace); other rows use the
+prediction icon. InPrivate never uses normal-mode history for this annotation.
+This changes only the source icon: backend order, query text and the five-item
+limit remain intact, and no query or logo is invented. Removing local history
+updates the icon immediately, including cached AS. `SearchSuggestions` still delegates
 row presentation to the shared AS `AppList`; matching-text weights stay unchanged.
 The wrapper's `data-suggestions-source` reports `preview`, `loading`, `live` or
 `fallback` for verification without adding workbench controls or product UI.
@@ -139,12 +152,9 @@ Both search-field appearances crossfade during travel, with shared icon/text
 spacing, so returning does not swap icons after landing. Content retains its
 12 px upward entrance, starting 100 ms later and settling with the field.
 
-Quick-feature masks and content thumbnails are original Figma assets. Voting
-and hockey reuse byte-identical `AppList` assets. Trending thumbnails preserve
-the source horizontal reflection. The Airbnb and NBC SVGs were exported from
-their original Figma instance nodes because Code Connect refers to an external
-Figma UI kit with no local component. Each is centered at intrinsic 25 × 25
-(including its outer stroke) in the design's 24 × 24 slot.
+The Airbnb and NBC SVGs are original exports from the Figma AS instances,
+centered at intrinsic 25 × 25 (including stroke) in the 24 × 24 logo slot.
+History and Delete reuse the installed Fluent components from Code Connect.
 
 The Incognito Code Connect name (`Incognito48Filled`) is absent from the installed
 Fluent package. `assets/incognito.svg` is the original 64 × 64 export of node

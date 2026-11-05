@@ -1,5 +1,5 @@
 .root, .root * { box-sizing: border-box; }
-.root { --gnrc-color-app-footer-icon-selected: var(--gnrc-color-app-list-section-action); position: relative; display: flex; width: 100%; height: 100%; padding-bottom: calc(52px + var(--gnrc-ios-safe-bottom)); flex-direction: column; overflow: hidden; background: var(--gnrc-color-homepage-feed-background); color: var(--gnrc-color-foreground-neutral-primary); font-family: var(--gnrc-font-family-functional); }
+.root { position: relative; display: flex; width: 100%; height: 100%; padding-bottom: var(--gnrc-ios-safe-bottom); flex-direction: column; overflow: hidden; background: var(--gnrc-color-homepage-feed-background); color: var(--gnrc-color-foreground-neutral-primary); font-family: var(--gnrc-font-family-functional); }
 .header { position: relative; z-index: 1; flex: none; background: var(--gnrc-color-homepage-feed-background); }
 .statusBar { height: var(--gnrc-ios-status-height); }
 .appHeader { width: 100%; }
@@ -8,17 +8,12 @@
 .sectionHeader { --gnrc-list-section-min-height: 0px; --gnrc-list-section-inline-padding: var(--gnrc-layout-content-inset); width: 100%; }
 .cardInset { padding-inline: var(--gnrc-layout-content-inset); }
 .listCard { width: 100%; border: 0; border-radius: var(--gnrc-border-radius-card-nested); box-shadow: inset 0 0 0 var(--gnrc-border-width-card) var(--gnrc-color-app-list-card-stroke); }
+.listCard [data-variant] { width: 100%; }
 .nativeLogo { display: flex; width: 32px; height: 32px; align-items: center; justify-content: center; }
 .nativeLogo img { display: block; max-width: none; flex: none; }
-.empty { position: absolute; top: calc(var(--gnrc-ios-status-height) + 1px); right: 0; bottom: calc(56px + var(--gnrc-ios-safe-bottom)); left: 0; display: flex; padding-bottom: 32px; flex-direction: column; align-items: center; justify-content: center; gap: 24px; }
-.empty > img { display: block; width: 128px; height: 128px; flex: none; object-fit: contain; }
-.emptyText { display: flex; width: 100%; padding-inline: 40px; flex-direction: column; gap: 8px; text-align: center; font-variation-settings: "opsz" 10.5; }
-.emptyText h3 { margin: 0; font: 650 20px / 26px var(--gnrc-font-family-functional); }
-.emptyText p { margin: 0; color: var(--gnrc-color-app-list-foreground-secondary); font: 450 16px / 22px var(--gnrc-font-family-functional); font-feature-settings: "calt" 0; }
+.siteLogo { display: flex; width: 32px; height: 32px; overflow: hidden; align-items: center; justify-content: center; border-radius: 12px; box-shadow: inset 0 0 0 .5px var(--gnrc-color-app-list-favicon-stroke); }
+.siteLogo img { display: block; width: 100%; height: 100%; object-fit: contain; }
 .searchNow { min-width: 119px; min-height: 48px; flex: none; padding: 11px 18px; border: 0; border-radius: 20px; background: var(--gnrc-color-app-list-accent); color: var(--gnrc-color-foreground-on-inverse); box-shadow: 0 1px 3px rgb(0 0 0 / 15%); font: 450 16px / 26px var(--gnrc-font-family-functional); font-variation-settings: "opsz" 10.5; }
 .searchNow:not([aria-disabled="true"]) { cursor: pointer; }
 .searchNow:focus-visible { outline: 2px solid var(--gnrc-color-app-list-accent); outline-offset: 3px; }
-.menuLayer { position: absolute; z-index: 4; inset: 0; }
-.dismissArea { position: absolute; inset: 0; }
-.menuAnchor { position: absolute; top: calc(var(--gnrc-ios-status-height) + 50px); right: 12px; transform-origin: right top; }
 .announcement { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }

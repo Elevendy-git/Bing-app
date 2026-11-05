@@ -1,0 +1,2 @@
+/* Static fallback; interactive hosts supply values from iosMotion.ts. */
+:root { --gnrc-motion-fade: 0s; --gnrc-motion-scene: 0s; }

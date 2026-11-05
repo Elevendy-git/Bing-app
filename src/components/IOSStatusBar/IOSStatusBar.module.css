@@ -13,6 +13,7 @@
   font-family: var(--gnrc-font-family-ios);
   user-select: none;
   color: var(--gnrc-ios-foreground);
+  font-feature-settings: normal;
   font-variation-settings: normal;
 }
 

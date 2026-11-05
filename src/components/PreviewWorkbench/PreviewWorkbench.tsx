@@ -1,5 +1,6 @@
 import { Fragment, useCallback, useId, useRef, useState, type ReactNode } from "react";
 import { PhonePreview } from "./PhonePreview";
+import { PreviewActivityProvider } from "./PreviewActivity";
 import { PreviewKeyScreens } from "./PreviewKeyScreens";
 import { PreviewLibrary } from "./PreviewLibrary";
 import { PreviewSettings } from "./PreviewSettings";
@@ -55,7 +56,11 @@ export function PreviewWorkbench({
           }}
         />
         <div className={styles.viewContent} hidden={view !== "prototype"}>
-          <PhonePreview theme={theme}><Fragment key={prototypeRevision}>{children}</Fragment></PhonePreview>
+          <PhonePreview theme={theme}>
+            <PreviewActivityProvider value={view === "prototype"}>
+              <Fragment key={prototypeRevision}>{children}</Fragment>
+            </PreviewActivityProvider>
+          </PhonePreview>
         </div>
         {view === "keyscreens" && (
           <PreviewKeyScreens theme={theme} screens={screens ?? [{ id: "current", title, content: children }]} />

@@ -1,0 +1,26 @@
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 24px var(--gnrc-ios-safe-bottom);
+  background: rgb(0 0 0 / 30%);
+}
+.dialog {
+  outline: none;
+  width: 100%;
+  padding: 24px;
+  border-radius: 24px;
+  background: color-mix(in srgb, var(--gnrc-color-surface-neutral-nearer) 94%, transparent);
+  box-shadow: 0 16px 24px rgb(0 0 0 / 8%), 0 8px 16px rgb(0 0 0 / 3%);
+}
+.dialog h2 { margin: 0 0 12px; font-size: 20px; font-weight: 650; line-height: 26px; font-variation-settings: "opsz" 36; }
+.dialog p { margin: 0; font-size: 16px; font-weight: 450; line-height: 26px; overflow-wrap: anywhere; }
+.actions { display: flex; padding-top: 24px; gap: 8px; }
+.actions button { min-width: 0; min-height: 40px; flex: 1; padding: 9px 10px; border: 1px solid transparent; border-radius: 12px; font: inherit; font-size: 14px; font-weight: 450; line-height: 20px; cursor: pointer; }
+.cancel { background: var(--gnrc-color-app-list-card-surface); color: inherit; box-shadow: inset 0 0 0 .5px var(--gnrc-color-app-list-card-stroke), 0 1px 2px rgb(0 0 0 / 10%); }
+.actions .destructive { border-color: var(--gnrc-color-menu-danger); background: transparent; color: var(--gnrc-color-menu-danger); }
+.primary { background: var(--gnrc-color-app-list-accent); color: var(--gnrc-color-foreground-on-inverse); }
+.actions button:focus-visible { outline: 2px solid var(--gnrc-color-app-list-accent); outline-offset: 2px; }

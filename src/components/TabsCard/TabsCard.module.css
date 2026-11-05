@@ -67,6 +67,15 @@
   pointer-events: none;
 }
 
+.documentPreview {
+  position: absolute;
+  inset: 34px 0 0;
+  overflow: hidden;
+  border-radius: 0 0 var(--gnrc-border-radius-list-card) var(--gnrc-border-radius-list-card);
+  pointer-events: none;
+}
+.documentPreview iframe { display: block; max-width: none; border: 0; transform-origin: top left; pointer-events: none; }
+
 /* Preserve the source image-fill transform, independently of the selection stroke. */
 .designPreview {
   top: -53.08%;

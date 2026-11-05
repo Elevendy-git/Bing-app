@@ -3,8 +3,6 @@
 .overlay { position: absolute; inset: 0; z-index: 2; background: transparent; }
 .background { position: absolute; inset: 0; z-index: -1; background: var(--gnrc-color-homepage-feed-background); pointer-events: none; }
 .header { position: relative; z-index: 2; flex: none; }
-/* Cover scrolled content without adding space or overlapping the traveling composer. */
-.searchCover { position: absolute; inset: 100% 0 auto; z-index: -1; height: 8px; background: var(--gnrc-color-homepage-feed-background); pointer-events: none; }
 .statusBar { height: var(--gnrc-ios-status-height); }
 .searchRegion { height: 56px; padding-inline: var(--gnrc-layout-search-inset); }
 /* Both field layers share geometry while their different glyphs crossfade. */
@@ -20,26 +18,28 @@
 .composerTarget { position: relative; height: 100%; }
 .searchRegion .search, .searchRegion .homeComposer { width: 100%; height: 100%; }
 /* Native edge bounce belongs to content; the header and keyboard stay outside it. */
-.content { min-height: 0; flex: 1; overflow: hidden auto; overflow-anchor: none; overscroll-behavior: none contain; scrollbar-width: none; padding-bottom: 20px; }
-.content::-webkit-scrollbar, .quickFeatures::-webkit-scrollbar { display: none; }
+/* Expose the single page background in the 8 px cover area. A separately
+   fading painted cover would compound opacity and flash a pale stripe. */
+.content { min-height: 0; flex: 1; overflow: hidden auto; overflow-anchor: none; overscroll-behavior: none contain; scrollbar-width: none; padding-bottom: 20px; clip-path: inset(8px 0 0); }
+.content::-webkit-scrollbar { display: none; }
 .privateContent { display: flex; align-items: center; padding-bottom: 0; }
+.content { position: relative; }
+.contentMode { width: 100%; min-width: 0; flex: none; }
+.root[data-live-motion], .root[data-live-motion] .background,
+.root[data-live-motion] .search { transition: background-color var(--gnrc-motion-fade), color var(--gnrc-motion-fade); }
 .privateIntro { display: flex; width: 100%; padding-inline: 24px; flex: none; flex-direction: column; align-items: center; gap: 16px; text-align: center; }
 .privateIcon { display: block; width: 64px; height: 64px; flex: none; }
 .privateIntro h1 { margin: 0; font-size: 20px; font-weight: 650; line-height: 26px; font-variation-settings: "opsz" 36; }
 .privateIntro p { margin: 0; }
 .privateExplanation { display: flex; width: 100%; flex-direction: column; gap: 8px; color: var(--gnrc-color-app-list-foreground-secondary); font-size: 14px; font-weight: 450; line-height: 20px; }
 .privateIntro .privacyStatement { width: 100%; font-size: 12px; font-weight: 450; line-height: 16px; font-variation-settings: "opsz" 5; text-decoration: underline; text-underline-position: under; }
-.quickFeatures { display: flex; width: 100%; padding: 20px var(--gnrc-layout-content-inset) 0; gap: 8px; overflow-x: auto; scrollbar-width: none; }
-.pill { display: inline-flex; padding: 8px 12px; flex: none; align-items: center; gap: 4px; border-radius: 12px; background: var(--gnrc-color-app-list-card-surface); box-shadow: inset 0 0 0 .5px var(--gnrc-color-app-list-card-stroke); font-size: 16px; font-weight: 450; line-height: 22px; white-space: nowrap; }
-.quickFeatures .pill { padding-left: 10px; }
-.featureIcon { --gnrc-search-feature-icon: none; display: block; width: 24px; height: 24px; flex: none; background: var(--gnrc-color-app-list-section-action); mask: var(--gnrc-search-feature-icon) center / 24px 24px no-repeat; }
-.sectionHeader { --gnrc-list-section-inline-padding: var(--gnrc-layout-content-inset); width: 100%; }
+.sectionHeader { --gnrc-list-section-padding-top: 20px; --gnrc-list-section-min-height: 54px; --gnrc-list-section-inline-padding: var(--gnrc-layout-content-inset); width: 100%; }
 .sectionHeader svg { display: block; width: 16px; height: 16px; margin: 2px; color: var(--gnrc-color-app-list-icon); }
 .cardInset { padding-inline: var(--gnrc-layout-content-inset); }
 .listCard { width: 100%; border: 0; box-shadow: inset 0 0 0 .5px var(--gnrc-color-app-list-card-stroke); }
-.trendingImage { display: block; width: 84px; height: 48px; border-radius: var(--gnrc-border-radius-list-thumbnail); object-fit: cover; transform: scaleX(-1); }
 .suggestions { padding-top: 12px; }
 .bottom { position: relative; z-index: 3; flex: none; }
-.privateBar { position: relative; z-index: 1; display: flex; height: 48px; padding: 4px var(--gnrc-layout-content-inset); justify-content: flex-end; background: var(--gnrc-color-homepage-feed-background); }
+.root .homeIndicator { z-index: 11; }
+.privateBar { position: relative; z-index: 1; display: flex; height: 48px; padding: 4px var(--gnrc-layout-content-inset); justify-content: flex-end; }
 .keyboardSurface { position: absolute; inset: auto 0 0; height: var(--gnrc-ios-keyboard-height); }
 .privateControl { display: flex; height: 40px; padding: 0; align-items: center; gap: 8px; font-size: 14px; font-weight: 400; line-height: 20px; }

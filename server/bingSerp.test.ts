@@ -30,6 +30,21 @@ function call(path: string, method = "GET") {
   });
 }
 describe("Bing result endpoint", () => {
+  it("returns the visited page URL and its own favicon, ignoring result-site branding", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(new Response('<link rel="shortcut icon" href="/sa/bing-icon.ico">' + html,
+      { headers: { "Content-Type": "text/html" } }));
+    const result = await call("/api/bing-serp?query=baidu");
+    expect(result.body.sourceUrl).toBe("https://www.bing.com/search?q=baidu&setlang=en");
+    expect(result.body.faviconUrl).toBe("https://www.bing.com/sa/bing-icon.ico");
+  });
+
+  it.each(["", "javascript:alert(1)", "https://localhost/icon.ico", "https://www.bing.com.evil.test/icon.ico"])(
+    "does not turn invalid favicon metadata into a request: %s", async (href) => {
+      vi.mocked(fetch).mockResolvedValueOnce(new Response(`<link rel="icon" href="${href}">` + html,
+        { headers: { "Content-Type": "text/html" } }));
+      expect((await call("/api/bing-serp?query=baidu")).body.faviconUrl).toBeNull();
+    });
+
   it("fetches only Bing with a mobile UA and never forwards browser credentials", async () => {
     const result = await call("/api/bing-serp?query=Weather&url=https://example.com");
     expect(result.status).toBe(200);

@@ -6,3 +6,5 @@ export { HistoryMenu } from "./HistoryMenu";
 export type { HistoryMenuProps } from "./HistoryMenu";
 export { BookmarkMenu } from "./BookmarkMenu";
 export type { BookmarkMenuProps } from "./BookmarkMenu";
+export { AnchoredMenu, useAnchoredMenu } from "./AnchoredMenu";
+export type { AnchoredMenuState, ItemMenuGeometry } from "./AnchoredMenu";

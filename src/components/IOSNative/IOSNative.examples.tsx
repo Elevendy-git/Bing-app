@@ -44,7 +44,7 @@ export function IOSKeyboardOverview() {
   const [indicator, setIndicator] = useState(true);
   return <PreviewConfigurator label="iOS Keyboard controls" controls={<>
     <SelectControl label="Keyboard type" value={layout} onChange={(next) => setLayout(next as IOSKeyboardLayout)}
-      options={[["uppercase", "Uppercase"], ["lowercase", "Lowercase"], ["numeric", "Numbers & symbols"]]} />
+      options={[["uppercase", "Uppercase"], ["lowercase", "Lowercase"], ["numeric", "Numbers"], ["symbols", "Symbols"], ["emoji", "Emoji"]]} />
     <SelectControl label="Return key" value={returnKey} onChange={(next) => setReturnKey(next as IOSKeyboardReturnKey)}
       options={[["return", "Return"], ["search", "Search"], ["done", "Done"]]} />
     <SelectControl label="Suggestions" value={String(suggestions)} onChange={(next) => setSuggestions(next === "true")}

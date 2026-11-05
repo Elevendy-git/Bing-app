@@ -4,9 +4,9 @@ import { BingAppPrototype } from "../BingAppPrototype";
 
 afterEach(cleanup);
 const openHistory = () => fireEvent.click(screen.getByRole("button", { name: "View all history" }));
-const backToRecent = async () => {
+const backToRecent = async (focusLabel = "View all history") => {
   fireEvent.click(screen.getByRole("button", { name: "Back to Recent" }));
-  await waitFor(() => expect(screen.getByRole("button", { name: "View all history" })).toHaveFocus());
+  await waitFor(() => expect(screen.getByRole("button", { name: focusLabel })).toHaveFocus());
 };
 
 describe("Recent and browsing History flow", () => {
@@ -26,9 +26,9 @@ describe("Recent and browsing History flow", () => {
     expect(deleteItem).toHaveFocus();
     fireEvent.click(deleteItem);
     await waitFor(() => expect(menu).not.toBeInTheDocument());
-    expect(within(screen.getByRole("group", { name: "Today history" })).queryByText("Spotify")).not.toBeInTheDocument();
+    await waitFor(() => expect(within(screen.getByRole("group", { name: "Today history" })).queryByText("Spotify")).not.toBeInTheDocument());
     expect(within(content).getAllByText("Spotify")).toHaveLength(2);
-    expect(content).toHaveFocus();
+    await waitFor(() => expect(content).toHaveFocus());
     await backToRecent();
     expect(recentContent.scrollTop).toBe(250);
     const summary = within(screen.getByRole("group", { name: "History list" }));
@@ -48,18 +48,18 @@ describe("Recent and browsing History flow", () => {
     const rowMenu = screen.getByRole("menu", { name: "History item options" });
     fireEvent.keyDown(rowMenu, { key: "Escape" });
     await waitFor(() => expect(rowMenu).not.toBeInTheDocument());
-    expect(rowMore).toHaveFocus();
+    await waitFor(() => expect(rowMore).toHaveFocus());
     const pageMore = screen.getByRole("button", { name: "History options" });
     fireEvent.click(pageMore);
     const pageMenu = screen.getByRole("menu", { name: "History options" });
     expect(within(pageMenu).getByRole("menuitem", { name: "Feedback" })).toHaveAttribute("aria-disabled", "true");
     fireEvent.pointerDown(pageMenu.parentElement!.parentElement!.querySelector('[aria-hidden="true"]')!);
     await waitFor(() => expect(pageMenu).not.toBeInTheDocument());
-    expect(pageMore).toHaveFocus();
+    await waitFor(() => expect(pageMore).toHaveFocus());
     expect(within(screen.getByRole("region", { name: "History content" })).getAllByText("Medium")).toHaveLength(3);
   });
 
-  it("clears browsing visits, opens Search from the empty state, and returns without affecting other histories", async () => {
+  it("clears browsing and Search history together while preserving bookmarks and Copilot history", async () => {
     render(<BingAppPrototype initialPage="recent" />);
     const bookmark = screen.getByRole("group", { name: "Bookmark list" }).textContent;
     const copilot = screen.getByRole("group", { name: "Copilot history list" }).textContent;
@@ -71,24 +71,23 @@ describe("Recent and browsing History flow", () => {
     expect(clear).toHaveFocus();
     fireEvent.click(clear);
     await waitFor(() => expect(menu).not.toBeInTheDocument());
-    expect(screen.getByText("Your browsing and search history will appear here.")).toBeVisible();
+    await waitFor(() => expect(screen.getByText("Your browsing and search history will appear here.")).toBeVisible());
     expect(screen.queryByRole("group", { name: "Today history" })).not.toBeInTheDocument();
     const searchNow = screen.getByRole("button", { name: "Search now" });
     fireEvent.click(searchNow);
     expect(screen.queryByRole("main", { name: "History page" })).not.toBeInTheDocument();
     expect(screen.getByRole("searchbox", { name: "Search query" })).toHaveValue("");
     await waitFor(() => expect(screen.getByRole("group", { name: "iOS keyboard" })).toBeVisible());
-    // Browsing-history fixtures and Search page query history have separate ownership.
-    expect(screen.getByRole("button", { name: "Edit search history" })).toBeVisible();
+    expect(screen.queryByRole("region", { name: "Recent searches" })).not.toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Search content" }).textContent).toBe("");
     fireEvent.click(screen.getByRole("button", { name: "Back from search" }));
     await waitFor(() => expect(searchNow).toHaveFocus());
-    expect(screen.getByText("Your browsing and search history will appear here.")).toBeVisible();
-    await backToRecent();
-    expect(screen.queryByRole("group", { name: "History list" })).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText("Your browsing and search history will appear here.")).toBeVisible());
+    await backToRecent("New tab");
+    expect(screen.queryByRole("region", { name: "History" })).not.toBeInTheDocument();
     expect(screen.getByRole("group", { name: "Bookmark list" }).textContent).toBe(bookmark);
     expect(screen.getByRole("group", { name: "Copilot history list" }).textContent).toBe(copilot);
-    openHistory();
-    expect(screen.getByRole("button", { name: "Search now" })).toBeVisible();
+    expect(screen.queryByRole("button", { name: "View all history" })).not.toBeInTheDocument();
   });
 
   it("removes empty date groups and shows the empty state after deleting the last visit", async () => {
@@ -103,6 +102,6 @@ describe("Recent and browsing History flow", () => {
     }
     expect(screen.queryByRole("region", { name: "Today" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Search now" })).toBeVisible();
-    expect(screen.getByRole("region", { name: "History content" })).toHaveFocus();
+    await waitFor(() => expect(screen.getByRole("region", { name: "History content" })).toHaveFocus());
   });
 });

@@ -1,14 +1,16 @@
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { useCallback, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import { AnimatePresence, useReducedMotion } from "motion/react";
 import { Avatar, BingSearchBox, GlanceCardGroup, IOSStatusBar, Toast, type AppFooterProps, type AvatarProps } from "../../components";
 import { ScreenFooter } from "../ScreenFooter";
 import type { GlanceCardItem } from "../../components/GlanceCard";
+import type { FeedArticleOpenHandler } from "../../components/FeedCard";
 import { HomepageFeed } from "./HomepageFeed";
 import { LiveHomepageFeed } from "./LiveHomepageFeed";
 import { HOMEPAGE_SCROLL_DOWN, HOMEPAGE_SEARCH_TRAVEL, useHomepageScrollSnap } from "./useHomepageScrollSnap";
 import { FeedOptionsSheet } from "./FeedOptionsSheet";
 import { useFeedFollow, type FeedOverlayState } from "./useFeedFollow";
-import { iosMotion } from "../../motion/iosMotion";
+import { iosMotion, iosMotionCss } from "../../motion/iosMotion";
+import { MotionPresence } from "../../motion/MotionPresence";
 import styles from "./Homepage.module.css";
 
 const sunny = new URL("./assets/sunny.svg", import.meta.url).href;
@@ -40,7 +42,9 @@ export interface HomepageProps {
   privateMode?: boolean;
   onNavigate?: AppFooterProps["onSelectedTabChange"];
   onOpenSearch?: () => void;
+  onVoiceSearch?: () => void;
   onOpenProfile?: () => void;
+  onOpenArticle?: FeedArticleOpenHandler;
   profileAvatar?: AvatarProps;
   /** The live Search composer takes over during the shared transition. */
   searchConcealed?: boolean;
@@ -49,10 +53,10 @@ export interface HomepageProps {
 }
 
 /** Homepage shares one persistent input above the scrolling content and its fade mask. */
-export function Homepage({ timeSource = "fixed", feedSource = "preview", interactiveFeed = false, initialFeedOverlay, initialState = "top", privateMode = false, onNavigate, onOpenSearch, onOpenProfile, profileAvatar, searchConcealed = false, scrollSnapEnabled = true }: HomepageProps) {
+export function Homepage({ timeSource = "fixed", feedSource = "preview", interactiveFeed = false, initialFeedOverlay, initialState = "top", privateMode = false, onNavigate, onOpenSearch, onVoiceSearch, onOpenProfile, onOpenArticle, profileAvatar, searchConcealed = false, scrollSnapEnabled = true }: HomepageProps) {
   const feedActions = useFeedFollow(initialFeedOverlay);
   const reducedMotion = useReducedMotion();
-  const toastMotion = interactiveFeed && !reducedMotion ? iosMotion.control : iosMotion.instant;
+  const toastMotion = interactiveFeed && !reducedMotion ? iosMotion.toast : iosMotion.instant;
   const scrollRef = useRef<HTMLDivElement>(null);
   const searchSlotRef = useRef<HTMLDivElement>(null);
   const lastSearchOffset = useRef<number>();
@@ -99,13 +103,14 @@ export function Homepage({ timeSource = "fixed", feedSource = "preview", interac
   const avatar = <Avatar {...profileAvatar} variant={privateMode ? "private" : profileAvatar?.variant ?? "image"} size="default" />;
 
   return (
-    <main className={`${styles.root} ${isScrolled ? styles.scrolled : ""}`} aria-label="Bing homepage">
+    <main className={`${styles.root} ${isScrolled ? styles.scrolled : ""}`} aria-label="Bing homepage"
+      style={iosMotionCss as CSSProperties} data-live-motion={!reducedMotion && Boolean(onNavigate) || undefined}>
       <div className={styles.scene} aria-hidden={feedActions.menuPresented || undefined} {...(feedActions.menuPresented ? { inert: "" } : {})}>
         <div className={styles.wallpaper} aria-hidden="true" />
         <div className={styles.searchBackdrop} aria-hidden="true" />
         <IOSStatusBar timeSource={timeSource} className={styles.statusBar} />
         <div ref={searchSlotRef} className={`${styles.searchSlot} ${searchConcealed ? styles.searchConcealed : ""}`}>
-          <BingSearchBox className={styles.searchBox} compact={isScrolled} onOpenSearch={onOpenSearch} />
+          <BingSearchBox className={styles.searchBox} compact={isScrolled} onOpenSearch={onOpenSearch} onVoiceSearch={onVoiceSearch} />
         </div>
         <div ref={scrollRef} className={styles.scrollContent} role="region" aria-label="Homepage content" tabIndex={0}
           onScroll={(event) => { if (event.target === event.currentTarget) syncSearchPosition(event.currentTarget.scrollTop); }}>
@@ -121,6 +126,7 @@ export function Homepage({ timeSource = "fixed", feedSource = "preview", interac
           <div className={styles.searchSpacer} aria-hidden="true" />
           <GlanceCardGroup items={homepageGlanceCards} className={styles.glanceCards} />
           {feedSource === "msn" ? <LiveHomepageFeed scrollRef={scrollRef} active={scrollSnapEnabled && !searchConcealed && !feedActions.menuPresented}
+            onOpenArticle={onOpenArticle}
             onMoreOptions={interactiveFeed ? feedActions.openMenu : undefined} />
             : <HomepageFeed onMoreOptions={interactiveFeed ? feedActions.openMenu : undefined} />}
         </div>
@@ -136,12 +142,12 @@ export function Homepage({ timeSource = "fixed", feedSource = "preview", interac
           onToggleFollow={interactiveFeed ? feedActions.toggleFollow : undefined} />}
       </AnimatePresence>
       <AnimatePresence initial={false}>
-        {!feedActions.menuPresented && feedActions.toast && <motion.div key={feedActions.toast.id} className={styles.feedToast}
+        {!feedActions.menuPresented && feedActions.toast && <MotionPresence key={feedActions.toast.id} className={styles.feedToast}
           initial={interactiveFeed && !reducedMotion ? { opacity: 0, y: 8 } : false} animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: reducedMotion ? 0 : 8 }} transition={toastMotion}>
           <Toast message={feedActions.toast.message} actionLabel="Undo" className={styles.toastCard}
             onAction={interactiveFeed ? feedActions.undo : undefined} onDismiss={interactiveFeed ? feedActions.dismissToast : undefined} />
-        </motion.div>}
+        </MotionPresence>}
       </AnimatePresence>
     </main>
   );

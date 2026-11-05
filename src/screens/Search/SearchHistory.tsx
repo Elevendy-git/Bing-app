@@ -1,144 +1,121 @@
-import { forwardRef, useCallback, useId, useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import { ChevronDown20Filled, ChevronUp20Filled, Delete16Regular, DismissCircle20Filled } from "@fluentui/react-icons";
-import { AnimatePresence, LayoutGroup, MotionConfig, motion, useIsPresent, useReducedMotion } from "motion/react";
-import { AppList } from "../../components/AppList";
+import { useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from "react";
+import { Delete16Regular, Dismiss20Regular } from "@fluentui/react-icons";
+import { AnimatePresence, motion, useIsPresent, useReducedMotion } from "motion/react";
+import { AppList, AppListCard } from "../../components/AppList";
 import { iosMotion } from "../../motion/iosMotion";
 import type { SearchHistoryItem } from "./Search.data";
-import { historyLayout } from "./historyLayout";
 import styles from "./SearchHistory.module.css";
 import searchStyles from "./Search.module.css";
 
 interface SearchHistoryProps {
   items: readonly SearchHistoryItem[];
   interactive: boolean;
+  initialEditing?: boolean;
   onItemsChange: (items: readonly SearchHistoryItem[]) => void;
-  onInteraction: () => void;
   onClearRequest: (trigger: HTMLButtonElement) => void;
+  onSelect?: (query: string) => void;
+  onEmptyFocus?: () => void;
 }
 
-interface HistoryPillProps {
+interface HistoryRowProps {
   item: SearchHistoryItem;
   editing: boolean;
   interactive: boolean;
   animate: boolean;
-  onRemove: (item: SearchHistoryItem) => void;
+  showDivider: boolean;
+  onRemove: (item: SearchHistoryItem, trigger: HTMLButtonElement) => void;
+  onSelect?: (query: string) => void;
 }
 
-// popLayout needs the DOM ref so the departing pill can fade in place while siblings reflow.
-const HistoryPill = forwardRef<HTMLSpanElement, HistoryPillProps>(function HistoryPill({ item, editing, interactive, animate, onRemove }, ref) {
+// Collapse in flow so the card and following rows share one height animation.
+function HistoryRow({ item, editing, interactive, animate, showDivider, onRemove, onSelect }: HistoryRowProps) {
   const present = useIsPresent();
-  return <motion.span ref={ref} layout={animate ? "position" : false}
-    initial={animate ? { opacity: 0, scale: 0.96 } : false} animate={{ opacity: 1, scale: 1 }}
-    exit={{ opacity: 0, scale: 0.96, transition: { ...iosMotion.fade, duration: 0.16 } }}
-    transition={animate ? iosMotion.control : iosMotion.instant}
-    className={`${searchStyles.pill} ${styles.pill}`} data-history-id={item.id}
-    aria-hidden={!present || undefined} {...(!present ? { inert: "" } : {})}>
-    <span className={styles.query}>{item.query}</span>
-    {interactive && <motion.button type="button" className={styles.remove} aria-label={`Remove ${item.query} from history`}
-      initial={false} animate={{ opacity: editing ? 1 : 0, scale: editing ? 1 : 0.8 }}
-      transition={animate ? iosMotion.control : iosMotion.instant}
-      disabled={!editing || !present} aria-hidden={!editing || !present || undefined}
-      onClick={() => onRemove(item)}><DismissCircle20Filled aria-hidden="true" /></motion.button>}
-  </motion.span>;
-});
+  const selectable = interactive && Boolean(onSelect);
+  return <motion.div className={styles.row}
+    initial={false} animate={{ opacity: 1, height: "auto" }}
+    exit={{ opacity: 0, height: 0 }}
+    transition={animate ? { height: iosMotion.listCollapse, opacity: iosMotion.itemExit } : iosMotion.instant}
+    data-history-id={item.id} aria-hidden={!present || undefined} {...(!present ? { inert: "" } : {})}
+    onPointerDown={interactive && (editing || selectable) ? event => event.preventDefault() : undefined}>
+    <AppList variant="as" title={item.query} suggestionSource="history" className={styles.listRow}
+      showDivider={showDivider} showRightControl={editing}
+      onClick={selectable ? () => onSelect?.(item.query) : undefined} disabled={editing || !present}
+      rightControl={<motion.span className={styles.removeIcon} initial={animate ? { opacity: 0 } : false}
+        animate={{ opacity: 1 }} transition={animate ? iosMotion.control : iosMotion.instant}><Dismiss20Regular aria-hidden="true" /></motion.span>}
+      rightControlLabel={`Remove ${item.query} from history`}
+      onRightControlClick={interactive && editing && present ? event => onRemove(item, event.currentTarget) : undefined} />
+  </motion.div>;
+}
 
-function HistorySection({ children, editing, animate }: { children: ReactNode; editing: boolean; animate: boolean }) {
+function HistorySection({ children, editing, animate, sectionRef }: { children: ReactNode; editing: boolean; animate: boolean; sectionRef: RefObject<HTMLElement> }) {
   const present = useIsPresent();
-  return <motion.section className={styles.root} aria-label="Recent searches" data-editing={editing}
+  return <motion.section ref={sectionRef} className={styles.root} aria-label="Recent searches" data-editing={editing}
     aria-hidden={!present || undefined} {...(!present ? { inert: "" } : {})}
     initial={false} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
     transition={animate ? iosMotion.control : iosMotion.instant}>{children}</motion.section>;
 }
 
-export function SearchHistory({ items, interactive, onItemsChange, onInteraction, onClearRequest }: SearchHistoryProps) {
-  const [expanded, setExpanded] = useState(false);
-  const [editing, setEditing] = useState(false);
-  const [measurements, setMeasurements] = useState<{ width: number; pills: Record<string, number> }>();
-  const measureRef = useRef<HTMLDivElement>(null);
-  const listId = useId();
+export function SearchHistory({ items, interactive, initialEditing = false, onItemsChange, onClearRequest, onSelect, onEmptyFocus }: SearchHistoryProps) {
+  const [editing, setEditing] = useState(initialEditing);
+  const sectionRef = useRef<HTMLElement>(null);
+  const editRef = useRef<HTMLButtonElement>(null);
+  const doneRef = useRef<HTMLButtonElement>(null);
+  const pendingFocus = useRef<{ scope: HTMLElement; trigger: HTMLButtonElement; target: "edit" | "done" | "row"; rowId?: string }>();
   const reducedMotion = useReducedMotion();
   const animate = interactive && !reducedMotion;
-  // The workbench scales the phone with CSS; layout motion needs unscaled coordinates.
-  const localPoint = useCallback((point: { x: number; y: number }) => {
-    const measure = measureRef.current;
-    const scale = measure?.clientWidth ? measure.getBoundingClientRect().width / measure.clientWidth : 1;
-    return scale ? { x: point.x / scale, y: point.y / scale } : point;
-  }, []);
-
-  useLayoutEffect(() => {
-    const measure = measureRef.current;
-    if (!measure || !items.length) return;
-    const update = () => {
-      if (!measure.clientWidth) return;
-      const scale = measure.getBoundingClientRect().width / measure.clientWidth;
-      if (!scale) return;
-      const pills = Object.fromEntries(Array.from(measure.children, (item, index) =>
-        [items[index].id, item.getBoundingClientRect().width / scale]));
-      setMeasurements((previous) => previous?.width === measure.clientWidth &&
-        items.every(({ id }) => Math.abs(previous.pills[id] - pills[id]) < 0.01)
-        ? previous : { width: measure.clientWidth, pills });
-    };
-    update();
-    if (typeof ResizeObserver === "undefined") return;
-    const observer = new ResizeObserver(update);
-    observer.observe(measure);
-    Array.from(measure.children).forEach((item) => observer.observe(item));
-    return () => observer.disconnect();
-  }, [items]);
-
-  // Reuse measured widths immediately on removal, avoiding a second layout correction mid-motion.
-  const layout = measurements && items.every(({ id }) => id in measurements.pills)
-    ? historyLayout(items.map(({ id }) => measurements.pills[id]), measurements.width) : undefined;
-  const overflow = layout?.overflow ?? false;
-  const showAll = expanded && overflow;
-  const visibleItems = showAll || !overflow ? items : items.slice(0, layout!.count);
-  const rows = layout && (showAll ? layout.expandedRows : layout.collapsedRows);
-  const act = (action: () => void) => { onInteraction(); action(); };
-  const remove = (item: SearchHistoryItem) => {
-    onItemsChange(items.filter(({ id }) => id !== item.id));
+  // Pointer actions deliberately preserve the input's focus and keyboard. Only
+  // transfer focus when a keyboard user's focused control is about to disappear.
+  const retainFocus = (trigger: HTMLButtonElement, target: "edit" | "done" | "row", rowId?: string) => {
+    const scope = sectionRef.current?.parentElement;
+    if (trigger === document.activeElement && scope) pendingFocus.current = { scope, trigger, target, rowId };
   };
-  const toggle = <>{showAll ? <ChevronUp20Filled /> : <ChevronDown20Filled />}</>;
-  const pills = visibleItems.map((item) => <HistoryPill key={item.id} item={item} editing={editing}
-    interactive={interactive} animate={animate} onRemove={remove} />);
+  useLayoutEffect(() => {
+    const pending = pendingFocus.current;
+    pendingFocus.current = undefined;
+    if (!interactive || !pending || !pending.scope.isConnected
+      || pending.scope.closest('[inert], [hidden], [aria-hidden="true"]')) return;
+    if (document.activeElement !== pending.trigger && document.activeElement !== document.body) return;
+    if (pending.target === "row" && !items.length) { onEmptyFocus?.(); return; }
+    const row = Array.from(sectionRef.current?.querySelectorAll<HTMLElement>("[data-history-id]") ?? [])
+      .find(element => element.dataset.historyId === pending.rowId);
+    const target = pending.target === "edit" ? editRef.current : pending.target === "done" ? doneRef.current
+      : row?.querySelector<HTMLButtonElement>("button:not(:disabled)") ?? doneRef.current;
+    target?.focus({ preventScroll: true });
+  }, [editing, items, interactive, onEmptyFocus]);
+  const remove = (item: SearchHistoryItem, trigger: HTMLButtonElement) => {
+    const remaining = items.filter(({ id }) => id !== item.id);
+    const index = Math.max(0, items.findIndex(({ id }) => id === item.id));
+    retainFocus(trigger, "row", remaining[Math.min(index, remaining.length - 1)]?.id);
+    onItemsChange(remaining);
+  };
+  const rows = items.map((item, index) => <HistoryRow key={item.id} item={item} editing={editing}
+    interactive={interactive} animate={animate} showDivider={index < items.length - 1}
+    onRemove={remove} onSelect={onSelect} />);
 
-  const content = items.length ? <HistorySection key="history" editing={editing} animate={animate}>
+  const content = items.length ? <HistorySection key="history" editing={editing} animate={animate} sectionRef={sectionRef}>
     <AppList variant="section-header" title="Recent searches" className={searchStyles.sectionHeader}
-      rightControl={interactive ? <span className={styles.actions}>
+      rightControl={interactive || editing ? <span className={styles.actions}
+        onPointerDown={interactive ? event => event.preventDefault() : undefined}>
         <motion.span className={`${styles.actionLayer} ${styles.editActions}`} initial={false}
           animate={{ opacity: editing ? 1 : 0, x: editing ? 0 : 4 }} transition={animate ? iosMotion.control : iosMotion.instant}
           aria-hidden={!editing || undefined} {...(!editing ? { inert: "" } : {})}>
-          <button type="button" disabled={!editing} onClick={(event) => { onInteraction(); onClearRequest(event.currentTarget); }}>Clear all</button>
+          <button type="button" disabled={!interactive || !editing} onClick={(event) => onClearRequest(event.currentTarget)}>Clear all</button>
           <span className={styles.actionDivider} aria-hidden="true" />
-          <button type="button" disabled={!editing} className={styles.done} onClick={() => setEditing(false)}>Done</button>
+          <button ref={doneRef} type="button" disabled={!interactive || !editing} className={styles.done}
+            onClick={event => { retainFocus(event.currentTarget, "edit"); setEditing(false); }}>Done</button>
         </motion.span>
         <motion.span className={styles.actionLayer} initial={false}
           animate={{ opacity: editing ? 0 : 1, scale: editing ? 0.9 : 1 }} transition={animate ? iosMotion.control : iosMotion.instant}
           aria-hidden={editing || undefined} {...(editing ? { inert: "" } : {})}>
-          <button type="button" className={styles.deleteAction} aria-label="Edit search history" disabled={editing}
-            onClick={() => act(() => setEditing(true))}><Delete16Regular aria-hidden="true" /></button>
+          <button ref={editRef} type="button" className={styles.deleteAction} aria-label="Edit search history" disabled={!interactive || editing}
+            onClick={event => { retainFocus(event.currentTarget, "done"); setEditing(true); }}><Delete16Regular aria-hidden="true" /></button>
         </motion.span>
       </span> : <Delete16Regular />} />
-    <div className={styles.inset}>
-      <div ref={measureRef} className={styles.measure} aria-hidden="true" {...{ inert: "" }}>
-        {items.map((item) => <span key={item.id} className={`${searchStyles.pill} ${styles.pill}`}>{item.query}</span>)}
-      </div>
-      <motion.div className={styles.viewport} initial={false}
-        animate={{ height: rows ? rows * 38 + (rows - 1) * 8 + 12 : "auto" }}
-        transition={animate ? iosMotion.control : iosMotion.instant}>
-        <div id={listId} className={styles.pills}>
-          <LayoutGroup id={listId}>
-          {animate ? <AnimatePresence initial={false} mode="popLayout">{pills}</AnimatePresence> : pills}
-          {overflow && (interactive ? <motion.button type="button" className={`${searchStyles.pill} ${styles.expand}`}
-            layout={animate ? "position" : false} transition={animate ? iosMotion.control : iosMotion.instant}
-            aria-label={showAll ? "Collapse search history" : "Show all search history"} aria-expanded={showAll} aria-controls={listId}
-            onClick={() => act(() => setExpanded(!showAll))}>{toggle}</motion.button>
-            : <span className={`${searchStyles.pill} ${styles.expand}`} aria-hidden="true">{toggle}</span>)}
-          </LayoutGroup>
-        </div>
-      </motion.div>
+    <div className={searchStyles.cardInset}>
+      <AppListCard ariaLabel="Search history" className={searchStyles.listCard}>
+        {animate ? <AnimatePresence initial={false}>{rows}</AnimatePresence> : rows}
+      </AppListCard>
     </div>
   </HistorySection> : null;
-  return <MotionConfig transformPagePoint={localPoint}>
-    {animate ? <AnimatePresence initial={false}>{content}</AnimatePresence> : content}
-  </MotionConfig>;
+  return animate ? <AnimatePresence initial={false}>{content}</AnimatePresence> : content;
 }

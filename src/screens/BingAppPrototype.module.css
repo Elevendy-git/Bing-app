@@ -1,7 +1,12 @@
 .screen { position: absolute; inset: 0; isolation: isolate; }
-.screen[hidden] { display: none; }
+.appSurfaces { position: absolute; inset: 0; }
+.voiceCovered [data-ios-status-bar], .voiceCovered [data-ios-home-indicator] { visibility: hidden; }
+.voiceScreen { z-index: 4; }
+.voiceSystemChrome { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
 .tabsScreen, .detailScreen { z-index: 1; }
 .searchScreen { z-index: 2; }
 .resultScreen { z-index: 1; }
-/* Keep the real result field measurable and preserve its iframe while editing. */
-.concealedScreen { visibility: hidden; pointer-events: none; }
+.inactiveResult { visibility: hidden; pointer-events: none; }
+.hiddenSystemChrome [data-ios-status-bar], .hiddenSystemChrome [data-ios-home-indicator] { visibility: hidden; }
+.hiddenStatusBar [data-ios-status-bar] { visibility: hidden; }
+.returnSystemChrome { position: absolute; inset: 0; z-index: 3; pointer-events: none; }

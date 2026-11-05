@@ -4,11 +4,17 @@ import { Homepage } from "./Homepage";
 import { BingAppPrototype } from "../BingAppPrototype";
 
 const motion = vi.hoisted(() => ({ animate: vi.fn(), reduced: false }));
-vi.mock("motion/react", async (importOriginal) => ({
-  ...await importOriginal<typeof import("motion/react")>(),
-  animate: motion.animate,
-  useReducedMotion: () => motion.reduced,
-}));
+vi.mock("motion/react", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("motion/react")>();
+  return {
+    ...actual,
+    // Only the scroll-position timeline is controlled by this test. Screen
+    // MotionValues still need real playback controls, including their Promise.
+    animate: ((...args: Parameters<typeof actual.animate>) => typeof args[0] === "number"
+      ? motion.animate(...args) : actual.animate(...args)) as typeof actual.animate,
+    useReducedMotion: () => motion.reduced,
+  };
+});
 
 let stop: ReturnType<typeof vi.fn>;
 beforeEach(() => {

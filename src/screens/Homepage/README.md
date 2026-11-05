@@ -14,6 +14,21 @@ ads, widgets and video payloads are not represented as ordinary news articles.
 Near the bottom, the live feed follows MSN's continuation and appends unique
 stories. Tapping Home animates the existing scroll surface back to the hero,
 synchronizing search position and preserving loaded cards and activity.
+Live news becomes eligible for a new homepage after five minutes from its last
+successful first-page read. Returning to Home, window focus/visibility, the
+minute clock and scroll events check this age. Refresh starts only in the visible,
+active hero (scrollTop at most 32 px); it never sets the scroll position. Reading
+farther down defers refresh until returning to the hero. If the user scrolls away
+while a refresh is pending, the new first page is held until that safe position
+returns, and an already stale held response is fetched again instead of shown.
+Replacing the first page resets its continuation chain and deduplication state,
+so old pages cannot append to the new edition. Existing cards stay visible during
+refresh and after a failure; the existing Retry area repeats the failed request
+type. Pagination failures still retry their original cursor. Requests never
+overlap. Search/history, open App tabs and follow preferences are outside this
+refresh and stay intact. The lead article image loads eagerly; all later article
+images, including carousel slides, use native lazy loading. Data replacement
+adds no motion or page transition.
 See [MSN news integration](../../../docs/msn-news.md) for caching and limitations.
 It adds the title-bar layout, original weather artwork, wallpaper crop. `className` lets the screen size the existing search box, feed, and footer while
 their Library examples retain their default widths. FeedCard's optional `mediaAspectRatio`

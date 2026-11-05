@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { CheckmarkCircle24Filled } from "@fluentui/react-icons";
+import { useIsPresent } from "motion/react";
 import styles from "./Toast.module.css";
 
 export interface ToastProps {
@@ -16,11 +17,12 @@ export interface ToastProps {
 export function Toast({ message, actionLabel, onAction, onDismiss, duration = 5000, className }: ToastProps) {
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
+  const present = useIsPresent();
   useEffect(() => {
-    if (!onDismiss || duration <= 0 || hovered || focused) return;
+    if (!present || !onDismiss || duration <= 0 || hovered || focused) return;
     const timer = setTimeout(onDismiss, duration);
     return () => clearTimeout(timer);
-  }, [message, onDismiss, duration, hovered, focused]);
+  }, [present, message, onDismiss, duration, hovered, focused]);
 
   return <div className={[styles.root, className].filter(Boolean).join(" ")} role="status" aria-live="polite" aria-atomic="true"
     onPointerEnter={() => setHovered(true)} onPointerLeave={() => setHovered(false)}

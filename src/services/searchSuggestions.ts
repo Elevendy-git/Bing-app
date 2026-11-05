@@ -12,6 +12,15 @@ export function normalizeSearchQuery(input: string): string {
   return input.trim().replace(/\s+/g, " ");
 }
 
+/** Annotate received suggestions without adding, reordering or persisting queries. */
+export function markSearchHistorySuggestions(items: readonly SearchSuggestion[], historyQueries: readonly string[], privateMode = false): SearchSuggestion[] {
+  const history = new Set((privateMode ? [] : historyQueries).map(query => normalizeSearchQuery(query).toLocaleLowerCase()));
+  return items.slice(0, SEARCH_SUGGESTION_LIMIT).map(item => ({
+    ...item,
+    source: history.has(normalizeSearchQuery(item.query).toLocaleLowerCase()) ? "history" : "prediction",
+  }));
+}
+
 /** Bing's public autocomplete response contains queries, not personal history or logos. */
 export function parseBingSuggestions(payload: unknown): SearchSuggestion[] {
   if (!Array.isArray(payload) || typeof payload[0] !== "string" || !Array.isArray(payload[1])) {

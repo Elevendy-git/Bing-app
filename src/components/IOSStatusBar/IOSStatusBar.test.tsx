@@ -1,7 +1,8 @@
-import { act, cleanup, render, screen, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { IOSStatusBar } from "./IOSStatusBar";
 import { PhonePreview } from "../PreviewWorkbench/PhonePreview";
+import { formatIOSStatusTime } from "./useIOSStatusTime";
 
 afterEach(() => {
   cleanup();
@@ -37,6 +38,43 @@ describe("IOSStatusBar", () => {
     rerender(<IOSStatusBar time="8:15" />);
     expect(screen.getByText("8:15")).toBeVisible();
     expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("keeps mounted screens on one clock while fixed specimens stay independent", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 9, 27, 16, 29, 59, 500));
+    const first = render(<IOSStatusBar timeSource="system" />);
+    const second = render(<IOSStatusBar timeSource="system" />);
+    const fixed = render(<IOSStatusBar />);
+    expect(vi.getTimerCount()).toBe(1);
+    act(() => vi.advanceTimersByTime(500));
+    const expected = formatIOSStatusTime(new Date());
+    expect(within(first.container).getByText(expected)).toBeVisible();
+    expect(within(second.container).getByText(expected)).toBeVisible();
+    expect(within(fixed.container).getByText("9:41")).toBeVisible();
+    first.unmount();
+    expect(vi.getTimerCount()).toBe(1);
+    second.unmount();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it.each(["focus", "pageshow", "visibilitychange"])("resynchronizes after %s without waiting for the old timer", event => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 9, 27, 9, 41, 12));
+    render(<IOSStatusBar timeSource="system" />);
+    vi.setSystemTime(new Date(2026, 9, 27, 10, 5, 59, 500));
+    fireEvent(event === "visibilitychange" ? document : window, new Event(event));
+    expect(screen.getByText("10:05")).toBeVisible();
+    expect(vi.getTimerCount()).toBe(1);
+    act(() => vi.advanceTimersByTime(500));
+    expect(screen.getByText("10:06")).toBeVisible();
+  });
+
+  it("uses the locale's 12/24-hour convention without a day-period label", () => {
+    const afternoon = new Date(2026, 9, 27, 16, 5);
+    expect(formatIOSStatusTime(afternoon, "en-US")).toBe("4:05");
+    expect(formatIOSStatusTime(afternoon, "zh-CN")).toBe("16:05");
+    expect(formatIOSStatusTime(new Date(2026, 9, 27, 0, 5), "en-GB")).toBe("0:05");
   });
 
   it("supports compact, expanded and minimal content while preserving the right status information", () => {

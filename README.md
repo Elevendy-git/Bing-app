@@ -6,13 +6,22 @@ workbench is the only application entry, with **Prototype**, **Key screens**, an
 
 ## Run locally
 
+Use **Node.js 24 LTS** (see `.nvmrc`). Install dependencies from the lockfile;
+no private npm registry configuration is required.
+
 ```sh
 npm ci
 npm run dev
 ```
 
-Open [Bing App](http://127.0.0.1:5174/). The development server uses port 5174 and
-reports a conflict instead of silently choosing another URL.
+Open [Bing App](http://localhost:5174/). The development server uses port 5174 and
+reports a conflict instead of silently choosing another URL. The old 127.0.0.1
+address redirects to localhost so Microsoft's login callback shares the app's origin.
+
+Profile shows real Rewards values when a local dashboard capture matches the
+signed-in account. The capture stays on this
+machine and is excluded from Git, static serving and the build. See
+[Rewards data](docs/rewards.md) for its source and snapshot behavior.
 
 Prototype's Homepage loads real English-language article metadata from MSN's
 anonymous web feed: title, photo, publisher/logo, publication time and original
@@ -25,12 +34,9 @@ news. Key screens and Library remain fixed design examples. This public web
 integration is intended for prototype evaluation, not a contracted production
 API. See [MSN news integration](docs/msn-news.md).
 
-Prototype's zero-input Search uses MSN's real TopStories suggestions for
-You might like. What's trending shows six Google Trends US topics through
-related English news headlines and matching source-provided thumbnails.
-Missing source thumbnails are omitted.
-The two sections keep their existing List components and load independently.
-See [Search discovery data](docs/search-discovery.md) for source and availability details.
+Prototype's zero-input Search shows only submitted search history in a List Card.
+Without records, the content area is blank. Quick features, You might like and
+What's trending are no longer part of Search.
 
 Prototype's Search suggestions use live Bing autocomplete (up to five queries).
 Both local development and `npm run preview` include the same-origin API route.
@@ -45,6 +51,13 @@ cards. Script-driven rich cards and actions are limited; see
 [SERP integration and limitations](src/screens/SERP/README.md). Key screens retain
 the supplied Weather design reference separately from the live prototype.
 
+SERP links open inside the phone's IAB viewport, retaining the App header/footer.
+Back/Forward and Recent tab switching preserve visited documents and their scroll
+positions. Page titles, URLs and available favicons update real activity; private
+visits stay out of normal history. The web preview keeps original HTML/CSS but
+does not support complete website scripting or sign-in. Unavailable pages offer
+Retry inside the App. See [IAB preview](docs/iab-preview.md).
+
 ```sh
 npm test           # Component, screen, and workbench regression tests
 npm run typecheck  # TypeScript and design-token checks
@@ -56,15 +69,18 @@ npm run preview    # Serve the built workbench at http://127.0.0.1:4174/
 
 | Path | Responsibility |
 | --- | --- |
-| `src/App.tsx` | Workbench entry and key-screen registration |
+| `src/App.tsx` | Workbench entry, account session and key-screen registration |
+| `src/auth/` | Microsoft personal-account login, Graph profile and redirect bridge |
 | `src/previewCatalog.tsx` | Library categories, previews, overviews, and search keywords |
 | `src/components/PreviewWorkbench/` | Navigation, settings, phone frame, gallery, search, themes |
 | `src/components/` | Reusable Bing components, Library examples, local assets, and tests |
 | `src/screens/Homepage/` | Homepage composition and scrolling behavior |
 | `src/screens/Profile/` | Account photo, initial, and signed-out Profile screens |
+| `src/screens/Settings/` | Settings groups, current account and Profile return flow |
 | `src/screens/Search/` | Query entry, zero input, keyboard and suggestion states |
-| `src/screens/SERP/` | App chrome and the isolated Bing result viewport |
+| `src/screens/SERP/` | App chrome, per-tab browsing and isolated web viewports |
 | `server/bingSerp.ts` | Fixed Bing upstream and mobile HTML preparation |
+| `server/webPage.ts` | Public webpage preview API for in-app navigation |
 | `server/msnFeed.ts` | Anonymous MSN article proxy and short-lived cache |
 | `src/screens/Homepage/LiveHomepageFeed.tsx` | Live news using the existing FeedCard layouts |
 | `src/services/searchSuggestions.ts` | Validated Bing suggestion data and client request |
@@ -87,19 +103,21 @@ selection state persist when switching views.
 
 Prototype starts with no activity. Submitting a normal-mode query adds Search
 history and a Recent history visit, with the newest query first. Repeated queries
-share one Search history chip; each submission remains a separate browsing visit.
+share one Search history row; each submission remains a separate browsing visit.
 Editing a result reuses its tab; submitting from Home or “+” creates a tab.
 Private queries do not populate these normal-mode collections. Bookmarks and
 Copilot history remain empty until their corresponding actions create records.
 Activity lives in the current prototype session. **Reset** in the upper-right
-toolbar clears all prototype state and returns to Homepage; reloading also starts
-empty. Appearance, Library and Key screen examples are independent of this reset.
+toolbar clears prototype activity and returns to Homepage; reloading also starts
+activity empty. Microsoft identity is kept separately in the browser session;
+Reset does not sign out. Appearance, Library and Key screen examples are independent
+of this reset.
 
 Homepage, Search and Recent search boxes fill the screen with 16 px side insets.
 Feed and List content fill with 20 px insets. Existing 24 px spacing remains,
 including Homepage's title bar, section titles and the InPrivate introduction.
 
-**Key screens** contains Home, Profile (photo, initials, signed out), Recent, Tabs (grid, menu and empty), six Search states (regular and InPrivate), and SERP Weather. Thumbnails
+**Key screens** contains Home, Profile (photo, initials, signed out) and Settings, Recent, Tabs (grid, menu and empty), seven Search states (including empty and InPrivate), and SERP Weather. Thumbnails
 render at 50%; clicking either the thumbnail or title opens an enlarged preview
 in place. Escape or the surrounding canvas closes it and restores keyboard focus.
 
@@ -133,17 +151,32 @@ opens Search and Back restores the originating screen and scroll position.
 Menu is a reusable 238 × 136 component; its Library preview follows global
 appearance. Tab settings and Feedback retain their supplied artwork without
 inventing destination screens. Supplied tab thumbnails are confined to design
-presets; new Prototype tabs have no thumbnail/favicon until real artwork is available.
+presets. Prototype tabs preview the actually loaded Bing result document and use
+its favicon; History uses the matching page URL and icon. Empty Recent sections
+are hidden, and the trailing View all tile appears only with more than three tabs.
 
-Settings switches views and System / Light / Dark appearance. Themes apply to the
+Workbench Settings switches views and System / Light / Dark appearance. Themes apply to the
 workbench and its previews. Escape closes Settings unless search or an enlarged
 screen is handling it first.
 
 Homepage's avatar opens Profile with the shared iOS-inspired navigation motion.
 Profile reuses Avatar, Header and List components; the account photo falls back to
 the first name/email letter. History and Bookmarks open their shared screens and
-return to Profile. Account and Rewards data are design fixtures; sign-in and the
-remaining destinations await their specified flows. See [Profile](src/screens/Profile/README.md).
+return to Profile. Prototype's Tap to sign in opens Microsoft's official login
+window for personal accounts. Homepage and Profile share the real name/email and
+available photo; no photo uses the initial. The signed-in email opens an account
+dialog with app-only Sign out. Navigation, Reset and reload retain the account
+within the browser session; login/logout preserves prototype activity. Bing history,
+bookmarks and Rewards are not synchronized. Key screens retain their design
+fixtures; the real account never displays fixture Rewards points. See
+[Microsoft sign-in setup and verification](docs/microsoft-sign-in.md) and
+[Profile](src/screens/Profile/README.md).
+
+Profile's Settings row opens the app's Settings screen, adapted from the supplied
+393 × 974 design to the 402 × 874 phone. The four groups reuse the existing List
+components, scroll below the pinned header, share the live account and have no app
+footer. Back preserves Profile and returns focus to its Settings row. Individual
+settings destinations await their supplied designs. See [Settings](src/screens/Settings/README.md).
 
 ## Design sources
 

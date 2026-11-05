@@ -1,17 +1,14 @@
-import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
-import { AnimatePresence, motion, useIsPresent, useReducedMotion } from "motion/react";
+import { useEffect, useRef, type CSSProperties } from "react";
+import { AnimatePresence, useIsPresent } from "motion/react";
 import { ChevronLeft24Regular, MoreHorizontal24Regular } from "@fluentui/react-icons";
-import { AppHeader, AppList, AppListCard, HistoryMenu, IOSStatusBar, type AppFooterProps } from "../../components";
-import { IOS_METRICS } from "../../components/IOSNative/iosMetrics";
-import { ScreenFooter } from "../ScreenFooter";
-import { iosMotion } from "../../motion/iosMotion";
+import { AppHeader, AppList, AppListCard, HistoryMenu, IOSHomeIndicator, IOSStatusBar } from "../../components";
+import { AnchoredMenu, useAnchoredMenu } from "../../components/MenuList/AnchoredMenu";
+import { CollapsingContent } from "../../motion/MotionPresence";
+import { ActivityEmptyState } from "../ActivityEmptyState";
 import { groupHistory, HISTORY_ENTRIES, type HistoryEntry } from "./History.data";
 import { HistoryListRow } from "./HistoryListRow";
 import styles from "./History.module.css";
 
-const emptyIllustration = new URL("./assets/empty-history.png", import.meta.url).href;
-
-type MenuState = { kind: "page" } | { kind: "item"; entryId: string; top: number; right: number };
 export interface HistoryProps {
   entries?: readonly HistoryEntry[];
   timeSource?: "fixed" | "system";
@@ -23,95 +20,67 @@ export interface HistoryProps {
   onDelete?: (id: string) => void;
   onClearAll?: () => void;
   onSearch?: () => void;
-  onNavigate?: AppFooterProps["onSelectedTabChange"];
+  onOpenSearch?: (query: string) => void;
+  onOpenPage?: (url: string) => void;
 }
 
 export function History({ entries = HISTORY_ENTRIES, timeSource = "fixed", interactive = false, active = true,
-  initialMenu, onBack, backLabel = "Back to Recent", onDelete, onClearAll, onSearch, onNavigate }: HistoryProps) {
-  const [menu, setMenu] = useState<MenuState | null>(initialMenu === "page" ? { kind: "page" }
-    : initialMenu === "item" ? { kind: "item", entryId: "today-spotify", top: 347, right: 32 } : null);
+  initialMenu, onBack, backLabel = "Back to Recent", onDelete, onClearAll, onSearch, onOpenSearch, onOpenPage }: HistoryProps) {
   const root = useRef<HTMLElement>(null);
   const content = useRef<HTMLDivElement>(null);
-  const trigger = useRef<HTMLElement | null>(null);
-  const menuId = useId();
-  const reducedMotion = useReducedMotion();
   const present = useIsPresent();
   const inactive = !active || !present;
+  const overlay = useAnchoredMenu({ root, fallback: content, active: !inactive,
+    initialState: initialMenu === "page" ? { kind: "page" }
+      : initialMenu === "item" ? { kind: "item", entryId: "today-spotify", top: 347, right: 32 } : null,
+  });
+  const { state: menu, id: menuId } = overlay;
   useEffect(() => {
     if (interactive && active) Array.from(root.current?.querySelectorAll<HTMLButtonElement>('button') ?? [])
       .find(button => button.getAttribute("aria-label") === backLabel)?.focus({ preventScroll: true });
   }, [interactive, active, backLabel]);
-  const dismiss = () => {
-    setMenu(null);
-    requestAnimationFrame(() => {
-      const target = trigger.current?.isConnected && !trigger.current.closest("[inert]") ? trigger.current : content.current;
-      target?.focus({ preventScroll: true });
-    });
-  };
-  const openItemMenu = (entry: HistoryEntry, button: HTMLButtonElement) => {
-    const screen = root.current;
-    if (!screen) return;
-    const bounds = screen.getBoundingClientRect();
-    const target = button.getBoundingClientRect();
-    const scale = screen.offsetWidth && bounds.width ? bounds.width / screen.offsetWidth : 1;
-    const bottomLimit = screen.clientHeight - IOS_METRICS.bottomSafeArea - 52 - 8;
-    let top = (target.bottom - bounds.top) / scale - 2;
-    if (top + 56 > bottomLimit) top = (target.top - bounds.top) / scale - 56 + 2;
-    trigger.current = button;
-    setMenu({ kind: "item", entryId: entry.id, top: Math.max(IOS_METRICS.statusBarHeight + 56, top),
-      right: (bounds.right - target.right) / scale + 6 });
-  };
   return <main ref={root} className={styles.root} aria-label="History page"
     aria-hidden={inactive || undefined} {...(inactive ? { inert: "" } : {})}>
-    <div className={styles.header} {...(menu ? { inert: "" } : {})}>
+    <div className={styles.header} {...(overlay.presented ? { inert: "" } : {})}>
       <IOSStatusBar timeSource={timeSource} className={styles.statusBar} />
       <AppHeader title="History" className={styles.appHeader}
         leftAction={{ label: backLabel, icon: <ChevronLeft24Regular />, onClick: onBack }}
         rightActions={[{ label: "History options", icon: <MoreHorizontal24Regular />,
           "aria-haspopup": "menu", "aria-expanded": menu?.kind === "page", "aria-controls": menu?.kind === "page" ? menuId : undefined,
-          onClick: interactive ? event => { trigger.current = event.currentTarget; setMenu({ kind: "page" }); } : undefined }]} />
+          onClick: interactive ? event => overlay.openPage(event.currentTarget) : undefined }]} />
     </div>
     <div ref={content} className={styles.scrollContent} role="region" aria-label="History content" tabIndex={0}
-      {...(menu ? { inert: "" } : {})}>
-      {entries.length === 0 && <div className={styles.empty}>
-        <img src={emptyIllustration} width={128} height={128} alt="" draggable={false} />
-        <div className={styles.emptyText}>
-          <h3>Add tab to start browsing</h3>
-          <p>Your browsing and search history will appear here.</p>
-        </div>
+      {...(overlay.presented ? { inert: "" } : {})}>
+      <AnimatePresence initial={false}>
+      {entries.length === 0 && <ActivityEmptyState key="empty" kind="history" animated={interactive}>
         <button type="button" data-history-search className={styles.searchNow} onClick={onSearch}
           aria-disabled={!onSearch || undefined}>Search now</button>
-      </div>}
-      {groupHistory(entries).map((group, groupIndex) => <section key={group.id} aria-label={group.label}>
+      </ActivityEmptyState>}
+      {groupHistory(entries).map((group, groupIndex) => <CollapsingContent key={group.id} enabled={interactive} role="region" aria-label={group.label}>
         <AppList variant="section-header" title={group.label} showRightControl={false} className={styles.sectionHeader}
           style={{ "--gnrc-list-section-padding-top": groupIndex === 0 ? "10px" : "24px" } as CSSProperties} />
         <div className={styles.cardInset}>
           <AppListCard className={styles.listCard} ariaLabel={`${group.label} history`}>
-            {group.entries.map((entry, index) => <HistoryListRow key={entry.id} entry={entry}
+            <AnimatePresence initial={false}>
+            {group.entries.map((entry, index) => <CollapsingContent key={entry.id} enabled={interactive}><HistoryListRow entry={entry}
+              onOpenSearch={interactive ? onOpenSearch : undefined}
+              onOpenPage={interactive ? onOpenPage : undefined}
               showDivider={index < group.entries.length - 1} rightControlLabel={`Options for ${entry.title}, ${group.label}`}
               rightControlExpanded={menu?.kind === "item" && menu.entryId === entry.id}
               rightControlMenuId={menu?.kind === "item" && menu.entryId === entry.id ? menuId : undefined}
-              onRightControlClick={interactive ? event => openItemMenu(entry, event.currentTarget) : undefined} />)}
+              onRightControlClick={interactive ? event => overlay.openItem(entry.id, event.currentTarget, { height: 56 }) : undefined} /></CollapsingContent>)}
+            </AnimatePresence>
           </AppListCard>
         </div>
-      </section>)}
+      </CollapsingContent>)}
+      </AnimatePresence>
     </div>
-    <div {...(menu ? { inert: "" } : {})}>
-      <ScreenFooter selectedTab="collections" labels={{ collections: "Recent" }} onSelectedTabChange={onNavigate} />
-    </div>
-    <AnimatePresence>
-      {menu && <motion.div className={styles.menuLayer} initial={initialMenu ? false : { opacity: 0 }}
-        animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={reducedMotion ? iosMotion.instant : iosMotion.control}>
-        <div className={styles.dismissArea} aria-hidden="true" onPointerDown={interactive ? dismiss : undefined} />
-        <motion.div className={styles.menuAnchor} style={menu.kind === "item" ? { top: menu.top, right: menu.right } : undefined}
-          initial={initialMenu ? false : { scale: 0.96, y: -4 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.96, y: -4 }}
-          transition={reducedMotion ? iosMotion.instant : iosMotion.control}>
-          <HistoryMenu variant={menu.kind} id={menuId} autoFocus={interactive} onDismiss={interactive ? dismiss : undefined}
-            onDelete={onDelete && menu.kind === "item" ? () => { onDelete(menu.entryId); dismiss(); } : undefined}
-            onClearAll={onClearAll ? () => { onClearAll(); dismiss(); } : undefined} />
-        </motion.div>
-      </motion.div>}
-    </AnimatePresence>
+    <IOSHomeIndicator placement="overlay" />
+    <AnchoredMenu menu={overlay} interactive={interactive}>
+      {menu && <HistoryMenu variant={menu.kind} id={menuId} autoFocus={interactive} onDismiss={interactive ? () => overlay.close() : undefined}
+        onDelete={onDelete && menu.kind === "item" ? () => { onDelete(menu.entryId); overlay.close(true); } : undefined}
+        onClearAll={onClearAll ? () => { onClearAll(); overlay.close(); } : undefined} />}
+    </AnchoredMenu>
     {interactive && <span className={styles.announcement} role="status">{entries.length} history entries</span>}
   </main>;
 }

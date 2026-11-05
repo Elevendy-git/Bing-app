@@ -1,7 +1,7 @@
 import { Add20Filled } from "@fluentui/react-icons";
 import styles from "./NewTabButton.module.css";
 
-/** Shared floating action; each screen owns the footer and its safe area. */
+/** Shared floating action; hosts set the footer height (zero on secondary pages). */
 export function NewTabButton({ onClick }: { onClick?: () => void }) {
   return onClick
     ? <button type="button" className={styles.root} aria-label="New tab" onClick={onClick}><Add20Filled aria-hidden="true" /></button>

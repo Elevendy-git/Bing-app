@@ -1,0 +1,35 @@
+.root, .root * { box-sizing: border-box; }
+.root {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  overflow: clip;
+  background: var(--gnrc-color-homepage-feed-background);
+  color: var(--gnrc-color-foreground-neutral-primary);
+  font-family: var(--gnrc-font-family-functional);
+  font-variation-settings: "opsz" 10.5;
+}
+.header { position: relative; z-index: 1; flex: none; background: var(--gnrc-color-homepage-feed-background); }
+.statusBar { height: var(--gnrc-ios-status-height); }
+.appHeader { width: 100%; }
+.appHeader button[aria-disabled="true"] { cursor: default; pointer-events: none; }
+.scrollContent { min-height: 0; flex: 1; overflow: hidden auto; padding-bottom: 24px; overscroll-behavior-y: contain; scrollbar-width: none; }
+.scrollContent::-webkit-scrollbar { display: none; }
+.sectionHeader {
+  --gnrc-list-section-min-height: 0px;
+  --gnrc-list-section-inline-padding: var(--gnrc-layout-content-inset);
+  --gnrc-list-section-title-color: var(--gnrc-color-app-list-foreground-secondary);
+  width: 100%;
+}
+.firstHeader { --gnrc-list-section-padding-top: 8px; }
+.cardInset { padding-inline: var(--gnrc-layout-content-inset); }
+.listCard {
+  --gnrc-list-row-inline-padding: 16px;
+  --gnrc-list-divider-inset: 54px;
+  width: 100%;
+  border: 0;
+  border-radius: var(--gnrc-border-radius-card-nested);
+  box-shadow: inset 0 0 0 var(--gnrc-border-width-card) var(--gnrc-color-app-list-card-stroke);
+}

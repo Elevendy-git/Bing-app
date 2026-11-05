@@ -7,6 +7,7 @@ export * from "./IABFooter";
 export * from "./MenuList";
 export * from "./FeedMenu";
 export * from "./Toast";
+export * from "./ConfirmationDialog";
 export * from "./AppHeader";
 export * from "./Avatar";
 export * from "./AppList";

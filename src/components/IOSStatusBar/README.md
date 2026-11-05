@@ -11,8 +11,16 @@ The original combined indicators SVG is rendered at 85.329 × 13 and masked with
 `showDynamicIsland` is enabled only in standalone Library previews, since
 PhonePreview already supplies the physical camera cutout.
 
-`time` defaults to 9:41. `timeSource="system"` updates at minute boundaries and
-cleans up its timer. Each PhonePreview supplies an independent overlay context.
+`time` defaults to 9:41 for fixed design specimens. `timeSource="system"` reads
+the computer's local clock and the browser locale's 12/24-hour convention, without
+a day-period label. All live instances share one clock and one minute-boundary
+timer. Focus, page restoration, visibility and language changes resynchronize it;
+the last live instance releases the timer and listeners. The browser locale is
+used because a webpage cannot read a separate OS 12/24-hour preference directly.
+Each PhonePreview supplies an independent overlay context. Status typography
+resets inherited font features so Search and Homepage use the same SF Pro glyphs.
+Signal, Wi-Fi and battery artwork remain simulated; this web preview does not
+access native iPhone system chrome or its device telemetry.
 
 Compact/Expanded/Minimal Live Activity support is retained from
 [One Copilot](https://github.com/gim-home/one-copilot-mobile-template), using the

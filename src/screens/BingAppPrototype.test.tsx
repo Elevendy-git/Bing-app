@@ -8,27 +8,27 @@ describe("Bing app navigation", () => {
   it("opens Search from the empty Recent page and returns without restoring sample activity", async () => {
     render(<BingAppPrototype initialPage="recent" initialRecentState="empty" />);
     const newTab = screen.getByRole("button", { name: "New tab" });
-    expect(screen.getByRole("heading", { name: "Your activity will appear here" })).toBeVisible();
+    await waitFor(() => expect(screen.getByRole("heading", { name: "Your activity will appear here" })).toBeVisible());
     fireEvent.click(newTab);
     expect(await screen.findByRole("searchbox", { name: "Search query" })).toHaveValue("");
     await waitFor(() => expect(screen.getByRole("group", { name: "iOS keyboard" })).toBeVisible());
     fireEvent.click(screen.getByRole("button", { name: "Back from search" }));
     await waitFor(() => expect(newTab).toHaveFocus());
-    expect(screen.getByRole("heading", { name: "Your activity will appear here" })).toBeVisible();
+    await waitFor(() => expect(screen.getByRole("heading", { name: "Your activity will appear here" })).toBeVisible());
     fireEvent.click(screen.getByRole("button", { name: "Home" }));
-    expect(screen.getByRole("main", { name: "Bing homepage" })).toBeVisible();
+    await waitFor(() => expect(screen.getByRole("main", { name: "Bing homepage" })).toBeVisible());
     fireEvent.click(screen.getByRole("button", { name: "Recent" }));
-    expect(screen.getByRole("heading", { name: "Your activity will appear here" })).toBeVisible();
+    await waitFor(() => expect(screen.getByRole("heading", { name: "Your activity will appear here" })).toBeVisible());
   });
 
-  it("opens Recent from the third footer item and preserves both screens when returning", () => {
+  it("preserves Homepage and starts a fresh Recent view when re-entered from the footer", async () => {
     render(<BingAppPrototype />);
     const homeInput = screen.getByRole("searchbox", { name: "Search Bing" });
     const homeScroll = screen.getByRole("region", { name: "Homepage content" });
     fireEvent.change(homeInput, { target: { value: "weekend ideas" } });
     fireEvent.scroll(homeScroll, { target: { scrollTop: 384 } });
     fireEvent.click(screen.getByRole("button", { name: "Recent" }));
-    expect(screen.getByRole("main", { name: "Recent page" })).toBeVisible();
+    await waitFor(() => expect(screen.getByRole("main", { name: "Recent page" })).toBeVisible());
     expect(screen.getAllByRole("navigation", { name: "Bing app navigation" })).toHaveLength(1);
     expect(screen.getByRole("button", { name: "Recent" })).toHaveAttribute("aria-current", "page");
     const recentScroll = screen.getByRole("region", { name: "Recent content" });
@@ -38,11 +38,16 @@ describe("Bing app navigation", () => {
     expect(homeInput).toHaveValue("weekend ideas");
     expect(homeScroll.scrollTop).toBe(384);
     fireEvent.click(screen.getByRole("button", { name: "Recent" }));
-    expect(screen.getByRole("region", { name: "Recent content" }).scrollTop).toBe(300);
+    expect(screen.getByRole("region", { name: "Recent content" })).toBe(recentScroll);
+    expect(recentScroll.scrollTop).toBe(0);
   });
 
-  it.each([false, true])("opens a fresh Search from Recent and returns to the same scroll position (private: %s)", async (privateMode) => {
+  it.each([false, true])("opens a fresh Search from Recent and restores scroll after leaving private mode (%s)", async (privateMode) => {
     render(<BingAppPrototype initialPage="recent" initialPrivateMode={privateMode} />);
+    if (privateMode) {
+      expect(screen.queryByRole("button", { name: "New tab" })).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: "Turn off" }));
+    }
     const recent = screen.getByRole("main", { name: "Recent page" });
     const content = screen.getByRole("region", { name: "Recent content" });
     const newTab = screen.getByRole("button", { name: "New tab" });
@@ -52,7 +57,7 @@ describe("Bing app navigation", () => {
     expect(screen.getByRole("searchbox", { name: "Search query" })).toHaveValue("");
     expect(screen.getByRole("searchbox", { name: "Search query" })).toHaveFocus();
     expect(screen.getByRole("group", { name: "iOS keyboard" })).toBeVisible();
-    expect(screen.getByRole("switch", { name: "InPrivate" })).toHaveAttribute("aria-checked", String(privateMode));
+    expect(screen.getByRole("switch", { name: "InPrivate" })).toHaveAttribute("aria-checked", "false");
     expect(screen.queryByRole("main", { name: "Recent page" })).not.toBeInTheDocument();
     expect(recent.closest("[inert]")).not.toBeNull();
     expect(screen.queryByRole("main", { name: "Bing homepage" })).not.toBeInTheDocument();

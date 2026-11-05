@@ -112,6 +112,6 @@
 .input::placeholder { color: var(--gnrc-color-foreground-neutral-secondary); opacity: 1; }
 .serp .input, .serp .value { color: inherit; }
 .input::-webkit-search-cancel-button { display: none; }
-button.iconSlot { padding: 0; border: 0; background: transparent; color: inherit; cursor: pointer; }
+button.iconSlot, button.actionSlot { padding: 0; border: 0; background: transparent; color: inherit; cursor: pointer; }
 button.dismiss { color: var(--gnrc-color-app-search-dismiss); }
-button.iconSlot:focus-visible { outline: 2px solid var(--gnrc-color-app-list-accent); outline-offset: -2px; border-radius: 50%; }
+button.iconSlot:focus-visible, button.actionSlot:focus-visible { outline: 2px solid var(--gnrc-color-app-list-accent); outline-offset: -2px; border-radius: 50%; }

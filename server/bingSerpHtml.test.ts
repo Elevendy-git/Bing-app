@@ -20,7 +20,8 @@ describe("Bing mobile HTML preparation", () => {
     expect(html).toContain('href="https://www.bing.com/mobile.css"');
     expect(html).toContain('url("https://www.bing.com/images/card.png")');
     expect(html).toContain('src="https://www.bing.com/images/icon.png"');
-    expect(html).toContain('target="_blank" rel="noopener noreferrer"');
+    expect(html).toContain('target="_self" rel="noopener noreferrer"');
+    expect(html).toContain('data-iab-href="https://example.com/weather"');
     expect(html).not.toContain("site-search");
   });
 

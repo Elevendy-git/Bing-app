@@ -38,6 +38,8 @@ export interface BingSearchBoxProps {
   defaultValue?: string;
   /** Homepage entry into the supplied Search flow. */
   onOpenSearch?: () => void;
+  /** Opt-in entry into the supplied voice-search flow. */
+  onVoiceSearch?: () => void;
 }
 
 /**
@@ -52,6 +54,7 @@ export function BingSearchBox({
   compact = false,
   defaultValue,
   onOpenSearch,
+  onVoiceSearch,
 }: BingSearchBoxProps) {
   const preventSubmit = (event: FormEvent<HTMLFormElement>) => event.preventDefault();
 
@@ -77,7 +80,10 @@ export function BingSearchBox({
           <button className={styles.action} type="button" aria-label="Start visual search">
             <Camera24Regular />
           </button>
-          <button className={styles.action} type="button" aria-label="Start voice search">
+          <button className={`${styles.action} ${onVoiceSearch ? styles.interactive : ""}`} type="button" aria-label="Start voice search"
+            onPointerDown={onVoiceSearch ? event => { event.preventDefault(); event.stopPropagation(); } : undefined}
+            onMouseDown={onVoiceSearch ? event => { event.preventDefault(); event.stopPropagation(); } : undefined}
+            onClick={onVoiceSearch ? event => { event.stopPropagation(); onVoiceSearch(); } : undefined}>
             <VoiceSearchIcon />
           </button>
         </span>

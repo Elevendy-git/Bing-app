@@ -5,6 +5,19 @@ import { FeedCard } from "./FeedCard";
 afterEach(cleanup);
 
 describe("FeedCard", () => {
+  it("defers media loading by default and lets the host prioritize its first card", () => {
+    const { rerender } = render(<FeedCard />);
+    expect(screen.getByRole("img")).toHaveAttribute("loading", "lazy");
+    expect(screen.getByRole("img")).toHaveAttribute("decoding", "async");
+    rerender(<FeedCard imageLoading="eager" />);
+    expect(screen.getByRole("img")).toHaveAttribute("loading", "eager");
+    rerender(<FeedCard variant="multi" activeSlideIndex={2} imageLoading="eager" />);
+    const media = Array.from(document.querySelectorAll('img[class*="image"]'));
+    expect(media).toHaveLength(4);
+    expect(media.map(image => image.getAttribute("loading"))).toEqual(["lazy", "lazy", "eager", "lazy"]);
+    expect(media.every(image => image.getAttribute("decoding") === "async")).toBe(true);
+  });
+
   it("honors a supplied photo focal point and omits a missing publisher mark", () => {
     const { rerender } = render(<FeedCard imagePosition="50% 12%" publisherLogoSrc={null} />);
     expect(screen.getByRole("img")).toHaveStyle({ objectPosition: "50% 12%" });

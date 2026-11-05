@@ -66,6 +66,8 @@ export interface AppListProps {
   rightControl?: ReactNode;
   /** Makes the complete content row actionable without changing its rest appearance. */
   onClick?: () => void;
+  /** Disable the primary row action while retaining any independent trailing action. */
+  disabled?: boolean;
   /** Independent trailing action, rendered beside the row button, never inside it. */
   onRightControlClick?: MouseEventHandler<HTMLButtonElement>;
   rightControlLabel?: string;
@@ -277,6 +279,7 @@ export function AppList({
   rightLabel,
   rightControl,
   onClick,
+  disabled,
   onRightControlClick,
   rightControlLabel,
   rightControlExpanded,
@@ -323,6 +326,7 @@ export function AppList({
           aria-label={ariaLabel ?? `${displayTitle}, ${displayRightLabel}`}
           data-variant={variant}
           onClick={onClick}
+          disabled={disabled}
         >
           {content}
         </button>
@@ -340,6 +344,8 @@ export function AppList({
     <DefaultRightControl variant={variant} thumbnailSrc={thumbnailSrc}
       thumbnailAlt={thumbnailAlt} rightLogoSrc={rightLogoSrc} rightLogoAlt={rightLogoAlt} />
   );
+  // History's overflow control stays separate from opening the recorded page.
+  const separateRightControl = onRightControlClick || (onClick && variant === "bing-search-history");
   const content = (
     <div className={styles.content}>
       {variant === "trending" ? (
@@ -374,28 +380,28 @@ export function AppList({
       </span>
 
       {showRightControl ? (
-        <span className={onRightControlClick ? styles.controlSpace : styles.rightControl}>
-          {onRightControlClick ? null : trailingControl}
+        <span className={separateRightControl ? styles.controlSpace : styles.rightControl}>
+          {separateRightControl ? null : trailingControl}
         </span>
       ) : null}
     </div>
   );
 
-  if (onRightControlClick && showRightControl) {
+  if (separateRightControl && showRightControl) {
     return (
       <div className={rootClassName} style={style} data-variant={variant}>
         <div className={styles.actionRow}>
           {onClick ? (
-            <button type="button" className={styles.rowAction} aria-label={ariaLabel ?? accessibleTitle} onClick={onClick}>
+            <button type="button" className={styles.rowAction} aria-label={ariaLabel ?? accessibleTitle} onClick={onClick} disabled={disabled}>
               {content}
             </button>
           ) : content}
-          <button type="button" className={styles.trailingAction}
+          {onRightControlClick ? <button type="button" className={styles.trailingAction}
             aria-label={rightControlLabel ?? `More options for ${accessibleTitle}`} onClick={onRightControlClick}
             aria-haspopup={rightControlExpanded === undefined ? undefined : "menu"}
             aria-expanded={rightControlExpanded} aria-controls={rightControlMenuId}>
             {trailingControl}
-          </button>
+          </button> : <span className={`${styles.trailingAction} ${styles.passiveControl}`} aria-hidden="true">{trailingControl}</span>}
         </div>
         {showDivider ? <Divider /> : null}
       </div>
@@ -418,6 +424,7 @@ export function AppList({
         aria-label={ariaLabel ?? accessibleTitle}
         data-variant={variant}
         onClick={onClick}
+        disabled={disabled}
       >
         {inner}
       </button>

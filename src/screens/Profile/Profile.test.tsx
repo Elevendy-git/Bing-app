@@ -10,6 +10,7 @@ describe("Profile identity and navigation", () => {
   it.each([
     ["History", "History page"],
     ["Bookmarks", "Bookmark page"],
+    ["Settings", "Settings page"],
   ])("opens %s from Profile and restores its exact entry and scroll position", async (entry, page) => {
     render(<BingAppPrototype initialPage="profile" />);
     const profile = screen.getByRole("main", { name: "Profile page" });

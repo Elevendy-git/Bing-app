@@ -41,9 +41,14 @@ export const BOOKMARK_ENTRIES: readonly BookmarkEntry[] = [
   { kind: "site", id: "wise", title: "International Money Transfer | Send money", subtitle: "wise.com/gb/send-money", genericIcon: true },
 ];
 
-/** Recent keeps the supplied preview order and brand artwork. */
-export function recentBookmarkPreview(entries: readonly BookmarkEntry[]): readonly RecentEntry[] {
-  return RECENT_BOOKMARKS.filter(preview => entries.some(entry => entry.kind === "site" && entry.id === preview.id));
+/** Project actual saved sites, in collection order, without joining demo records. */
+export function recentBookmarkPreview(entries: readonly BookmarkEntry[]): readonly BookmarkSite[] {
+  return entries.filter((entry): entry is BookmarkSite => entry.kind === "site").slice(0, 3);
+}
+
+/** Search includes saved sites beyond the preview and inside supplied folders. */
+export function bookmarkSearchEntries(entries: readonly BookmarkEntry[]): readonly RecentEntry[] {
+  return entries.flatMap(entry => entry.kind === "site" ? [entry] : bookmarkSearchEntries(entry.children ?? []));
 }
 
 /** IDs identify individual saved entries, including duplicate URLs in different folders. */

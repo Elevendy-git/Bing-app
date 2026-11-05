@@ -6,6 +6,12 @@ The App owns the status bar, search composer and shared `IABFooter`. The central
 viewport, including Bing's category navigation, belongs to the web page. No
 React/native search-result cards are recreated here.
 
+Private sessions use the shared composer and status bar in a fixed private
+navy header, independently of workbench appearance. The session, rather than a
+subsequently toggled Search draft, owns this palette. Web content and the shared
+footer keep their existing presentation. Composer transition artwork carries
+the origin's private palette without changing its geometry or motion parameters.
+
 ## Two workbench views
 
 - **Key screens → Search results → SERP · Weather** uses the original web image
@@ -14,15 +20,20 @@ React/native search-result cards are recreated here.
 - **Prototype** submits Search via Enter, the keyboard Search action, or a query
   suggestion. `LiveBingResults` requests `/api/bing-serp?query=…`. The Vite server
   fetches Bing's mobile HTML and retains its result markup and CSS. The viewport
-  scrolls independently beneath fixed App chrome. Back/composer reopen query
-  editing; Home and Recent use the existing prototype destinations.
+  scrolls independently beneath fixed App chrome. Result links navigate inside
+  the App; Back/Forward traverse the current tab's visited pages. At the first
+  entry Back slides the result screen out to the right, revealing Homepage.
+  The result document stays mounted; Reduce Motion returns instantly. See
+  [SERP Back motion](../../../docs/motion.md#serp--homepage-back). Tapping the composer opens query
+  editing. Home and Recent retain their destinations.
 
 `LiveSERP` connects the request and iframe lifecycle to AppSearchBox's loading
 line. The result viewport stays blank while requesting, with no centered
 “Searching Bing…” message. Valid HTML advances the line; the iframe's load event
 completes and fades it. The line is a stage estimate, not a measured download
 percentage. Errors stop it and preserve Retry, which starts fresh progress.
-Obsolete requests are aborted and cannot complete the current navigation.
+Requests from removed documents are aborted. Retained background documents can
+finish loading without changing the active page or its progress.
 See [IAB loading motion](../../../docs/motion.md#iab-search-loading).
 
 Editing the result query uses a shared-composer transition into Search. The
@@ -34,23 +45,28 @@ navigation. See [SERP ↔ Search motion](../../../docs/motion.md#serp--search).
 
 ## HTML preview boundaries
 
-This is a live-fetched HTML snapshot, **not a full WebView**. Bing's scripts,
+This is a live-fetched HTML snapshot, **not a full WebView**. Remote scripts,
 embedded frames and forms are removed. Script-driven weather widgets, other rich
-cards, lazy content and controls may be absent or inactive. Ordinary links and
-category links open their real destination in a new tab; they are not a local
-browser history. More, Copilot, voice and unavailable Forward are passive until
-their flows are supplied. Bing's returned layout, ranking, locale and content may
-vary, and will not necessarily match the historical weather reference.
+cards, lazy content and controls may be absent or inactive. Ordinary links open
+their real destination through `/api/web-page` in the same App viewport. Bing
+search links become another SERP entry. Each tab retains its documents and scroll
+positions for Back/Forward and Recent; a new link after Back replaces only the
+forward branch. More, Copilot and voice stay passive until their flows are supplied.
+Bing's returned layout, ranking, locale and content may vary, and will not
+necessarily match the historical weather reference.
 
-The server calls only `https://www.bing.com/search`, uses a mobile user agent,
+The search endpoint calls only `https://www.bing.com/search`, uses a mobile user agent,
 does not forward browser credentials, and follows no redirects. Queries are
 limited to 256 characters; documents to 4 MiB; upstream calls to 8 seconds.
 Responses use `no-store` and the application adds no query log or persistence.
 English/Chinese input selects the corresponding language. Location-sensitive
 results can reflect the server's network location; no device location is sent.
 Result assets load from their original HTTPS sources in an isolated, credentialless
-iframe (where supported). Scripts and same-origin access are not allowed; CSP
-also blocks forms, scripts and embedded frames. These restrictions are intentional.
+iframe (where supported). The only executable script is the App-owned, nonce-authorized
+link bridge. The iframe has no same-origin access or popup permission. CSP blocks
+remote scripts, forms and embedded frames; the parent validates message source and
+channel before navigating. Thumbnail snapshots contain no bridge and allow no scripts.
+See [IAB preview](../../../docs/iab-preview.md) for the webpage endpoint and its limits.
 
 Failed, challenged or unrecognized responses display an error with Retry instead
 of replacing live data with a screenshot. The extraction relies on Bing's current

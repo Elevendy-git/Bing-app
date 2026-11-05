@@ -21,12 +21,15 @@
   background: var(--gnrc-color-homepage-sky);
   opacity: 1;
   pointer-events: none;
-  transition: opacity 280ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: opacity var(--gnrc-motion-scene);
 }
 
 .scene { position: absolute; inset: 0; }
 .feedToast { position: absolute; z-index: 9; inset: auto var(--gnrc-layout-toast-inset) calc(52px + var(--gnrc-ios-safe-bottom) + 16px); pointer-events: none; }
 .toastCard { pointer-events: auto; }
+.root:not([data-live-motion]) .wallpaper,
+.root:not([data-live-motion]) .statusBar,
+.root:not([data-live-motion]) .searchBackdrop { transition: none; }
 
 /* Original Figma image crop: x=.6923154, width=.20892857, height=.80380952. */
 .wallpaper::before {
@@ -59,8 +62,8 @@
   color: var(--gnrc-color-ios-island-surface);
   pointer-events: none;
   transition:
-    color 280ms cubic-bezier(0.22, 1, 0.36, 1),
-    background-color 280ms cubic-bezier(0.22, 1, 0.36, 1);
+    color var(--gnrc-motion-scene),
+    background-color var(--gnrc-motion-scene);
 }
 
 .scrollContent {
@@ -154,7 +157,7 @@
   mask: url("./assets/search-header-mask.svg") center top / 100% 138px no-repeat;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: opacity var(--gnrc-motion-fade);
 }
 
 .scrolled .wallpaper { opacity: 0; }

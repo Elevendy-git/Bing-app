@@ -2,8 +2,10 @@
 .root, .root * { box-sizing: border-box; }
 .root { position: relative; width: 100%; height: var(--gnrc-ios-keyboard-height); padding-top: 24px; flex: none; border-radius: 27px 27px 0 0; background: var(--gnrc-ios-keyboard-surface); color: var(--gnrc-ios-foreground); box-shadow: inset 0 0 8px var(--gnrc-ios-keyboard-inset); font-family: var(--gnrc-font-family-ios); font-variation-settings: normal; user-select: none; }
 .predictions { position: relative; display: grid; height: 25px; margin-inline: 8.5px; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 11px; color: var(--gnrc-ios-keyboard-suggestion); font-size: 18px; font-weight: 400; line-height: 22px; letter-spacing: -.43px; }
-.predictions > span { position: relative; display: grid; height: 25px; overflow: hidden; place-items: center; text-overflow: ellipsis; white-space: nowrap; transform: translateY(-14px); }
-.predictions > span + span { border-left: 1px solid var(--gnrc-ios-keyboard-separator); }
+.predictions > span, .predictions > button { position: relative; display: grid; min-width: 0; height: 25px; margin: 0; padding: 0 4px; overflow: hidden; border: 0; background: transparent; color: inherit; font: inherit; place-items: center; white-space: nowrap; transform: translateY(-14px); }
+.predictions > * + * { border-left: 1px solid var(--gnrc-ios-keyboard-separator); }
+.predictions button { cursor: pointer; }
+.predictions button span { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .keys { display: flex; padding-inline: 6.67px; flex-direction: column; gap: 11px; }
 .row { display: flex; height: 43px; gap: 6px; }
 .middle { padding-inline: 20px; }
@@ -24,4 +26,14 @@ button.key { cursor: pointer; }
 .lightArtwork { display: var(--gnrc-ios-light-artwork); }
 .darkArtwork { display: var(--gnrc-ios-dark-artwork); }
 .shiftOutline { --gnrc-ios-shift-artwork: none; display: block; width: 45px; height: 43px; background: currentColor; mask: var(--gnrc-ios-shift-artwork) center / auto no-repeat; }
-button.key:focus-visible { outline: 2px solid var(--gnrc-color-app-list-accent); outline-offset: 2px; }
+.capsLock::after { position: absolute; width: 12px; height: 2px; bottom: 8px; background: currentColor; content: ""; }
+.utilityKey { display: grid; min-width: 32px; min-height: 28px; margin: 0; padding: 0; border: 0; background: transparent; color: inherit; place-items: center; cursor: pointer; }
+.utilityKey[aria-pressed="true"] { border-radius: 8px; background: var(--gnrc-ios-keyboard-prominent); }
+.emojiCategories { display: grid; height: 25px; margin-inline: 8.5px; grid-template-columns: repeat(5, 1fr); transform: translateY(-14px); }
+.emojiCategories button, .emojiCategories span { display: grid; margin: 0; padding: 0; border: 0; border-radius: 6px; background: transparent; place-items: center; font-size: 19px; cursor: pointer; }
+.emojiCategories [aria-pressed="true"] { background: var(--gnrc-ios-keyboard-key); }
+.emojiGrid { display: grid; height: 151px; grid-template-columns: repeat(8, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, 1fr)); gap: 2px; }
+.emojiKey { display: grid; min-width: 0; padding: 0; border: 0; background: transparent; place-items: center; font-size: 27px; cursor: pointer; }
+.emojiGrid .symbolKey { width: 100%; height: 100%; background: transparent; }
+.dictationStatus { position: absolute; z-index: 1; inset: 4px 8px auto; display: grid; height: 39px; padding: 0 8px; overflow: hidden; border-radius: 10px; background: var(--gnrc-ios-keyboard-surface); color: inherit; font: 400 14px / 18px var(--gnrc-font-family-ios); text-align: center; place-items: center; pointer-events: none; }
+.root button:focus-visible { outline: 2px solid var(--gnrc-color-app-list-accent); outline-offset: 2px; }

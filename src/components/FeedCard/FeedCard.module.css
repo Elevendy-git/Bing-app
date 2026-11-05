@@ -35,6 +35,32 @@
   aspect-ratio: var(--gnrc-feed-card-media-aspect-ratio);
 }
 
+.openArticle {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.openArticle:focus-visible {
+  outline: 2px solid var(--gnrc-color-app-list-section-action);
+  outline-offset: -2px;
+}
+
+.articleTitle {
+  display: -webkit-box;
+  width: 100%;
+  overflow: hidden;
+  font: inherit;
+  text-align: left;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
 .image {
   display: block;
   width: 100%;
@@ -220,12 +246,7 @@
   display: flex;
   width: 100%;
   gap: var(--gnrc-spacing-component-base-300);
-  transition: transform 260ms cubic-bezier(0.33, 1, 0.68, 1);
   will-change: transform;
-}
-
-.trackDragging {
-  transition: none;
 }
 
 .multiSlide {

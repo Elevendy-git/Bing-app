@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { previewComponentGroups } from "../../previewCatalog";
 import { PreviewLibraryGroup } from "./PreviewLibraryGroup";
@@ -42,7 +42,7 @@ describe("Library preview interaction boundaries", () => {
     expect(collections).not.toHaveAttribute("aria-current");
   });
 
-  it("switches Multi-cards with pagination, keyboard and drag instead of a side control", () => {
+  it("switches Multi-cards with pagination, keyboard and drag instead of a side control", async () => {
     render(<PreviewLibraryGroup group={previewComponentGroups.find((group) => group.id === "feed-card")!}
       theme="light" showTitle />);
     const carousel = screen.getByRole("group", { name: /^Slide 1 of/ });
@@ -51,6 +51,8 @@ describe("Library preview interaction boundaries", () => {
     expect(carousel).toHaveAccessibleName(expect.stringContaining("Slide 2 of"));
     fireEvent.keyDown(carousel, { key: "ArrowRight" });
     expect(carousel).toHaveAccessibleName(expect.stringContaining("Slide 3 of"));
+    // Start the next gesture on the landed page; interruption is covered separately.
+    await waitFor(() => expect(carousel.firstElementChild).toHaveStyle({ transform: "translateX(-660px)" }));
     fireEvent.pointerDown(carousel, { pointerId: 1, clientX: 280, button: 0 });
     fireEvent.pointerMove(carousel, { pointerId: 1, clientX: 120 });
     fireEvent.pointerUp(carousel, { pointerId: 1, clientX: 120 });

@@ -10,8 +10,6 @@ export function FeedOptionsSheet({ interactive = false, ...menuProps }: FeedMenu
   const reducedMotion = useReducedMotion();
   const animate = interactive && !reducedMotion;
   return <motion.div ref={root} className={styles.overlay} aria-hidden={!present || undefined} {...(!present ? { inert: "" } : {})}
-    initial={animate ? { opacity: 0 } : false} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-    transition={animate ? iosMotion.sheet : iosMotion.instant}
     onClick={interactive ? event => { if (event.target === event.currentTarget) menuProps.onDismiss?.(); } : undefined}
     onKeyDown={interactive ? event => {
       if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); menuProps.onDismiss?.(); }
@@ -22,6 +20,9 @@ export function FeedOptionsSheet({ interactive = false, ...menuProps }: FeedMenu
         buttons[(index + (event.shiftKey ? -1 : 1) + buttons.length) % buttons.length]?.focus({ preventScroll: true });
       }
     } : undefined}>
+    <motion.div className={styles.backdrop} aria-hidden="true" initial={animate ? { opacity: 0 } : false}
+      onClick={interactive ? menuProps.onDismiss : undefined}
+      animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={animate ? iosMotion.fade : iosMotion.instant} />
     <motion.section className={styles.sheet} role="dialog" aria-modal="true" aria-label="Feed options"
       initial={animate ? { y: "110%" } : false} animate={{ y: 0 }} exit={{ y: animate ? "110%" : 0 }}
       transition={animate ? iosMotion.sheet : iosMotion.instant}>

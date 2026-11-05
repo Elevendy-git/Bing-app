@@ -1,4 +1,5 @@
-.overlay { position: absolute; inset: 0; z-index: 10; display: flex; align-items: flex-end; padding: 6px; background: rgb(0 0 0 / 30%); }
-.sheet { width: 100%; max-height: calc(100% - var(--gnrc-ios-status-height)); overflow: auto; border-radius: 34px 34px 58px 58px; scrollbar-width: none; }
+.overlay { position: absolute; inset: 0; z-index: 10; display: flex; align-items: flex-end; padding: 6px; }
+.backdrop { position: absolute; inset: 0; background: rgb(0 0 0 / 30%); pointer-events: none; }
+.sheet { position: relative; width: 100%; max-height: calc(100% - var(--gnrc-ios-status-height)); overflow: auto; border-radius: 34px 34px 58px 58px; scrollbar-width: none; }
 .sheet::-webkit-scrollbar { display: none; }
 .overlay[inert] { pointer-events: none; }

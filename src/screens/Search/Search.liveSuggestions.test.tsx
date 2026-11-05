@@ -1,6 +1,6 @@
 import { act, cleanup, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { fetchSearchSuggestions, parseBingSuggestions } from "../../services/searchSuggestions";
+import { fetchSearchSuggestions, markSearchHistorySuggestions, parseBingSuggestions, type SearchSuggestion } from "../../services/searchSuggestions";
 import { useSearchSuggestions } from "./useSearchSuggestions";
 
 const response = (query: string, items: unknown[]) => ({ ok: true, json: async () => [query, items] }) as Response;
@@ -13,6 +13,25 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.useRealTimers(); vi.unstubAllGlobals(); });
 
 describe("Live suggestion data", () => {
+  it("annotates only received exact history matches, preserving order, artwork and the five-item limit", () => {
+    const items: SearchSuggestion[] = [
+      { query: "Weather tomorrow", source: "prediction" },
+      { query: "weather TODAY", source: "prediction", logoUrl: "https://example.com/weather.png" },
+      { query: "Weather", source: "prediction" },
+      { query: "Weather radar", source: "prediction" },
+      { query: "Weather forecast", source: "prediction" },
+      { query: "Weather channel", source: "prediction" },
+    ];
+    const history = [" WEATHER  today ", "Weather channel", "Unreturned history"];
+    const marked = markSearchHistorySuggestions(items, history);
+    expect(marked.map(item => item.query)).toEqual(items.slice(0, 5).map(item => item.query));
+    expect(marked.map(item => item.source)).toEqual(["prediction", "history", "prediction", "prediction", "prediction"]);
+    expect(marked[1].logoUrl).toBe(items[1].logoUrl);
+    expect(items.every(item => item.source === "prediction")).toBe(true);
+    expect(markSearchHistorySuggestions(marked, history, true).every(item => item.source === "prediction")).toBe(true);
+    expect(markSearchHistorySuggestions([], history)).toEqual([]);
+  });
+
   it("validates, normalizes and deduplicates Bing results, limiting to five without inventing metadata", () => {
     expect(parseBingSuggestions(["We", [null, {}, "", " Weather  forecast ", "WEATHER forecast", "weather", "weather today", "weather tomorrow", "weather radar", "weather hk"]]))
       .toEqual(["Weather forecast", "weather", "weather today", "weather tomorrow", "weather radar"].map((query) => ({ query, source: "prediction" })));

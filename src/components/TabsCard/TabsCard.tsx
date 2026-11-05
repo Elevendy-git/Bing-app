@@ -1,5 +1,7 @@
 import { Dismiss16Regular } from "@fluentui/react-icons";
-import type { CSSProperties, HTMLAttributes } from "react";
+import { useState, type CSSProperties, type HTMLAttributes } from "react";
+import type { BingPageSnapshot } from "../../services/bingPage";
+import { TabPagePreview } from "./TabPagePreview";
 import styles from "./TabsCard.module.css";
 
 const defaultPreview = new URL("./assets/open-ai-preview.png", import.meta.url).href;
@@ -11,6 +13,8 @@ export interface TabsCardProps extends Omit<HTMLAttributes<HTMLElement>, "childr
   selected?: boolean;
   /** Defaults to the source artwork; supplied previews fill the area below the header. */
   previewSrc?: string | null;
+  /** The actual loaded document, shown as an isolated, noninteractive mobile preview. */
+  pageSnapshot?: BingPageSnapshot;
   /** Optional image-fill geometry supplied by a screen's Figma instance. */
   previewStyle?: CSSProperties;
   faviconSrc?: string | null;
@@ -26,6 +30,7 @@ export function TabsCard({
   title = "Open ai",
   selected = false,
   previewSrc = defaultPreview,
+  pageSnapshot,
   previewStyle,
   faviconSrc = defaultFavicon,
   onSelect,
@@ -35,12 +40,14 @@ export function TabsCard({
   className,
   ...props
 }: TabsCardProps) {
+  const [failedFavicon, setFailedFavicon] = useState<string>();
   return (
     <article
       {...props}
       className={[styles.root, className].filter(Boolean).join(" ")}
       data-state={selected ? "selected" : "rest"}
     >
+      {pageSnapshot && <TabPagePreview snapshot={pageSnapshot} title={title} />}
       <button
         type="button"
         className={styles.select}
@@ -48,13 +55,14 @@ export function TabsCard({
         aria-pressed={selected}
         onClick={onSelect}
       >
-        {previewSrc && <img
+        {!pageSnapshot && previewSrc && <img
           className={[styles.preview, previewSrc === defaultPreview && styles.designPreview].filter(Boolean).join(" ")}
           src={previewSrc} style={previewStyle} alt="" draggable={false}
         />}
         <span className={styles.header}>
           <span className={styles.identity}>
-            {faviconSrc && <img className={styles.favicon} src={faviconSrc} alt="" draggable={false} />}
+            {faviconSrc && failedFavicon !== faviconSrc && <img className={styles.favicon} src={faviconSrc} alt="" draggable={false}
+              referrerPolicy="no-referrer" onError={() => setFailedFavicon(faviconSrc)} />}
             <span className={styles.title} title={title}>{title}</span>
           </span>
           <span className={styles.closeSpace} aria-hidden="true" />

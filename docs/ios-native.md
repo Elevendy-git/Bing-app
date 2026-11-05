@@ -43,9 +43,41 @@ independent keyboard timings remain in place; see [motion](motion.md).
 Library → OS Native contains one Overview per component. State changes use the
 right control panel, which moves above the artwork at narrow workbench widths.
 The artwork stays passive. Keyboard previews cover uppercase, lowercase,
-numbers/symbols, return labels, suggestions and indicator visibility. Screens
-reuse the same exported components; callbacks enable only previously specified
-input/navigation behavior. No voice, emoji picker or result-page flow is added.
+numbers, symbols, emoji, return labels, suggestions and indicator visibility.
+Screens reuse the same exported components; callback-free previews stay passive.
+
+In the Prototype, the shared keyboard switches alphabetic, numeric, symbol
+and emoji layouts. Shift capitalizes one letter; double-tap locks uppercase;
+another Shift tap unlocks it. The input layer preserves exact case, selection
+replacement and whole-grapheme deletion. An empty field starts uppercase and
+typing returns to lowercase unless Caps Lock is on. The local emoji palette
+inserts real Unicode characters and supports the existing deletion policy.
+
+Search and Recent share predictions from their current live Bing autocomplete
+response. The first slot preserves the typed text; the next two use distinct
+provider suggestions. Stale/loading/error results are not presented as current
+predictions. Picking a slot fills the field and retains focus without submitting.
+This is query completion, not access to Apple's native QuickType engine; the web
+prototype cannot call that engine. Library example words remain static fixtures.
+
+The microphone uses the browser's `SpeechRecognition` / `webkitSpeechRecognition`
+when available, starting only on a user press. Final transcripts insert at the
+caret with appropriate word spacing; interim text stays in the status strip.
+Stop, errors, leaving the field/page and unmounting release recognition and
+ignore late callbacks. Unsupported browsers and denied microphone access show
+an explicit status. This relies on browser permissions and the browser's speech
+service (which may process audio remotely), not Apple's dictation engine.
+No audio is sent to or retained by this project's server.
+
+Behavior references checked on 2026-10-27:
+
+- [Apple: Type with the onscreen keyboard](https://support.apple.com/guide/iphone/type-with-the-onscreen-keyboard-iph3c50f96e/ios)
+  documents Shift, double-tap Caps Lock and number/symbol switching.
+- [UITextInputTraits.autocapitalizationType](https://developer.apple.com/documentation/uikit/uitextinputtraits/autocapitalizationtype)
+  describes automatic Shift behavior; search fields here use initial-letter
+  capitalization as prototype policy.
+- [MDN: SpeechRecognition](https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition)
+  documents limited browser availability and server-based recognition in Chrome.
 
 The existing Compact/Expanded Live Activity slots remain available in Status
 Bar. Those variants and their Wi-Fi/battery glyphs originated in One Copilot;

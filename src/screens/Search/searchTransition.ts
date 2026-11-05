@@ -9,6 +9,7 @@ export interface SearchTransitionOrigin {
   compact?: boolean;
   value: string;
   theme?: "light" | "dark";
+  privateMode?: boolean;
 }
 
 /** Measure the actual composer so device sizing and workbench zoom share one path. */
@@ -28,5 +29,6 @@ export function measureSearchOrigin(screen: HTMLElement | null, kind: SearchTran
     compact: composer.dataset.compact === "true",
     value: value ?? composer.querySelector<HTMLInputElement>("input")?.value ?? "",
     theme: composer.closest('[data-theme]')?.getAttribute("data-theme") === "dark" ? "dark" : "light",
+    privateMode: composer.closest('[data-private-mode]')?.getAttribute("data-private-mode") === "true",
   };
 }

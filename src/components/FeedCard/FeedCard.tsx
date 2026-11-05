@@ -6,11 +6,15 @@ import {
 import {
   useRef,
   useState,
+  useEffect,
+  useLayoutEffect,
   type CSSProperties,
   type KeyboardEvent,
   type PointerEvent,
   type MouseEventHandler,
 } from "react";
+import { animate, motion, useMotionValue, useReducedMotion } from "motion/react";
+import { iosFeedGesture, iosMotion } from "../../motion/iosMotion";
 import {
   FEED_CARD_AD_IMAGE,
   FEED_CARD_MULTI_IMAGE,
@@ -29,8 +33,10 @@ export interface FeedFollowTarget {
 }
 
 export type FeedMoreOptionsHandler = (target: FeedFollowTarget, trigger: HTMLButtonElement) => void;
+export type FeedArticleOpenHandler = (article: { url: string; title: string }) => void;
 
 export interface FeedCardItem {
+  url?: string;
   imageSrc: string;
   imageAlt: string;
   imagePosition?: string;
@@ -43,6 +49,9 @@ export interface FeedCardItem {
 }
 
 export interface FeedCardProps {
+  /** Supplied article destination; passive design specimens may omit it. */
+  url?: string;
+  onOpenArticle?: FeedArticleOpenHandler;
   /** Layout and media proportions can be set by an embedding screen. */
   className?: string;
   mediaAspectRatio?: number;
@@ -54,6 +63,8 @@ export interface FeedCardProps {
   imageAlt?: string;
   /** Focal position supplied by live media metadata; defaults to centered artwork. */
   imagePosition?: string;
+  /** Media outside the initial viewport can defer loading; hosts can prioritize the first card. */
+  imageLoading?: "eager" | "lazy";
   /** Publisher displayed in the attribution row. */
   publisher?: string;
   /** Omitted uses the design mark; null means the data source supplied no logo. */
@@ -129,6 +140,10 @@ const DEFAULT_MULTI_SLIDES: FeedCardItem[] = [
 
 const MULTI_SLIDE_GAP = 12;
 
+function articleAction({ url, title }: Pick<FeedCardItem, "url" | "title">, onOpen?: FeedArticleOpenHandler) {
+  return url && onOpen ? () => onOpen({ url, title }) : undefined;
+}
+
 function MediumMark() {
   return (
     <svg
@@ -159,21 +174,40 @@ function FeedMedia({
   imageSrc,
   imageAlt,
   imagePosition,
-}: Pick<Required<FeedCardProps>, "variant" | "imageSrc" | "imageAlt"> & Pick<FeedCardProps, "imagePosition">) {
+  imageLoading = "lazy",
+  title,
+  onOpen,
+}: Pick<Required<FeedCardProps>, "variant" | "imageSrc" | "imageAlt"> & Pick<FeedCardProps, "imagePosition" | "imageLoading" | "title"> & { onOpen?: () => void }) {
   if (variant === "loading") {
     return <div className={`${styles.media} ${styles.mediaSkeleton}`} aria-hidden="true" />;
   }
 
+  const Surface = onOpen ? "button" : "div";
   return (
-    <div className={styles.media}>
-      <img className={styles.image} src={imageSrc} alt={imageAlt}
-        style={imagePosition ? { objectPosition: imagePosition } : undefined} />
+    <Surface
+      className={`${styles.media} ${onOpen ? styles.openArticle : ""}`}
+      {...(onOpen ? {
+        type: "button" as const,
+        "data-feed-open": true,
+        "aria-label": `Open article image: ${title}`,
+        onClick: onOpen,
+      } : {})}
+    >
+      <img
+        className={styles.image}
+        src={imageSrc}
+        alt={imageAlt}
+        loading={imageLoading}
+        decoding="async"
+        draggable={false}
+        style={imagePosition ? { objectPosition: imagePosition } : undefined}
+      />
       {variant === "watch" ? (
         <span className={styles.playIndicator} aria-hidden="true">
           <Play24Filled />
         </span>
       ) : null}
-    </div>
+    </Surface>
   );
 }
 
@@ -227,8 +261,9 @@ function CardBody({
   elapsedTime,
   title,
   onMoreOptions,
+  onOpen,
 }: Pick<Required<FeedCardProps>, "variant" | "publisher" | "elapsedTime" | "title"> &
-  Pick<FeedCardProps, "publisherLogoSrc"> & { onMoreOptions?: MouseEventHandler<HTMLButtonElement> }) {
+  Pick<FeedCardProps, "publisherLogoSrc"> & { onMoreOptions?: MouseEventHandler<HTMLButtonElement>; onOpen?: () => void }) {
   return (
     <div className={styles.body}>
       <div className={styles.metaRow}>
@@ -264,64 +299,121 @@ function CardBody({
       </div>
 
       <div className={styles.titleSlot}>
-        <h2 className={styles.title}>{title}</h2>
+        <h2 className={styles.title}>
+          {onOpen ? (
+            <button type="button" className={`${styles.articleTitle} ${styles.openArticle}`} data-feed-open onClick={onOpen}>
+              {title}
+            </button>
+          ) : title}
+        </h2>
       </div>
     </div>
   );
 }
 
-function MultiCardCarousel({ slides, activeSlideIndex, onActiveSlideChange, onMoreOptions }: {
+function MultiCardCarousel({ slides, activeSlideIndex, onActiveSlideChange, onMoreOptions, onOpenArticle, imageLoading = "lazy" }: {
   slides: FeedCardItem[];
-} & Pick<FeedCardProps, "activeSlideIndex" | "onActiveSlideChange" | "onMoreOptions">) {
+} & Pick<FeedCardProps, "activeSlideIndex" | "onActiveSlideChange" | "onMoreOptions" | "onOpenArticle" | "imageLoading">) {
   const [internalIndex, setInternalIndex] = useState(0);
   const activeIndex = Math.max(0, Math.min(slides.length - 1, activeSlideIndex ?? internalIndex));
-  const [dragOffset, setDragOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [width, setWidth] = useState(318);
+  const x = useMotionValue(-activeIndex * (318 + MULTI_SLIDE_GAP));
+  const reducedMotion = useReducedMotion();
   const viewportRef = useRef<HTMLDivElement>(null);
-  const dragStartRef = useRef<number | null>(null);
+  const dragStartRef = useRef<{ pointerId: number; pointer: number; pointerY: number; position: number; scale: number; index: number;
+    axis: "pending" | "horizontal" | "vertical" } | null>(null);
   const dragOffsetRef = useRef(0);
+  const suppressClick = useRef(false);
+  const activeIndexRef = useRef(activeIndex);
+  activeIndexRef.current = activeIndex;
+
+  useLayoutEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+    const measure = () => {
+      if (!viewport.clientWidth) return;
+      setWidth(viewport.clientWidth);
+      // A canvas resize or initial controlled state is layout, not navigation.
+      x.jump(-activeIndexRef.current * (viewport.clientWidth + MULTI_SLIDE_GAP));
+    };
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(viewport);
+    return () => observer.disconnect();
+  }, [x]);
+  useEffect(() => {
+    if (isDragging) return;
+    // A layout-effect measurement can precede its setState render on mount.
+    const currentWidth = viewportRef.current?.clientWidth || width;
+    const target = -activeIndex * (currentWidth + MULTI_SLIDE_GAP);
+    if (x.get() === target) return;
+    if (reducedMotion) { x.jump(target); return; }
+    const animation = animate(x, target, iosMotion.carousel);
+    return () => animation.stop();
+  }, [activeIndex, isDragging, width, x, reducedMotion]);
 
   const moveTo = (index: number) => {
     const nextIndex = Math.max(0, Math.min(slides.length - 1, index));
     if (activeSlideIndex === undefined) setInternalIndex(nextIndex);
     onActiveSlideChange?.(nextIndex);
     dragOffsetRef.current = 0;
-    setDragOffset(0);
   };
 
   const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
     if (event.pointerType === "mouse" && event.button !== 0) return;
-    if ((event.target as Element).closest?.("button")) return;
+    if (dragStartRef.current) return;
+    suppressClick.current = false;
+    if ((event.target as Element).closest?.("button:not([data-feed-open])")) return;
 
-    dragStartRef.current = event.clientX;
+    const viewport = viewportRef.current;
+    const scale = viewport?.clientWidth ? viewport.getBoundingClientRect().width / viewport.clientWidth : 1;
+    x.stop();
+    const position = x.get();
+    dragStartRef.current = { pointerId: event.pointerId, pointer: event.clientX, pointerY: event.clientY, position, scale: scale || 1, axis: "pending",
+      index: Math.max(0, Math.min(slides.length - 1, Math.round(-position / (width + MULTI_SLIDE_GAP)))) };
     dragOffsetRef.current = 0;
     setIsDragging(true);
-    event.currentTarget.setPointerCapture?.(event.pointerId);
   };
 
   const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    if (dragStartRef.current === null) return;
+    const drag = dragStartRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
 
-    let nextOffset = event.clientX - dragStartRef.current;
-    const isPastStart = activeIndex === 0 && nextOffset > 0;
-    const isPastEnd = activeIndex === slides.length - 1 && nextOffset < 0;
-    if (isPastStart || isPastEnd) nextOffset *= 0.28;
-
+    const nextOffset = (event.clientX - drag.pointer) / drag.scale;
+    const verticalOffset = (event.clientY - drag.pointerY) / drag.scale;
+    if (Math.max(Math.abs(nextOffset), Math.abs(verticalOffset)) > iosFeedGesture.tapSlop) suppressClick.current = true;
+    if (drag.axis === "pending") {
+      if (!suppressClick.current) return;
+      // Resolve intent before moving the track. A vertical gesture belongs to the
+      // feed for the rest of this press, even if it later moves sideways.
+      drag.axis = Math.abs(nextOffset) > Math.abs(verticalOffset) ? "horizontal" : "vertical";
+    }
+    if (drag.axis !== "horizontal") return;
+    if (!event.currentTarget.hasPointerCapture?.(event.pointerId)) {
+      event.currentTarget.setPointerCapture?.(event.pointerId);
+    }
+    let position = drag.position + nextOffset;
+    const end = -(slides.length - 1) * (width + MULTI_SLIDE_GAP);
+    if (position > 0) position *= 0.28;
+    else if (position < end) position = end + (position - end) * 0.28;
     dragOffsetRef.current = nextOffset;
-    setDragOffset(nextOffset);
+    x.set(position);
   };
 
   const finishDrag = (event: PointerEvent<HTMLDivElement>, cancelled = false) => {
-    if (dragStartRef.current === null) return;
+    const drag = dragStartRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    if (cancelled) suppressClick.current = true;
 
     if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
 
-    const width = viewportRef.current?.clientWidth ?? 318;
     const threshold = Math.min(56, width * 0.18);
     const offset = dragOffsetRef.current;
-    let nextIndex = activeIndex;
+    let nextIndex = drag.index;
 
     if (!cancelled && Math.abs(offset) >= threshold) {
       nextIndex += offset < 0 ? 1 : -1;
@@ -329,7 +421,10 @@ function MultiCardCarousel({ slides, activeSlideIndex, onActiveSlideChange, onMo
 
     dragStartRef.current = null;
     setIsDragging(false);
-    moveTo(nextIndex);
+    dragOffsetRef.current = 0;
+    // Clicks and vertical scrolling resume an interrupted settling animation
+    // without changing selection. Only a recognized horizontal drag pages.
+    if (drag.axis === "horizontal") moveTo(nextIndex);
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -342,12 +437,6 @@ function MultiCardCarousel({ slides, activeSlideIndex, onActiveSlideChange, onMo
       moveTo(activeIndex + 1);
     }
   };
-
-  const trackStyle = {
-    transform: `translate3d(calc(-${activeIndex * 100}% - ${
-      activeIndex * MULTI_SLIDE_GAP
-    }px + ${dragOffset}px), 0, 0)`,
-  } satisfies CSSProperties;
 
   return (
     <div className={styles.multiContainer}>
@@ -363,10 +452,16 @@ function MultiCardCarousel({ slides, activeSlideIndex, onActiveSlideChange, onMo
         onPointerMove={handlePointerMove}
         onPointerUp={finishDrag}
         onPointerCancel={(event) => finishDrag(event, true)}
+        onPointerLeave={event => {
+          if (!event.currentTarget.hasPointerCapture?.(event.pointerId)) finishDrag(event, true);
+        }}
+        onClickCapture={event => {
+          if (suppressClick.current && event.detail > 0) { event.preventDefault(); event.stopPropagation(); }
+        }}
       >
-        <div
-          className={`${styles.multiTrack} ${isDragging ? styles.trackDragging : ""}`}
-          style={trackStyle}
+        <motion.div
+          className={styles.multiTrack}
+          style={{ x }}
         >
           {slides.map((slide, index) => (
             <div
@@ -375,18 +470,21 @@ function MultiCardCarousel({ slides, activeSlideIndex, onActiveSlideChange, onMo
               {...(index !== activeIndex ? { inert: "" } : {})}
               key={`${slide.title}-${index}`}
             >
-              <FeedMedia variant="multi" imageSrc={slide.imageSrc} imageAlt={slide.imageAlt} imagePosition={slide.imagePosition} />
+              <FeedMedia variant="multi" imageSrc={slide.imageSrc} imageAlt={slide.imageAlt} imagePosition={slide.imagePosition}
+                imageLoading={index === activeIndex ? imageLoading : "lazy"}
+                title={slide.title} onOpen={articleAction(slide, onOpenArticle)} />
               <CardBody
                 variant="multi"
                 publisher={slide.publisher}
                 publisherLogoSrc={slide.publisherLogoSrc}
                 elapsedTime={slide.elapsedTime}
                 title={slide.title}
+                onOpen={articleAction(slide, onOpenArticle)}
                 onMoreOptions={onMoreOptions ? event => onMoreOptions(slide.followTarget ?? { kind: "publisher", name: slide.publisher }, event.currentTarget) : undefined}
               />
             </div>
           ))}
-        </div>
+        </motion.div>
       </div>
       <Pagination activeIndex={activeIndex} count={slides.length} onSelect={moveTo} />
     </div>
@@ -402,6 +500,7 @@ export function FeedCard({
   imageSrc,
   imageAlt,
   imagePosition,
+  imageLoading = "lazy",
   publisher,
   publisherLogoSrc,
   elapsedTime,
@@ -411,6 +510,8 @@ export function FeedCard({
   onActiveSlideChange,
   followTarget,
   onMoreOptions,
+  url,
+  onOpenArticle,
   className,
   mediaAspectRatio,
 }: FeedCardProps) {
@@ -421,6 +522,7 @@ export function FeedCard({
   const resolvedTitle = title ?? defaults.title;
   const resolvedImage = imageSrc ?? defaults.imageSrc;
   const resolvedImageAlt = imageAlt ?? defaults.imageAlt;
+  const onOpen = isLoading ? undefined : articleAction({ url, title: resolvedTitle }, onOpenArticle);
 
   return (
     <article
@@ -434,6 +536,8 @@ export function FeedCard({
           activeSlideIndex={activeSlideIndex}
           onActiveSlideChange={onActiveSlideChange}
           onMoreOptions={onMoreOptions}
+          onOpenArticle={onOpenArticle}
+          imageLoading={imageLoading}
           slides={
             slides?.length
               ? slides
@@ -447,6 +551,7 @@ export function FeedCard({
                     elapsedTime: resolvedElapsedTime,
                     title: resolvedTitle,
                     followTarget,
+                    url,
                   },
                   ...DEFAULT_MULTI_SLIDES.slice(1),
                 ]
@@ -454,7 +559,9 @@ export function FeedCard({
         />
       ) : (
         <>
-          <FeedMedia variant={variant} imageSrc={resolvedImage} imageAlt={resolvedImageAlt} imagePosition={imagePosition} />
+          <FeedMedia variant={variant} imageSrc={resolvedImage} imageAlt={resolvedImageAlt} imagePosition={imagePosition}
+            imageLoading={imageLoading}
+            title={resolvedTitle} onOpen={onOpen} />
           {isLoading ? (
             <SkeletonBody />
           ) : (
@@ -464,6 +571,7 @@ export function FeedCard({
               publisherLogoSrc={publisherLogoSrc}
               elapsedTime={resolvedElapsedTime}
               title={resolvedTitle}
+              onOpen={onOpen}
               onMoreOptions={onMoreOptions ? event => onMoreOptions(followTarget ?? { kind: "publisher", name: resolvedPublisher }, event.currentTarget) : undefined}
             />
           )}

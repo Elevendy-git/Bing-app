@@ -16,7 +16,7 @@ describe("Feed follow flow", () => {
     expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
     fireEvent.click(within(dialog).getByRole("menuitem", { name: "Follow Medium" }));
     await waitFor(() => expect(screen.getByText("You've followed this channel")).toBeVisible());
-    expect(first).toHaveFocus();
+    await waitFor(() => expect(first).toHaveFocus());
     fireEvent.click(screen.getByRole("button", { name: "Undo" }));
     await waitFor(() => expect(screen.queryByRole("status")).not.toBeInTheDocument());
     fireEvent.click(first);
@@ -43,10 +43,10 @@ describe("Feed follow flow", () => {
     fireEvent.keyDown(follow, { key: "Escape" });
     await waitFor(() => expect(screen.getByRole("searchbox")).toBeInTheDocument());
     expect(content.scrollTop).toBe(384);
-    expect(first).toHaveFocus();
+    await waitFor(() => expect(first).toHaveFocus());
     fireEvent.click(first);
     await waitFor(() => expect(screen.getByRole("menuitem", { name: "Follow Medium" })).toBeVisible());
-    fireEvent.click(screen.getByRole("dialog").parentElement!);
+    fireEvent.click(screen.getByRole("dialog").previousElementSibling!);
     await waitFor(() => expect(screen.getByRole("searchbox")).toBeInTheDocument());
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
   });

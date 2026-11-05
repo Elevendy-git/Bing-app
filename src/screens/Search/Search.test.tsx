@@ -14,10 +14,50 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 
 describe("Query entry flow", () => {
+  it.each(["🌍", "👍🏽", "🇨🇳", "👩‍👩‍👧‍👦", "e\u0301"])("deletes %s as a whole character and keeps the caret in place", character => {
+    render(<Search interactive initialState="keyboard" />);
+    const input = screen.getByRole("searchbox", { name: "Search query" }) as HTMLInputElement;
+    fireEvent.change(input, { target: { value: `Hello ${character} world` } });
+    input.setSelectionRange(6 + character.length, 6 + character.length);
+    fireEvent.click(screen.getByRole("button", { name: "Delete character" }));
+    expect(input).toHaveValue("Hello  world");
+    expect(input.selectionStart).toBe(6);
+    expect(input).toHaveFocus();
+    fireEvent.click(screen.getByRole("button", { name: "a" }));
+    expect(input).toHaveValue("Hello a world");
+    expect(input.selectionStart).toBe(7);
+  });
+
+  it.each(["zero-input", "keyboard"] as const)("leaves %s content blank without history or discovery requests", (initialState) => {
+    render(<Search interactive initialState={initialState} history={[]} />);
+    const content = screen.getByRole("region", { name: "Search content" });
+    expect(content.textContent).toBe("");
+    expect(content.querySelector("section")).toBeNull();
+    expect(within(content).queryByRole("group")).not.toBeInTheDocument();
+    expect(screen.queryByText("Quick features")).not.toBeInTheDocument();
+    expect(screen.queryByText("You might like")).not.toBeInTheDocument();
+    expect(screen.queryByText("What’s trending")).not.toBeInTheDocument();
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("dismisses the keyboard for vertical content scrolling, not horizontal swipes or zoom", () => {
+    render(<Search interactive initialState="keyboard" />);
+    const content = screen.getByRole("region", { name: "Search content" });
+    const keyboard = screen.getByRole("group", { name: "iOS keyboard" });
+    fireEvent.wheel(content, { deltaX: 70, deltaY: 2 });
+    fireEvent.wheel(content, { deltaY: 70, ctrlKey: true });
+    fireEvent.touchStart(content, { touches: [{ clientX: 100, clientY: 100 }] });
+    fireEvent.touchMove(content, { touches: [{ clientX: 30, clientY: 105 }] });
+    expect(screen.getByRole("group", { name: "iOS keyboard" })).toBe(keyboard);
+    fireEvent.touchMove(content, { touches: [{ clientX: 95, clientY: 50 }] });
+    expect(screen.queryByRole("group", { name: "iOS keyboard" })).not.toBeInTheDocument();
+    fireEvent.focus(screen.getByRole("searchbox", { name: "Search query" }));
+    expect(screen.getByRole("group", { name: "iOS keyboard" })).toBe(keyboard);
+  });
   it("moves between zero input, keyboard and live suggestions without inventing a result page", async () => {
     render(<Search interactive />);
     const input = screen.getByRole("searchbox", { name: "Search query" });
-    expect(screen.getByRole("group", { name: "You might like" })).toBeVisible();
+    await waitFor(() => expect(screen.getByRole("region", { name: "Recent searches" })).toBeVisible());
     expect(screen.queryByRole("group", { name: "iOS keyboard" })).not.toBeInTheDocument();
 
     fireEvent.focus(input);
@@ -26,8 +66,8 @@ describe("Query entry flow", () => {
     expect(await screen.findByText("channel")).toBeVisible();
     const suggestions = screen.getByRole("group", { name: "Search suggestions" });
     expect(suggestions.children).toHaveLength(5);
-    expect(within(suggestions).queryByRole("img", { name: "From search history" })).not.toBeInTheDocument();
-    expect(within(suggestions).getAllByRole("img", { name: "Suggested query" })).toHaveLength(5);
+    expect(within(suggestions).getAllByRole("img", { name: "From search history" })).toHaveLength(2);
+    expect(within(suggestions).getAllByRole("img", { name: "Suggested query" })).toHaveLength(3);
     expect(suggestions.querySelectorAll("img")).toHaveLength(0);
     expect(within(suggestions).getByText("forecast")).toBeVisible();
     expect(suggestions.parentElement).toHaveAttribute("data-suggestions-source", "live");
@@ -37,7 +77,7 @@ describe("Query entry flow", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Clear search query" }));
     expect(input).toHaveValue("");
-    expect(screen.getByRole("group", { name: "You might like" })).toBeVisible();
+    await waitFor(() => expect(screen.getByRole("region", { name: "Recent searches" })).toBeVisible());
     expect(screen.getByRole("group", { name: "iOS keyboard" })).toBeVisible();
     fireEvent.keyDown(input, { key: "Escape" });
     expect(screen.queryByRole("group", { name: "iOS keyboard" })).not.toBeInTheDocument();
@@ -49,14 +89,14 @@ describe("Query entry flow", () => {
     const keyboard = screen.getByRole("group", { name: "iOS keyboard" });
     fireEvent.click(screen.getByRole("button", { name: "W" }));
     expect(input).toHaveValue("W");
-    fireEvent.click(screen.getByRole("button", { name: "E" }));
+    fireEvent.click(screen.getByRole("button", { name: "e" }));
     expect(input).toHaveValue("We");
     fireEvent.click(screen.getByRole("button", { name: "Delete character" }));
     expect(input).toHaveValue("W");
     expect(input).toHaveFocus();
     fireEvent.change(input, { target: { value: "unrelated query" } });
     expect(screen.queryByRole("group", { name: "Search suggestions" })).not.toBeInTheDocument();
-    fireEvent.wheel(screen.getByRole("region", { name: "Search content" }));
+    fireEvent.wheel(screen.getByRole("region", { name: "Search content" }), { deltaY: 20 });
     expect(screen.queryByRole("group", { name: "iOS keyboard" })).not.toBeInTheDocument();
     expect(input).toHaveValue("unrelated query");
     // Refocusing can reverse an in-flight dismissal without replacing the keyboard or query.
@@ -65,7 +105,7 @@ describe("Query entry flow", () => {
     expect(input).toHaveValue("unrelated query");
   });
 
-  it("shows five live numeric suggestions and restores discovery for whitespace-only input", async () => {
+  it("shows five live numeric suggestions and restores history for whitespace-only input", async () => {
     render(<Search interactive />);
     const input = screen.getByRole("searchbox", { name: "Search query" });
     fireEvent.change(input, { target: { value: "1111" } });
@@ -77,7 +117,27 @@ describe("Query entry flow", () => {
     expect(suggestions.querySelectorAll("img")).toHaveLength(0);
     fireEvent.change(input, { target: { value: "   " } });
     expect(screen.queryByRole("group", { name: "Search suggestions" })).not.toBeInTheDocument();
-    expect(screen.getByRole("group", { name: "You might like" })).toBeVisible();
+    await waitFor(() => expect(screen.getByRole("region", { name: "Recent searches" })).toBeVisible());
+  });
+
+  it("marks exact local-history matches without reordering AS, and removes that source in private mode or after deletion", async () => {
+    const history = [{ id: "weather", query: " WEATHER " }, { id: "forecast", query: "Weather   forecast" }];
+    const { rerender } = render(<Search interactive initialState="input" initialQuery="Weather" history={history} />);
+    await screen.findByText("channel");
+    const suggestions = screen.getByRole("group", { name: "Search suggestions" });
+    expect(Array.from(suggestions.children, row => row.textContent)).toEqual([
+      "Weather", "Weather channel", "Weather underground", "Weather radar", "Weather forecast",
+    ]);
+    expect(within(suggestions).getAllByRole("img", { name: "From search history" })).toHaveLength(2);
+    expect(within(suggestions).getAllByRole("img", { name: "Suggested query" })).toHaveLength(3);
+    fireEvent.click(screen.getByRole("switch", { name: "InPrivate" }));
+    expect(within(suggestions).queryByRole("img", { name: "From search history" })).toBeNull();
+    expect(within(suggestions).getAllByRole("img", { name: "Suggested query" })).toHaveLength(5);
+    fireEvent.click(screen.getByRole("switch", { name: "InPrivate" }));
+    expect(within(suggestions).getAllByRole("img", { name: "From search history" })).toHaveLength(2);
+    rerender(<Search interactive initialState="input" initialQuery="Weather" history={[]} />);
+    expect(within(suggestions).queryByRole("img", { name: "From search history" })).toBeNull();
+    expect(fetch).toHaveBeenCalledOnce();
   });
 
   it("shows five received AS rows together without a single-row loading card", async () => {
@@ -124,8 +184,8 @@ describe("Query entry flow", () => {
     expect(toggle).toHaveAttribute("aria-checked", "true");
     expect(input).toHaveFocus();
     expect(screen.getByRole("group", { name: "iOS keyboard" })).toBe(keyboard);
-    expect(screen.getByRole("region", { name: "InPrivate Search" })).toBeVisible();
-    expect(screen.queryByRole("group", { name: "You might like" })).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole("region", { name: "InPrivate Search" })).toBeVisible());
+    expect(screen.queryByRole("region", { name: "Recent searches" })).not.toBeInTheDocument();
     expect(screen.getByRole("main", { name: "Search page" })).toHaveAttribute("data-theme", "dark");
 
     fireEvent.change(input, { target: { value: "Weather" } });
@@ -139,13 +199,13 @@ describe("Query entry flow", () => {
     fireEvent.click(toggle);
     expect(input).toHaveValue("Weather");
     fireEvent.click(screen.getByRole("button", { name: "Clear search query" }));
-    expect(screen.getByRole("region", { name: "InPrivate Search" })).toBeVisible();
+    await waitFor(() => expect(screen.getByRole("region", { name: "InPrivate Search" })).toBeVisible());
     expect(screen.getByRole("group", { name: "iOS keyboard" })).toBe(keyboard);
     fireEvent.keyDown(input, { key: "Escape" });
     expect(screen.queryByRole("group", { name: "iOS keyboard" })).not.toBeInTheDocument();
     expect(toggle).toHaveAttribute("aria-checked", "true");
     fireEvent.click(toggle);
-    expect(screen.getByRole("group", { name: "You might like" })).toBeVisible();
+    await waitFor(() => expect(screen.getByRole("region", { name: "Recent searches" })).toBeVisible());
     expect(screen.queryByRole("group", { name: "iOS keyboard" })).not.toBeInTheDocument();
   });
 
@@ -156,7 +216,7 @@ describe("Query entry flow", () => {
     expect(screen.queryByRole("switch")).not.toBeInTheDocument();
     expect(screen.getByRole("img", { name: "InPrivate on" })).toBeVisible();
     expect(screen.getByRole("main", { name: "Search page" })).toHaveAttribute("data-private-mode", "true");
-    expect(screen.queryByRole("group", { name: "You might like" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "Recent searches" })).not.toBeInTheDocument();
     if (initialState === "input") expect(screen.getByRole("group", { name: "Search suggestions" })).toBeVisible();
     else expect(screen.getByRole("region", { name: "InPrivate Search" })).toBeVisible();
   });

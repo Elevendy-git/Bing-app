@@ -1,6 +1,7 @@
 .root, .root * { box-sizing: border-box; }
 .root { position: absolute; inset: 0; display: flex; flex-direction: column; width: 100%; height: 100%; overflow: clip; background: var(--gnrc-color-app-footer-surface); color: var(--gnrc-color-foreground-neutral-primary); }
 .header { position: relative; z-index: 1; padding-bottom: 8px; flex: none; background: var(--gnrc-color-app-footer-surface); }
+.header[data-private-mode="true"] { background: var(--gnrc-color-search-private-background); color: var(--gnrc-color-foreground-neutral-primary); }
 .searchRow { display: flex; width: 100%; padding: 0 10px 0 var(--gnrc-layout-search-inset); align-items: center; }
 .searchRow .search { min-width: 0; width: auto; flex: 1; }
 .searchConcealed { opacity: 0; }

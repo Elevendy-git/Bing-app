@@ -19,6 +19,8 @@ export interface AppSearchBoxProps {
   inputRef?: Ref<HTMLInputElement>;
   onBack?: () => void;
   onClear?: () => void;
+  /** Opt-in voice entry; passive artwork keeps its decorative microphone. */
+  onVoiceSearch?: () => void;
   /** IAB navigation loading feedback; omitted when idle or failed. */
   loadState?: AppSearchBoxLoadState;
   /** A new request/retry starts a fresh loading bar. */
@@ -39,11 +41,18 @@ export function AppSearchBox({
   inputRef,
   onBack,
   onClear,
+  onVoiceSearch,
   loadState,
   loadKey,
   animateLoading,
 }: AppSearchBoxProps) {
   const hasInput = state === "input";
+  const microphone = onVoiceSearch ? <button type="button" className={styles.actionSlot} aria-label="Start voice search"
+    onPointerDown={event => { event.preventDefault(); event.stopPropagation(); }}
+    onMouseDown={event => { event.preventDefault(); event.stopPropagation(); }}
+    onClick={event => { event.stopPropagation(); onVoiceSearch(); }}>
+    <span className={styles.microphone} aria-hidden="true" />
+  </button> : <span className={styles.actionSlot} aria-hidden="true"><span className={styles.microphone} /></span>;
   return (
     <div className={[styles.root, variant === "recent" && styles.recent, variant === "serp" && styles.serp, className].filter(Boolean).join(" ")}
       role="group" aria-label={ariaLabel} data-variant={variant} data-state={state}>
@@ -62,14 +71,14 @@ export function AppSearchBox({
         {hasInput && variant !== "serp" && <span className={styles.caret} aria-hidden="true" />}
         </>}
       </span>
-      {variant === "serp" ? <span className={styles.actionSlot} aria-hidden="true"><span className={styles.microphone} /></span> : hasInput ? (
+      {variant === "serp" ? microphone : hasInput ? (
         onClear ? <button type="button" className={`${styles.iconSlot} ${styles.dismiss}`} aria-label="Clear search query"
           onMouseDown={(event) => event.preventDefault()} onClick={onClear}><DismissCircle24Filled /></button> :
         <span className={`${styles.iconSlot} ${styles.dismiss}`} aria-hidden="true"><DismissCircle24Filled /></span>
       ) : variant === "search" ? (
-        <span className={styles.actions} aria-hidden="true">
-          <span className={styles.actionSlot}><Camera24Regular /></span>
-          <span className={styles.actionSlot}><span className={styles.microphone} /></span>
+        <span className={styles.actions} aria-hidden={onVoiceSearch ? undefined : true}>
+          <span className={styles.actionSlot} aria-hidden="true"><Camera24Regular /></span>
+          {microphone}
         </span>
       ) : null}
       {variant === "serp" && loadState && <SearchBoxProgress key={loadKey} state={loadState} animate={animateLoading} />}

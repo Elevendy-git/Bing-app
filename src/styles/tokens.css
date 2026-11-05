@@ -19,6 +19,8 @@
   --gnrc-color-app-search-dismiss: #4c4642;
   --gnrc-color-app-search-progress: #0c59f2;
   --gnrc-color-search-private-background: #151a28;
+  --gnrc-color-private-action-background: #0c59f2;
+  --gnrc-color-private-action-foreground: #ffffff;
   /* Switcher: C2 3326:52693. Preserve the supplied six-state palette. */
   --gnrc-color-switcher-track: rgb(0 0 0 / 20%);
   --gnrc-color-switcher-track-selected: #32ad52;

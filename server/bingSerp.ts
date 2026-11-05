@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Plugin } from "vite";
 import { normalizeSearchQuery, SEARCH_QUERY_MAX_LENGTH } from "../src/services/searchSuggestions";
-import { prepareBingSerpHtml } from "./bingSerpHtml";
+import { prepareBingSerpDocument } from "./bingSerpHtml";
 
 const MAX_HTML_BYTES = 4 * 1024 * 1024;
 const MOBILE_USER_AGENT = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1";
@@ -40,8 +40,8 @@ export async function handleBingSerp(req: IncomingMessage, res: ServerResponse, 
       source += decoder.decode(value, { stream: true });
     }
     source += decoder.decode();
-    const html = prepareBingSerpHtml(source);
-    send(200, { query, html, sourceUrl: upstream.href, fetchedAt: new Date().toISOString() });
+    const document = prepareBingSerpDocument(source);
+    send(200, { query, ...document, sourceUrl: upstream.href, fetchedAt: new Date().toISOString() });
   } catch {
     send(controller.signal.aborted ? 504 : 502, { error: "Bing results are unavailable" });
   } finally { clearTimeout(timeout); res.off("close", abort); }
