@@ -4,9 +4,22 @@ import { BingAppPrototype } from "../BingAppPrototype";
 
 afterEach(cleanup);
 const openHistory = () => fireEvent.click(screen.getByRole("button", { name: "View all history" }));
+const contentChanges = { mutationObserverOptions: { childList: true, subtree: true } };
+const waitForFocus = async (target: HTMLElement) => {
+  // Poll identity without formatting the retained screen on every failed frame.
+  await waitFor(() => expect(target.ownerDocument.activeElement === target).toBe(true), contentChanges);
+  expect(target).toHaveFocus();
+};
 const backToRecent = async (focusLabel = "View all history") => {
-  fireEvent.click(screen.getByRole("button", { name: "Back to Recent" }));
-  await waitFor(() => expect(screen.getByRole("button", { name: focusLabel })).toHaveFocus());
+  const history = screen.getByRole("main", { name: "History page" });
+  fireEvent.click(within(history).getByRole("button", { name: "Back to Recent" }));
+  // Focus returns on exit completion. Ignore per-frame style mutations while
+  // waiting for removal, instead of repeatedly scanning all mounted screens.
+  await waitFor(() => expect(history.isConnected).toBe(false), contentChanges);
+  expect(history).not.toBeInTheDocument();
+  const recent = screen.getByRole("main", { name: "Recent page" });
+  const target = within(recent).getByRole("button", { name: focusLabel });
+  await waitForFocus(target);
 };
 
 describe("Recent and browsing History flow", () => {
@@ -28,7 +41,7 @@ describe("Recent and browsing History flow", () => {
     await waitFor(() => expect(menu).not.toBeInTheDocument());
     await waitFor(() => expect(within(screen.getByRole("group", { name: "Today history" })).queryByText("Spotify")).not.toBeInTheDocument());
     expect(within(content).getAllByText("Spotify")).toHaveLength(2);
-    await waitFor(() => expect(content).toHaveFocus());
+    await waitForFocus(content);
     await backToRecent();
     expect(recentContent.scrollTop).toBe(250);
     const summary = within(screen.getByRole("group", { name: "History list" }));
@@ -48,14 +61,14 @@ describe("Recent and browsing History flow", () => {
     const rowMenu = screen.getByRole("menu", { name: "History item options" });
     fireEvent.keyDown(rowMenu, { key: "Escape" });
     await waitFor(() => expect(rowMenu).not.toBeInTheDocument());
-    await waitFor(() => expect(rowMore).toHaveFocus());
+    await waitForFocus(rowMore);
     const pageMore = screen.getByRole("button", { name: "History options" });
     fireEvent.click(pageMore);
     const pageMenu = screen.getByRole("menu", { name: "History options" });
     expect(within(pageMenu).getByRole("menuitem", { name: "Feedback" })).toHaveAttribute("aria-disabled", "true");
     fireEvent.pointerDown(pageMenu.parentElement!.parentElement!.querySelector('[aria-hidden="true"]')!);
     await waitFor(() => expect(pageMenu).not.toBeInTheDocument());
-    await waitFor(() => expect(pageMore).toHaveFocus());
+    await waitForFocus(pageMore);
     expect(within(screen.getByRole("region", { name: "History content" })).getAllByText("Medium")).toHaveLength(3);
   });
 
@@ -81,7 +94,7 @@ describe("Recent and browsing History flow", () => {
     expect(screen.queryByRole("region", { name: "Recent searches" })).not.toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Search content" }).textContent).toBe("");
     fireEvent.click(screen.getByRole("button", { name: "Back from search" }));
-    await waitFor(() => expect(searchNow).toHaveFocus());
+    await waitForFocus(searchNow);
     await waitFor(() => expect(screen.getByText("Your browsing and search history will appear here.")).toBeVisible());
     await backToRecent("New tab");
     expect(screen.queryByRole("region", { name: "History" })).not.toBeInTheDocument();
@@ -102,6 +115,7 @@ describe("Recent and browsing History flow", () => {
     }
     expect(screen.queryByRole("region", { name: "Today" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Search now" })).toBeVisible();
-    await waitFor(() => expect(screen.getByRole("region", { name: "History content" })).toHaveFocus());
+    const content = screen.getByRole("region", { name: "History content" });
+    await waitForFocus(content);
   });
 });
