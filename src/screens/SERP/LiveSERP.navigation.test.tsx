@@ -8,6 +8,12 @@ function clickLink(frame: HTMLElement, url: string, override: Partial<MessageEve
   const channel = frame.getAttribute('srcdoc')!.match(/nonce="([^"]+)"/)![1];
   fireEvent(window, new MessageEvent('message', { source: (frame as HTMLIFrameElement).contentWindow, origin: 'null', data: { type:'bing-iab-navigate', channel, url }, ...override }));
 }
+async function loadedFrame(title: string) {
+  const frame = await screen.findByTitle(title);
+  // Flush the document's load and effects before simulating its bridge messages.
+  await act(async () => { fireEvent.load(frame); });
+  return frame;
+}
 
 describe('IAB navigation within an app tab', () => {
   it('retains documents through back/forward, drops only the forward branch, and reports current metadata', async () => {
@@ -16,7 +22,7 @@ describe('IAB navigation within an app tab', () => {
     const ready = vi.fn();
     const backHome = vi.fn();
     render(<LiveSERP query="Weather" onPageReady={ready} onBack={backHome} backLabel="Back to Home" />);
-    const serp = await screen.findByTitle('Bing results for Weather'); fireEvent.load(serp);
+    const serp = await loadedFrame('Bing results for Weather');
     clickLink(serp, 'https://example.com/one');
     const one = await screen.findByTitle('Web page: https://example.com/one'); fireEvent.load(one);
     expect(screen.getByRole('main', {name:'In-app browser'})).toBeVisible();
@@ -44,7 +50,7 @@ describe('IAB navigation within an app tab', () => {
     const fetcher = vi.fn().mockResolvedValueOnce(results).mockImplementationOnce(() => new Promise(done => { resolve=done; }));
     vi.stubGlobal('fetch',fetcher);
     const {rerender} = render(<LiveSERP query="Weather" />);
-    const serp = await screen.findByTitle('Bing results for Weather');
+    const serp = await loadedFrame('Bing results for Weather');
     clickLink(serp,'https://example.com/forged',{source:window});
     clickLink(serp,'javascript:alert(1)');
     rerender(<LiveSERP query="Weather" active={false} />);
@@ -62,13 +68,16 @@ describe('IAB navigation within an app tab', () => {
     expect(serp.getAttribute('sandbox')).not.toMatch(/same-origin|popups/);
   });
   it('keeps failed navigation in the app and supports retry and back', async () => {
-    vi.stubGlobal('fetch',vi.fn().mockResolvedValueOnce(results).mockRejectedValueOnce(Error('offline')).mockResolvedValueOnce(web('https://example.com/one')));
+    const fetcher = vi.fn().mockResolvedValueOnce(results).mockRejectedValueOnce(Error('offline')).mockResolvedValueOnce(web('https://example.com/one'));
+    vi.stubGlobal('fetch',fetcher);
     render(<LiveSERP query="Weather" />);
-    const serp = await screen.findByTitle('Bing results for Weather');
+    const serp = await loadedFrame('Bing results for Weather');
     clickLink(serp,'https://example.com/one');
+    await waitFor(() => expect(fetcher).toHaveBeenCalledTimes(2));
     expect(await screen.findByRole('alert')).toHaveTextContent('This page can’t be previewed');
     fireEvent.click(screen.getByRole('button',{name:'Try again'}));
-    await screen.findByTitle('Web page: https://example.com/one');
+    await loadedFrame('Web page: https://example.com/one');
+    expect(fetcher).toHaveBeenCalledTimes(3);
     fireEvent.click(screen.getByRole('button',{name:'Back'}));
     expect(screen.getByTitle('Bing results for Weather')).toBe(serp);
   });
