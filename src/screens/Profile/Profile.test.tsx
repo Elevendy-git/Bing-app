@@ -28,26 +28,42 @@ describe("Profile identity and navigation", () => {
     expect(content.scrollTop).toBe(45);
   });
 
-  it("retains Profile as the return destination after a bookmark folder and shares deletions with Recent", async () => {
+  it("retains Profile as the return destination after a bookmark folder", async () => {
     render(<BingAppPrototype initialPage="profile" />);
-    fireEvent.click(screen.getByRole("button", { name: "Bookmarks" }));
-    const folderOpener = screen.getByRole("button", { name: "Open Travel to Paris folder" });
+    const profile = within(screen.getByRole("main", { name: "Profile page" }));
+    const bookmarks = profile.getByRole("button", { name: "Bookmarks" });
+    fireEvent.click(bookmarks);
+    const bookmark = within(screen.getByRole("main", { name: "Bookmark page" }));
+    const folderOpener = bookmark.getByRole("button", { name: "Open Travel to Paris folder" });
     fireEvent.click(folderOpener);
-    fireEvent.click(screen.getByRole("button", { name: "Back to Bookmark" }));
+    const folder = within(screen.getByRole("main", { name: "Travel to Paris folder" }));
+    fireEvent.click(folder.getByRole("button", { name: "Back to Bookmark" }));
     await waitFor(() => expect(folderOpener).toHaveFocus());
-    fireEvent.click(screen.getByRole("button", { name: "Options for Spotify, spotify" }));
-    fireEvent.click(screen.getByRole("menuitem", { name: "Delete" }));
-    await waitFor(() => expect(screen.queryByRole("menu")).not.toBeInTheDocument());
-    fireEvent.click(screen.getByRole("button", { name: "Back to Profile" }));
-    await waitFor(() => expect(screen.getByRole("button", { name: "Bookmarks" })).toHaveFocus());
-    fireEvent.click(screen.getByRole("button", { name: "Back to Homepage" }));
-    await waitFor(() => expect(screen.getByRole("button", { name: "Open Profile" })).toHaveFocus());
-    fireEvent.click(screen.getByRole("button", { name: "Recent" }));
-    expect(within(screen.getByRole("group", { name: "Bookmark list" })).queryByText("Spotify")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "View all bookmark" }));
-    expect(screen.getByRole("button", { name: "Back to Recent" })).toHaveFocus();
-    fireEvent.click(screen.getByRole("button", { name: "Back to Recent" }));
-    await waitFor(() => expect(screen.getByRole("button", { name: "View all bookmark" })).toHaveFocus());
+    fireEvent.click(bookmark.getByRole("button", { name: "Back to Profile" }));
+    await waitFor(() => expect(bookmarks).toHaveFocus());
+    fireEvent.click(profile.getByRole("button", { name: "Back to Homepage" }));
+    const profileOpener = screen.getByRole("button", { name: "Open Profile" });
+    await waitFor(() => expect(profileOpener).toHaveFocus());
+  });
+
+  it("shares bookmark deletions with Recent and restores its own return destination", async () => {
+    render(<BingAppPrototype initialPage="recent" />);
+    const recent = within(screen.getByRole("main", { name: "Recent page" }));
+    const bookmarkOpener = recent.getByRole("button", { name: "View all bookmark" });
+    fireEvent.click(bookmarkOpener);
+    const bookmark = within(screen.getByRole("main", { name: "Bookmark page" }));
+    fireEvent.click(bookmark.getByRole("button", { name: "Options for Spotify, spotify" }));
+    const menu = screen.getByRole("menu");
+    fireEvent.click(within(menu).getByRole("menuitem", { name: "Delete" }));
+    await waitFor(() => expect(menu).not.toBeInTheDocument());
+    fireEvent.click(bookmark.getByRole("button", { name: "Back to Recent" }));
+    await waitFor(() => expect(bookmarkOpener).toHaveFocus());
+    expect(within(recent.getByRole("group", { name: "Bookmark list" })).queryByText("Spotify")).not.toBeInTheDocument();
+    fireEvent.click(bookmarkOpener);
+    const back = within(screen.getByRole("main", { name: "Bookmark page" })).getByRole("button", { name: "Back to Recent" });
+    expect(back).toHaveFocus();
+    fireEvent.click(back);
+    await waitFor(() => expect(bookmarkOpener).toHaveFocus());
   });
 
   it("returns through History to Profile after Search from empty history", async () => {

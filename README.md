@@ -230,8 +230,9 @@ Figma sources in a component README. Check relevant interactions and Light/Dark
 appearance directly in the workbench before submitting changes.
 
 The pull-request workflow runs types, token checks, tests, and the workbench build.
-The deployment workflow publishes `dist/` to GitHub Pages when changes reach
-`main`, or when manually dispatched. Repository Pages settings must use
+The deployment workflow publishes `dist/` to GitHub Pages only when manually
+dispatched from Actions. Code pushes still run the automatic workbench checks.
+Before starting a deployment, enable Pages in the repository settings and use
 **GitHub Actions** as the deployment source. The production build uses relative
 asset URLs for project-based Pages paths. No deployment is triggered by local edits.
 GitHub Pages serves static files only, so live suggestions would need a separately

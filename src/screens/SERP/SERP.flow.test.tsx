@@ -14,6 +14,21 @@ beforeEach(() => {
 });
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 
+async function openRecentFromSERP() {
+  render(<BingAppPrototype />);
+  fireEvent.focus(screen.getByRole("searchbox", { name: "Search Bing" }));
+  const query = screen.getByRole("searchbox", { name: "Search query" });
+  fireEvent.change(query, { target: { value: "Weather" } });
+  fireEvent.keyDown(query, { key: "Enter" });
+  await screen.findByTitle("Bing results for Weather");
+  await waitFor(() => expect(document.querySelector('[aria-label="Search page"]')).not.toBeInTheDocument());
+  await waitFor(() => expect(screen.getByRole("searchbox", { name: "Edit search query" })).toHaveFocus());
+  fireEvent.click(screen.getByRole("button", { name: "Recent" }));
+  const footer = screen.getByRole("navigation", { name: "Recent browser navigation" });
+  await waitFor(() => expect(within(footer).getByRole("button", { name: "Recent" })).toHaveFocus());
+  return footer;
+}
+
 describe("Query to Bing results flow", () => {
   it("opens an unfiltered Recent after submitting a Recent suggestion, retaining existing activity", async () => {
     render(<BingAppPrototype initialRecentState="empty" />);
@@ -118,15 +133,7 @@ describe("Query to Bing results flow", () => {
   });
 
   it("keeps Recent's browser footer only when entered from SERP and returns to the same query", async () => {
-    render(<BingAppPrototype />);
-    fireEvent.focus(screen.getByRole("searchbox", { name: "Search Bing" }));
-    fireEvent.change(screen.getByRole("searchbox", { name: "Search query" }), { target: { value: "Weather" } });
-    fireEvent.keyDown(screen.getByRole("searchbox", { name: "Search query" }), { key: "Enter" });
-    await screen.findByTitle("Bing results for Weather");
-    await waitFor(() => expect(document.querySelector('[aria-label="Search page"]')).not.toBeInTheDocument());
-    await waitFor(() => expect(screen.getByRole("searchbox", { name: "Edit search query" })).toHaveFocus());
-    fireEvent.click(screen.getByRole("button", { name: "Recent" }));
-    const browserFooter = screen.getByRole("navigation", { name: "Recent browser navigation" });
+    const browserFooter = await openRecentFromSERP();
     const selected = within(browserFooter).getByRole("button", { name: "Recent" });
     expect(selected).toHaveAttribute("aria-current", "page");
     expect(selected.querySelector("svg")).toHaveAttribute("data-icon-variant", "filled");
@@ -135,28 +142,42 @@ describe("Query to Bing results flow", () => {
     fireEvent.click(selected);
     expect(screen.getByRole("navigation", { name: "Recent browser navigation" })).toBe(browserFooter);
     expect(screen.queryByRole("main", { name: "Search results" })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "View all open tabs" }));
-    expect(screen.getByRole("main", { name: "Tabs page" })).toBeVisible();
+    fireEvent.click(within(browserFooter).getByRole("button", { name: "Back to search results" }));
+    expect(screen.getByRole("searchbox", { name: "Edit search query" })).toHaveValue("Weather");
+    fireEvent.click(screen.getByRole("button", { name: "Recent" }));
+    fireEvent.click(screen.getByRole("button", { name: "Home" }));
+    fireEvent.click(screen.getByRole("button", { name: "Recent" }));
+    await waitFor(() => expect(screen.getByRole("navigation", { name: "Bing app navigation" })).toBeVisible());
+    expect(screen.queryByRole("navigation", { name: "Recent browser navigation" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Back to search results" })).not.toBeInTheDocument();
+  });
+
+  // Exercise each return route independently, retaining real motion and focus waits
+  // without coupling every destination to one accumulated CI wall-clock deadline.
+  it.each([
+    { entry: "View all open tabs", page: "Tabs page" },
+    { entry: "View all history", page: "History page" },
+    { entry: "View all bookmark", page: "Bookmark page" },
+  ])("restores Recent's browser footer and $entry focus after $page", async ({ entry, page }) => {
+    const browserFooter = await openRecentFromSERP();
+    fireEvent.click(screen.getByRole("button", { name: entry }));
+    expect(screen.getByRole("main", { name: page })).toBeVisible();
     await waitFor(() => expect(screen.queryByRole("navigation", { name: "Bing app navigation" })).not.toBeInTheDocument());
     expect(screen.queryByRole("navigation", { name: "Recent browser navigation" })).not.toBeInTheDocument();
+    if (page === "Bookmark page") {
+      fireEvent.click(screen.getByRole("button", { name: "Open Travel to Paris folder" }));
+      fireEvent.click(screen.getByRole("button", { name: "Back to Bookmark" }));
+      await waitFor(() => expect(screen.getByRole("button", { name: "Open Travel to Paris folder" })).toHaveFocus());
+    }
     fireEvent.click(screen.getByRole("button", { name: "Back to Recent" }));
-    await waitFor(() => expect(screen.getByRole("button", { name: "View all open tabs" })).toHaveFocus());
+    await waitFor(() => expect(screen.getByRole("button", { name: entry })).toHaveFocus());
     expect(screen.getByRole("navigation", { name: "Recent browser navigation" })).toBe(browserFooter);
-    fireEvent.click(screen.getByRole("button", { name: "View all history" }));
-    expect(screen.getByRole("main", { name: "History page" })).toBeVisible();
-    expect(screen.queryByRole("navigation", { name: "Bing app navigation" })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Back to Recent" }));
-    await waitFor(() => expect(screen.getByRole("button", { name: "View all history" })).toHaveFocus());
-    expect(screen.getByRole("navigation", { name: "Recent browser navigation" })).toBe(browserFooter);
-    fireEvent.click(screen.getByRole("button", { name: "View all bookmark" }));
-    expect(screen.getByRole("main", { name: "Bookmark page" })).toBeVisible();
-    expect(screen.queryByRole("navigation", { name: "Bing app navigation" })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Open Travel to Paris folder" }));
-    fireEvent.click(screen.getByRole("button", { name: "Back to Bookmark" }));
-    await waitFor(() => expect(screen.getByRole("button", { name: "Open Travel to Paris folder" })).toHaveFocus());
-    fireEvent.click(screen.getByRole("button", { name: "Back to Recent" }));
-    await waitFor(() => expect(screen.getByRole("button", { name: "View all bookmark" })).toHaveFocus());
-    expect(screen.getByRole("navigation", { name: "Recent browser navigation" })).toBe(browserFooter);
+    fireEvent.click(within(browserFooter).getByRole("button", { name: "Back to search results" }));
+    expect(screen.getByRole("searchbox", { name: "Edit search query" })).toHaveValue("Weather");
+  });
+
+  it("restores Recent's browser footer and New tab focus after cancelling Search", async () => {
+    const browserFooter = await openRecentFromSERP();
     fireEvent.click(screen.getByRole("button", { name: "New tab" }));
     expect(screen.getByRole("searchbox", { name: "Search query" })).toHaveValue("");
     await waitFor(() => expect(screen.getByRole("group", { name: "iOS keyboard" })).toBeVisible());
@@ -166,13 +187,7 @@ describe("Query to Bing results flow", () => {
     expect(screen.getByRole("navigation", { name: "Recent browser navigation" })).toBe(browserFooter);
     fireEvent.click(within(browserFooter).getByRole("button", { name: "Back to search results" }));
     expect(screen.getByRole("searchbox", { name: "Edit search query" })).toHaveValue("Weather");
-    fireEvent.click(screen.getByRole("button", { name: "Recent" }));
-    fireEvent.click(screen.getByRole("button", { name: "Home" }));
-    fireEvent.click(screen.getByRole("button", { name: "Recent" }));
-    await waitFor(() => expect(screen.getByRole("navigation", { name: "Bing app navigation" })).toBeVisible());
-    expect(screen.queryByRole("navigation", { name: "Recent browser navigation" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Back to search results" })).not.toBeInTheDocument();
-  }, 10000);
+  });
 
   it("edits through the composer but returns directly Home through SERP Back without resetting its scroll", async () => {
     render(<BingAppPrototype />);
