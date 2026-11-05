@@ -46,19 +46,25 @@ describe("Profile identity and navigation", () => {
     await waitFor(() => expect(profileOpener).toHaveFocus());
   });
 
-  it("shares bookmark deletions with Recent and restores its own return destination", async () => {
-    render(<BingAppPrototype initialPage="recent" />);
-    const recent = within(screen.getByRole("main", { name: "Recent page" }));
-    const bookmarkOpener = recent.getByRole("button", { name: "View all bookmark" });
-    fireEvent.click(bookmarkOpener);
+  it("shares bookmark deletions from Profile with Recent and restores its own return destination", async () => {
+    render(<BingAppPrototype initialPage="profile" />);
+    const profile = within(screen.getByRole("main", { name: "Profile page" }));
+    const bookmarks = profile.getByRole("button", { name: "Bookmarks" });
+    fireEvent.click(bookmarks);
     const bookmark = within(screen.getByRole("main", { name: "Bookmark page" }));
     fireEvent.click(bookmark.getByRole("button", { name: "Options for Spotify, spotify" }));
     const menu = screen.getByRole("menu");
     fireEvent.click(within(menu).getByRole("menuitem", { name: "Delete" }));
     await waitFor(() => expect(menu).not.toBeInTheDocument());
-    fireEvent.click(bookmark.getByRole("button", { name: "Back to Recent" }));
-    await waitFor(() => expect(bookmarkOpener).toHaveFocus());
+    fireEvent.click(bookmark.getByRole("button", { name: "Back to Profile" }));
+    await waitFor(() => expect(bookmarks).toHaveFocus());
+    fireEvent.click(profile.getByRole("button", { name: "Back to Homepage" }));
+    const profileOpener = screen.getByRole("button", { name: "Open Profile" });
+    await waitFor(() => expect(profileOpener).toHaveFocus());
+    fireEvent.click(within(screen.getByRole("navigation", { name: "Bing app navigation" })).getByRole("button", { name: "Recent" }));
+    const recent = within(screen.getByRole("main", { name: "Recent page" }));
     expect(within(recent.getByRole("group", { name: "Bookmark list" })).queryByText("Spotify")).not.toBeInTheDocument();
+    const bookmarkOpener = recent.getByRole("button", { name: "View all bookmark" });
     fireEvent.click(bookmarkOpener);
     const back = within(screen.getByRole("main", { name: "Bookmark page" })).getByRole("button", { name: "Back to Recent" });
     expect(back).toHaveFocus();
