@@ -5,7 +5,8 @@ import { AppHeader, AppList, AppListCard, HistoryMenu, IOSHomeIndicator, IOSStat
 import { AnchoredMenu, useAnchoredMenu } from "../../components/MenuList/AnchoredMenu";
 import { CollapsingContent } from "../../motion/MotionPresence";
 import { ActivityEmptyState } from "../ActivityEmptyState";
-import { groupHistory, HISTORY_ENTRIES, type HistoryEntry } from "./History.data";
+import { groupHistory, HISTORY_ENTRIES } from "./History.data";
+import type { HistoryEntry } from "../activity/types";
 import { HistoryListRow } from "./HistoryListRow";
 import styles from "./History.module.css";
 

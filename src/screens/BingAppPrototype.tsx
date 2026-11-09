@@ -1,11 +1,10 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import type { SelectableFooterDestination } from "../components/AppFooter";
 import { IOSHomeIndicator } from "../components/IOSHomeIndicator";
 import { IOSStatusBar } from "../components/IOSStatusBar";
 import { Homepage, type HomepageProps } from "./Homepage";
 import { Recent } from "./Recent";
-import { RECENT_CONVERSATIONS } from "./Recent/Recent.data";
 import { Tabs } from "./Tabs";
 import { History } from "./History";
 import { Bookmark } from "./Bookmark";
@@ -17,19 +16,15 @@ import { useVoiceAudioMeter } from "../hooks/useVoiceAudioMeter";
 import { usePreviewActivity } from "../components/PreviewWorkbench/PreviewActivity";
 import { Profile, PROFILE_ACCOUNTS, profileAvatar, type ProfileAccount, type ProfileAuthentication } from "./Profile";
 import type { RewardsSnapshot } from "../auth/rewards";
-import { BOOKMARK_ENTRIES, bookmarkSearchEntries, deleteBookmark, recentBookmarkPreview } from "./Bookmark/Bookmark.data";
-import { HISTORY_ENTRIES } from "./History/History.data";
-import { OPEN_TABS } from "./Tabs/Tabs.data";
-import { bingSearchQuery, bingSearchUrl, type BingPageSnapshot } from "../services/bingPage";
+import { bookmarkSearchEntries, recentBookmarkPreview } from "./activity/bookmarks";
 import { webUrl } from "../services/webNavigation";
-import { normalizeSearchQuery } from "../services/searchSuggestions";
 import { Search, type SearchTransitionOrigin } from "./Search";
-import { RECENT_SEARCHES } from "./Search/Search.data";
 import { LiveSERP } from "./SERP/LiveSERP";
 import { SERP } from "./SERP/SERP";
 import { measureSearchOrigin } from "./Search/searchTransition";
 import { iosMotion } from "../motion/iosMotion";
 import { ScreenLayer, useOverlayPresence } from "../motion/MotionPresence";
+import { usePrototypeActivity } from "./activity/usePrototypeActivity";
 import styles from "./BingAppPrototype.module.css";
 
 export interface BingAppPrototypeProps {
@@ -45,17 +40,6 @@ export interface BingAppPrototypeProps {
   timeSource?: "fixed" | "system";
   feedSource?: HomepageProps["feedSource"];
 }
-
-interface ResultSession {
-  id: string;
-  query: string;
-  privateMode: boolean;
-  tabId: string | null;
-  historyId: string | null;
-  initialUrl?: string;
-}
-
-const searchQueryKey = (query: string) => normalizeSearchQuery(query).toLocaleLowerCase();
 
 function openMicrosoftRewards() {
   // The official site owns its authenticated session, outside the IAB preview proxy.
@@ -73,9 +57,9 @@ export function BingAppPrototype({ initialPage = "home", account = PROFILE_ACCOU
     onSignOut: () => setDemoAccount(null),
   } : undefined);
   const [page, setPage] = useState<"home" | "recent" | "tabs" | "history" | "bookmark" | "settings" | "search" | "serp" | "profile">(initialPage);
-  const [resultSessions, setResultSessions] = useState<ResultSession[]>([]);
-  const [activeResultId, setActiveResultId] = useState<string | null>(null);
-  const activeResult = resultSessions.find(session => session.id === activeResultId);
+  const activity = usePrototypeActivity(initialRecentState);
+  const { resultSessions, activeResultId, activeResult, searchHistory, browsingHistory, bookmarks, conversations,
+    tabs, selectedTabId, deleteHistoryEntry, updateSearchHistory, saveResultPage, closeTab, closeAllTabs } = activity;
   const resultQuery = activeResult?.query ?? "";
   const [searchDraft, setSearchDraft] = useState("");
   const [searchReturnPage, setSearchReturnPage] = useState<"home" | "recent" | "tabs" | "history" | "serp">("home");
@@ -86,10 +70,6 @@ export function BingAppPrototype({ initialPage = "home", account = PROFILE_ACCOU
   const reducedMotion = useReducedMotion();
   const [privateMode, setPrivateMode] = useState(initialPrivateMode);
   const [detailChromeRetained, setDetailChromeRetained] = useState(initialPage === "profile");
-  const [searchHistory, setSearchHistory] = useState(initialRecentState === "empty" ? [] : RECENT_SEARCHES);
-  const [browsingHistory, setBrowsingHistory] = useState(initialRecentState === "empty" ? [] : HISTORY_ENTRIES);
-  const [bookmarks, setBookmarks] = useState(initialRecentState === "empty" ? [] : BOOKMARK_ENTRIES);
-  const [conversations] = useState(initialRecentState === "empty" ? [] : RECENT_CONVERSATIONS);
   const [searchOrigin, setSearchOrigin] = useState<SearchTransitionOrigin | null>(null);
   const [searchExitOrigin, setSearchExitOrigin] = useState<SearchTransitionOrigin | null>(null);
   const serpRef = useRef<HTMLDivElement>(null);
@@ -108,10 +88,6 @@ export function BingAppPrototype({ initialPage = "home", account = PROFILE_ACCOU
   const profileRef = useRef<HTMLDivElement>(null);
   const tabsRef = useRef<HTMLDivElement>(null);
   const historyRef = useRef<HTMLDivElement>(null);
-  const [tabs, setTabs] = useState(initialRecentState === "empty" ? [] : OPEN_TABS);
-  const [selectedTabId, setSelectedTabId] = useState<string | null>(initialRecentState === "empty" ? null : "spring");
-  const activitySequence = useRef(0);
-  const recordedPages = useRef(new Set<string>());
   const [voiceOpen, setVoiceOpen] = useState(false);
   const [voiceOffline, setVoiceOffline] = useState(false);
   const [voiceLanguage, setVoiceLanguage] = useState("en-US");
@@ -191,71 +167,9 @@ export function BingAppPrototype({ initialPage = "home", account = PROFILE_ACCOU
     (recentRef.current?.querySelector<HTMLButtonElement>(`[aria-label="${label}"]`)
       ?? recentRef.current?.querySelector<HTMLButtonElement>('[data-private-turn-off], [aria-label="New tab"]'))?.focus({ preventScroll: true });
   };
-  const deleteHistoryEntry = (id: string) => {
-    const deletedQuery = bingSearchQuery(browsingHistory.find(entry => entry.id === id)?.subtitle ?? "");
-    const remaining = browsingHistory.filter(entry => entry.id !== id);
-    setBrowsingHistory(remaining);
-    // Search lists unique queries, while History lists individual visits. Keep
-    // the query until its last visit is removed; webpage deletion is unrelated.
-    if (deletedQuery && !remaining.some(entry => searchQueryKey(bingSearchQuery(entry.subtitle ?? "") ?? "") === searchQueryKey(deletedQuery))) {
-      setSearchHistory(items => items.filter(item => searchQueryKey(item.query) !== searchQueryKey(deletedQuery)));
-    }
-  };
-  const updateSearchHistory = (items: typeof searchHistory) => {
-    const remaining = new Set(items.map(item => searchQueryKey(item.query)));
-    const removed = new Set(searchHistory.filter(item => !remaining.has(searchQueryKey(item.query)))
-      .map(item => searchQueryKey(item.query)));
-    setSearchHistory(items);
-    // Search history is a deduplicated view of the same queries shown in Recent.
-    // Clear/remove all visits for those queries, preserving ordinary webpage visits.
-    setBrowsingHistory(entries => entries.filter(entry => {
-      const query = bingSearchQuery(entry.subtitle ?? "");
-      return !query || (items.length > 0 && !removed.has(searchQueryKey(query)));
-    }));
-  };
-  // A loaded page belongs to the submitted visit, even if Recent's selection changes meanwhile.
-  const saveResultPage = useCallback((owner: ResultSession, snapshot: BingPageSnapshot, navigationId = 0) => {
-    if (owner.privateMode || !owner.tabId) return;
-    setTabs(items => items.map(tab => tab.id === owner.tabId && tab.query === owner.query
-      ? { ...tab, title: snapshot.title || bingSearchQuery(snapshot.sourceUrl) || owner.query, pageSnapshot: snapshot, faviconSrc: snapshot.faviconUrl } : tab));
-    const id = navigationId === 0 ? owner.historyId : `${owner.id}-page-${navigationId}`;
-    if (!id) return;
-    const firstVisit = !recordedPages.current.has(id);
-    recordedPages.current.add(id);
-    const query = bingSearchQuery(snapshot.sourceUrl);
-    // Related searches inside Bing are real queries too. A retained page being
-    // revisited with Back/Forward must not restore a query the user deleted.
-    if (navigationId > 0 && firstVisit && query) {
-      setSearchHistory(items => [{ id, query }, ...items.filter(item => searchQueryKey(item.query) !== searchQueryKey(query))]);
-    }
-    setBrowsingHistory(items => {
-      const metadata = { title: snapshot.title || bingSearchQuery(snapshot.sourceUrl) || owner.query,
-        subtitle: snapshot.sourceUrl, logoSrc: snapshot.faviconUrl ?? undefined };
-      if (items.some(item => item.id === id)) return items.map(item => item.id === id ? { ...item, ...metadata } : item);
-      return navigationId > 0 && firstVisit ? [{ id, ...metadata, visitedAt: Date.now(), groupId: "today", groupLabel: "Today" }, ...items] : items;
-    });
-  }, []);
-  const closeTab = (id: string) => {
-    const nextTabs = tabs.filter(tab => tab.id !== id);
-    setTabs(nextTabs);
-    setResultSessions(sessions => sessions.filter(session => session.tabId !== id));
-    if (selectedTabId === id) setSelectedTabId(nextTabs[Math.min(tabs.findIndex(tab => tab.id === id), nextTabs.length - 1)]?.id ?? null);
-  };
-  const closeAllTabs = () => {
-    setTabs([]);
-    setSelectedTabId(null);
-    setResultSessions(sessions => sessions.filter(session => session.tabId === null));
-  };
   const openTab = (id: string) => {
-    const tab = tabs.find(item => item.id === id);
-    if (!tab?.query) return;
-    const session = resultSessions.find(item => item.tabId === id)
-      ?? { id: `tab-${id}`, query: tab.query, privateMode: false, tabId: id, historyId: null,
-        initialUrl: tab.pageSnapshot && !bingSearchQuery(tab.pageSnapshot.sourceUrl) ? tab.pageSnapshot.sourceUrl : undefined };
-    // Tab switching restores its existing document; only a new submission records a visit.
-    setResultSessions(sessions => sessions.some(item => item.id === session.id) ? sessions : [...sessions, session]);
-    setActiveResultId(session.id);
-    setSelectedTabId(id);
+    const session = activity.restoreTab(id);
+    if (!session) return;
     setPrivateMode(session.privateMode);
     setSearchOrigin(null);
     setSearchExitOrigin(null);
@@ -295,34 +209,11 @@ export function BingAppPrototype({ initialPage = "home", account = PROFILE_ACCOU
   };
   const openNewTab = (from: "recent" | "tabs" | "history") => { setSearchOrigin(null); setSearchExitOrigin(null); setSearchDraft(""); setSearchReturnPage(from); setPage("search"); };
   const submitSearch = (value: string, source: "search" | "history" | "recent" | "feed" | "voice" | "voice-serp" = "search", articleTitle?: string) => {
-    const input = normalizeSearchQuery(value);
-    const destination = webUrl(input);
-    const query = destination ? bingSearchQuery(destination) ?? input : input;
-    const initialUrl = destination && !bingSearchQuery(destination) ? destination : undefined;
-    const title = initialUrl ? articleTitle?.trim() || query : query;
-    if (!query) return;
-    const id = `search-${++activitySequence.current}`;
-    let session: ResultSession = { id, query, privateMode, tabId: null, historyId: null, initialUrl };
-    // Only submitted normal-mode queries become activity; typing and private queries do not.
-    if (!privateMode) {
-      const visitedAt = Date.now();
-      if (!initialUrl) setSearchHistory(items => [{ id, query }, ...items.filter(item => searchQueryKey(item.query) !== searchQueryKey(query))]);
-      setBrowsingHistory(entries => [{
-        id, title, subtitle: initialUrl ?? bingSearchUrl(query),
-        visitedAt, groupId: "today", groupLabel: "Today",
-      }, ...entries]);
-      // Editing the active result reuses its tab. Home and the + entry create a new tab on submit.
-      const reuseTab = source === "voice-serp" || (source === "search" && searchReturnPage === "serp");
-      const tabId = reuseTab && tabs.some(tab => tab.id === activeResult?.tabId) ? activeResult!.tabId! : id;
-      const tab = { id: tabId, title, query, previewSrc: null, faviconSrc: null };
-      setTabs(items => [tab, ...items.filter(item => item.id !== tabId)]);
-      setSelectedTabId(tabId);
-      session = { id, query, privateMode: false, tabId, historyId: id, initialUrl };
-    }
-    // Retain other tabs' iframes (including scroll and pending requests). Editing
-    // replaces only this tab's document; private results never enter normal activity.
-    setResultSessions(sessions => [...sessions.filter(item => item.tabId !== session.tabId && item.tabId !== null), session]);
-    setActiveResultId(session.id);
+    // The entry point decides whether submission edits the active tab or creates one.
+    const reuseTab = source === "voice-serp" || (source === "search" && searchReturnPage === "serp");
+    const session = activity.createResultSession(value, { privateMode, reuseTab, articleTitle });
+    if (!session) return;
+    const query = session.query;
     if (source !== "search") setSearchOrigin(null);
     setSearchExitOrigin(source === "search" ? measureSearchOrigin(serpRef.current, "serp", query) : null);
     setSearchDraft(query);
@@ -456,7 +347,7 @@ export function BingAppPrototype({ initialPage = "home", account = PROFILE_ACCOU
           <History entries={browsingHistory} timeSource={timeSource} interactive active={page === "history"}
             backLabel={detailOrigin === "profile" ? "Back to Profile" : "Back to Recent"}
             onBack={() => setPage(detailOrigin)} onDelete={deleteHistoryEntry}
-            onClearAll={() => { setBrowsingHistory([]); setSearchHistory([]); }} onSearch={() => openNewTab("history")}
+            onClearAll={activity.clearHistory} onSearch={() => openNewTab("history")}
             onOpenSearch={openHistorySearch} onOpenPage={url => submitSearch(url, "history")} />
         </motion.div>}
       </AnimatePresence>
@@ -469,7 +360,7 @@ export function BingAppPrototype({ initialPage = "home", account = PROFILE_ACCOU
           initial={{ x: reducedMotion ? 0 : "100%" }} animate={{ x: 0 }} exit={{ x: reducedMotion ? 0 : "100%" }}
           transition={reducedMotion ? iosMotion.instant : iosMotion.navigation}>
           <Bookmark entries={bookmarks} timeSource={timeSource} interactive active={page === "bookmark"}
-            onDelete={id => setBookmarks(entries => deleteBookmark(entries, id))}
+            onDelete={activity.deleteBookmarkEntry}
             backLabel={detailOrigin === "profile" ? "Back to Profile" : "Back to Recent"}
             onBack={() => setPage(detailOrigin)} />
         </motion.div>}

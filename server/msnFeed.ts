@@ -4,6 +4,7 @@ import type { Plugin } from "vite";
 import { MSN_FEED_PATH, MSN_FEED_LIMIT, type MsnFeed } from "../src/services/msnFeed";
 import { parseMsnArticles } from "./msnFeedData";
 import { msnPublicWebKey } from "./msnPublicClient";
+import { sendJson } from "./http";
 
 const CACHE_MS = 5 * 60_000;
 const MAX_BYTES = 2 * 1024 * 1024;
@@ -74,23 +75,18 @@ export function createMsnFeedHandler() {
   return async (req: IncomingMessage, res: ServerResponse, next: () => void) => {
     const url = new URL(req.url ?? "/", "http://localhost");
     if (url.pathname !== MSN_FEED_PATH) return next();
-    const send = (status: number, body: unknown) => {
-      if (res.destroyed || res.writableEnded) return;
-      res.writeHead(status, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" });
-      res.end(JSON.stringify(body));
-    };
-    if (req.method !== "GET") { res.setHeader("Allow", "GET"); return send(405, { error: "Method not allowed" }); }
+    if (req.method !== "GET") { res.setHeader("Allow", "GET"); return sendJson(res, 405, { error: "Method not allowed" }); }
     const cursor = url.searchParams.get("cursor");
     const page = cursor ? pages.get(cursor) : first;
-    if (!page) return send(410, { error: "News cursor expired" });
+    if (!page) return sendJson(res, 410, { error: "News cursor expired" });
     if (cursor) { pages.delete(cursor); pages.set(cursor, page); }
     try {
       if (page.feed && Date.now() - Date.parse(page.feed.fetchedAt) < CACHE_MS
-        && (!page.feed.nextCursor || pages.has(page.feed.nextCursor))) return send(200, page.feed);
+        && (!page.feed.nextCursor || pages.has(page.feed.nextCursor))) return sendJson(res, 200, page.feed);
       // Share only public news data across requests, never a user's identity, cookies or history.
       page.pending ??= load(page).finally(() => { page.pending = undefined; });
-      send(200, await page.pending);
-    } catch { send(502, { error: "MSN news is unavailable" }); }
+      sendJson(res, 200, await page.pending);
+    } catch { sendJson(res, 502, { error: "MSN news is unavailable" }); }
   };
 }
 

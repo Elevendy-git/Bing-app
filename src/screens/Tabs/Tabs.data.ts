@@ -1,4 +1,5 @@
-import { RECENT_TABS, type RecentTab } from "../Recent/Recent.data";
+import { RECENT_TABS } from "../Recent/Recent.data";
+import type { RecentTab } from "../activity/types";
 
 /** Original Shareout 1:20742 image fills. Thumbnails are design fixtures. */
 const sports = {

@@ -6,7 +6,8 @@ import { AnchoredMenu, useAnchoredMenu } from "../../components/MenuList/Anchore
 import { iosMotion } from "../../motion/iosMotion";
 import { CollapsingContent } from "../../motion/MotionPresence";
 import { ActivityEmptyState } from "../ActivityEmptyState";
-import { BOOKMARK_ENTRIES, type BookmarkEntry, type BookmarkFolder } from "./Bookmark.data";
+import { BOOKMARK_ENTRIES } from "./Bookmark.data";
+import type { BookmarkEntry, BookmarkFolder } from "../activity/types";
 import { BookmarkListRow } from "./BookmarkListRow";
 import styles from "./Bookmark.module.css";
 

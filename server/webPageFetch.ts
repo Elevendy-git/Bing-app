@@ -3,6 +3,7 @@ import { BlockList, isIP } from "node:net";
 import { request as httpRequest } from "node:http";
 import { request as httpsRequest } from "node:https";
 import { webUrl, resultDestination } from "../src/services/webNavigation";
+import { MOBILE_USER_AGENT } from "./http";
 
 const blocked = new BlockList();
 for (const [address, prefix] of [["0.0.0.0", 8], ["10.0.0.0", 8], ["100.64.0.0", 10], ["127.0.0.0", 8],
@@ -59,7 +60,7 @@ async function fetchPublicDocument(value: string, signal: AbortSignal, format: "
       const req = request(url, {
         signal, agent: false, family: address.family,
         lookup: (_hostname, _options, done) => done(null, address.address, address.family),
-        headers: { "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1",
+        headers: { "User-Agent": MOBILE_USER_AGENT,
           Accept: format === "json" ? "application/json" : "text/html,application/xhtml+xml", "Accept-Language": "en-US,en;q=0.9", "Accept-Encoding": "identity" },
       }, res => {
         if ([301, 302, 303, 307, 308].includes(res.statusCode ?? 0) && res.headers.location) {

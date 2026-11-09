@@ -1,6 +1,6 @@
 import { ChevronRight20Regular, Folder24Regular, Globe24Regular } from "@fluentui/react-icons";
 import { AppList, type AppListProps } from "../../components";
-import type { BookmarkEntry } from "./Bookmark.data";
+import type { BookmarkEntry } from "../activity/types";
 import styles from "./Bookmark.module.css";
 
 export function BookmarkListRow({ entry, ...props }: { entry: BookmarkEntry } & Omit<AppListProps, "title" | "subtitle" | "variant">) {

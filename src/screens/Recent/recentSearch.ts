@@ -1,4 +1,4 @@
-import type { RecentEntry, RecentTab } from "./Recent.data";
+import type { RecentEntry, RecentTab } from "../activity/types";
 
 const normalize = (value: string) => value.normalize("NFKC").toLocaleLowerCase().trim().replace(/\s+/g, " ");
 

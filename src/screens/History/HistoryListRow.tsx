@@ -1,7 +1,7 @@
 import { AppList, type AppListProps } from "../../components/AppList";
 import { Globe24Regular } from "@fluentui/react-icons";
 import { useState } from "react";
-import type { RecentEntry } from "../Recent/Recent.data";
+import type { RecentEntry } from "../activity/types";
 import { bingSearchQuery } from "../../services/bingPage";
 import { webUrl } from "../../services/webNavigation";
 import styles from "./History.module.css";

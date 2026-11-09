@@ -2,21 +2,16 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Plugin } from "vite";
 import { normalizeSearchQuery, SEARCH_QUERY_MAX_LENGTH } from "../src/services/searchSuggestions";
 import { prepareBingSerpDocument } from "./bingSerpHtml";
+import { MOBILE_USER_AGENT, sendJson } from "./http";
 
 const MAX_HTML_BYTES = 4 * 1024 * 1024;
-const MOBILE_USER_AGENT = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1";
 
 export async function handleBingSerp(req: IncomingMessage, res: ServerResponse, next: () => void) {
   const url = new URL(req.url ?? "/", "http://localhost");
   if (url.pathname !== "/api/bing-serp") return next();
-  const send = (status: number, body: unknown) => {
-    if (res.destroyed || res.writableEnded) return;
-    res.writeHead(status, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" });
-    res.end(JSON.stringify(body));
-  };
-  if (req.method !== "GET") { res.setHeader("Allow", "GET"); return send(405, { error: "Method not allowed" }); }
+  if (req.method !== "GET") { res.setHeader("Allow", "GET"); return sendJson(res, 405, { error: "Method not allowed" }); }
   const query = normalizeSearchQuery(url.searchParams.get("query") ?? "");
-  if (!query || query.length > SEARCH_QUERY_MAX_LENGTH) return send(400, { error: "Invalid search query" });
+  if (!query || query.length > SEARCH_QUERY_MAX_LENGTH) return sendJson(res, 400, { error: "Invalid search query" });
   const controller = new AbortController();
   const abort = () => controller.abort();
   const timeout = setTimeout(abort, 8000);
@@ -41,9 +36,9 @@ export async function handleBingSerp(req: IncomingMessage, res: ServerResponse, 
     }
     source += decoder.decode();
     const document = prepareBingSerpDocument(source);
-    send(200, { query, ...document, sourceUrl: upstream.href, fetchedAt: new Date().toISOString() });
+    sendJson(res, 200, { query, ...document, sourceUrl: upstream.href, fetchedAt: new Date().toISOString() });
   } catch {
-    send(controller.signal.aborted ? 504 : 502, { error: "Bing results are unavailable" });
+    sendJson(res, controller.signal.aborted ? 504 : 502, { error: "Bing results are unavailable" });
   } finally { clearTimeout(timeout); res.off("close", abort); }
 }
 

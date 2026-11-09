@@ -1,18 +1,7 @@
-import { RECENT_BOOKMARKS, type RecentEntry } from "../Recent/Recent.data";
-
-export interface BookmarkSite extends RecentEntry {
-  kind: "site";
-  genericIcon?: boolean;
-}
-export interface BookmarkFolder {
-  kind: "folder";
-  id: string;
-  title: string;
-  favoriteCount: number;
-  /** Only folders whose contents were supplied have a destination. */
-  children?: readonly BookmarkEntry[];
-}
-export type BookmarkEntry = BookmarkSite | BookmarkFolder;
+import { RECENT_BOOKMARKS } from "../Recent/Recent.data";
+import type { BookmarkEntry, BookmarkSite } from "../activity/types";
+export type { BookmarkEntry, BookmarkFolder, BookmarkSite } from "../activity/types";
+export { recentBookmarkPreview, bookmarkSearchEntries, deleteBookmark } from "../activity/bookmarks";
 
 const spotify = RECENT_BOOKMARKS.find(entry => entry.id === "spotify")!;
 const robinhood: BookmarkSite = { kind: "site", id: "robinhood", title: "Robinhood", subtitle: "https://robinhood.com/", genericIcon: true };
@@ -40,30 +29,3 @@ export const BOOKMARK_ENTRIES: readonly BookmarkEntry[] = [
   genspark,
   { kind: "site", id: "wise", title: "International Money Transfer | Send money", subtitle: "wise.com/gb/send-money", genericIcon: true },
 ];
-
-/** Project actual saved sites, in collection order, without joining demo records. */
-export function recentBookmarkPreview(entries: readonly BookmarkEntry[]): readonly BookmarkSite[] {
-  return entries.filter((entry): entry is BookmarkSite => entry.kind === "site").slice(0, 3);
-}
-
-/** Search includes saved sites beyond the preview and inside supplied folders. */
-export function bookmarkSearchEntries(entries: readonly BookmarkEntry[]): readonly RecentEntry[] {
-  return entries.flatMap(entry => entry.kind === "site" ? [entry] : bookmarkSearchEntries(entry.children ?? []));
-}
-
-/** IDs identify individual saved entries, including duplicate URLs in different folders. */
-export function deleteBookmark(entries: readonly BookmarkEntry[], id: string): readonly BookmarkEntry[] {
-  let changed = false;
-  const next = entries.flatMap(entry => {
-    if (entry.kind === "site" && entry.id === id) { changed = true; return []; }
-    if (entry.kind === "folder" && entry.children) {
-      const children = deleteBookmark(entry.children, id);
-      if (children !== entry.children) {
-        changed = true;
-        return [{ ...entry, children, favoriteCount: Math.max(0, entry.favoriteCount - 1) }];
-      }
-    }
-    return [entry];
-  });
-  return changed ? next : entries;
-}

@@ -1,15 +1,12 @@
-import { parse, serializeOuter, type DefaultTreeAdapterMap } from "parse5";
-import { cleanPreviewNode, cssUrls, resourceUrl } from "./bingSerpHtml";
-type Node = DefaultTreeAdapterMap["node"];
-type Element = DefaultTreeAdapterMap["element"];
-const walk = (node: Node): Node[] => [node, ...("childNodes" in node ? node.childNodes.flatMap(walk) : [])];
-const attr = (node: Element, name: string) => node.attrs.find(item => item.name === name)?.value;
-const text = (node: Node) => walk(node).map(child => "value" in child ? child.value : "").join(" ").replace(/\s+/g, " ").trim();
+import { parse, serializeOuter } from "parse5";
+import { attr, cleanPreviewNode, cssUrls, isElement, resourceUrl, walk, type PreviewNode } from "./previewHtml";
+
+const text = (node: PreviewNode) => walk(node).map(child => "value" in child ? child.value : "").join(" ").replace(/\s+/g, " ").trim();
 
 /** Read-only mobile HTML, retaining the site's layout while removing executable content. */
 export function prepareWebPageDocument(source: string, sourceUrl: string) {
   const doc = parse(source);
-  const elements = walk(doc).filter((node): node is Element => "tagName" in node);
+  const elements = walk(doc).filter(isElement);
   const titleNode = elements.find(node => node.tagName === "title");
   const title = (titleNode ? text(titleNode) : new URL(sourceUrl).hostname).slice(0, 240);
   const favicon = elements.find(node => node.tagName === "link" && attr(node, "rel")?.toLowerCase().split(/\s+/).includes("icon"));

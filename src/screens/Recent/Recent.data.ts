@@ -1,18 +1,6 @@
-import type { CSSProperties } from "react";
-import type { BingPageSnapshot } from "../../services/bingPage";
 import { MEDIUM_FAVICON_32 } from "../../components/AppList/AppList.assets";
-
-export interface RecentTab {
-  id: string;
-  title: string;
-  /** Navigation identity, separate from the display title and thumbnail. */
-  query?: string;
-  previewSrc?: string | null;
-  pageSnapshot?: BingPageSnapshot;
-  faviconSrc?: string | null;
-  previewStyle?: CSSProperties;
-  gridPreviewStyle?: CSSProperties;
-}
+import type { RecentEntry, RecentTab } from "../activity/types";
+export type { RecentEntry, RecentTab } from "../activity/types";
 
 /** Original image fills from C2 641:10440. The first uses TabsCard's shared asset. */
 export const RECENT_TABS: readonly RecentTab[] = [
@@ -22,15 +10,6 @@ export const RECENT_TABS: readonly RecentTab[] = [
   { id: "chat", title: "Open ai", query: "Open ai", previewSrc: new URL("./assets/open-ai-chat.jpg", import.meta.url).href,
     previewStyle: { top: "-10.81%", left: 0, width: "100%", height: "523.23%", objectFit: "fill" } },
 ];
-
-export interface RecentEntry {
-  id: string;
-  title: string;
-  subtitle: string;
-  logoSrc?: string;
-  /** Preserve a supplied SVG's native dimensions inside the 32 px logo slot. */
-  nativeLogo?: boolean;
-}
 
 export const RECENT_SITES: readonly RecentEntry[] = [
   { id: "medium", title: "Medium", subtitle: "https://medium.com/", logoSrc: MEDIUM_FAVICON_32 },

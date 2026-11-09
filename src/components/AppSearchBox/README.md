@@ -6,9 +6,13 @@ and [Recent page · 1117:73172](https://www.figma.com/design/vA59dRO3b38EcRK1JY8
 `AppSearchBox` has `variant="search" | "recent" | "serp"` and three controlled visual
 states: `zero-input`, `focus`, `input`. Supply `value` for the input state.
 By default it renders passive artwork with a static Figma cursor. Library and
-Recent retain this behavior. The supplied Shareout Query flow opts into a native
-input through `inputProps` / `inputRef`, plus `onBack` and `onClear` callbacks.
-Camera and voice actions remain passive pending their interaction designs.
+Key screen specimens retain this behavior. Prototype's Search and Recent screens
+opt into a native input through `inputProps` / `inputRef` and supply their clear
+and navigation callbacks. Both reuse the simulated `IOSKeyboard` and live AS;
+[Recent](../../screens/Recent/README.md#search-within-recent) also filters local activity.
+`onVoiceSearch` activates the microphone in an empty Search field or SERP and
+opens the shared [Voice Search flow](../../screens/VoiceSearch/README.md).
+Without the callback the microphone is decorative. Camera artwork remains passive.
 
 | Variant | Default size | Text | Layout |
 | --- | --- | --- | --- |
@@ -37,7 +41,7 @@ design's Code Connect mappings.
 
 Library → Inputs → Bing Search Box shows one preview per page with a right-side
 State selector. The existing Homepage component remains `BingSearchBox`.
-Recent now composes `AppSearchBox` at fluid width (361 px on the 393 px device);
+Recent composes `AppSearchBox` at fluid width (370 px on the 402 px device);
 the screen owns its 16 px side insets and persistent 8 px bottom header gap.
 
 Both source component sets specify Light. Dark follows the existing Consumer

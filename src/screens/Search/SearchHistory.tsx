@@ -3,7 +3,7 @@ import { Delete16Regular, Dismiss20Regular } from "@fluentui/react-icons";
 import { AnimatePresence, motion, useIsPresent, useReducedMotion } from "motion/react";
 import { AppList, AppListCard } from "../../components/AppList";
 import { iosMotion } from "../../motion/iosMotion";
-import type { SearchHistoryItem } from "./Search.data";
+import type { SearchHistoryItem } from "../activity/types";
 import styles from "./SearchHistory.module.css";
 import searchStyles from "./Search.module.css";
 

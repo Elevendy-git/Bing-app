@@ -16,9 +16,18 @@ InPrivate: [Zero input](https://www.figma.com/design/yClrtwNrFJhE7W5waPRmkv/?nod
 `Search` composes `AppSearchBox`, `AppList`, `AppListCard`, `IOSStatusBar`,
 `IOSKeyboard`, `IOSHomeIndicator` and `Switcher`. Its three `initialState` presets, the empty-history preset and the
 `initialPrivateMode` counterparts are passive in Key screens.
-`interactive` enables Query text entry and the InPrivate switch in Prototype, with `onBack` returning
-to the preserved Homepage. It also enables the history controls described below.
-Library previews and Recent search remain passive.
+`interactive` enables Query text entry, the InPrivate switch and the history
+controls in Prototype. The owning flow supplies `onBack`: Homepage entry returns
+to the preserved Homepage, result editing restores SERP, and New tab returns to
+its Recent, Tabs or History origin. Library and Key screen specimens remain passive.
+[Recent search](../Recent/README.md#search-within-recent) reuses the live input,
+keyboard and suggestion logic while filtering local activity.
+
+The empty Search field's microphone opens the shared
+[Voice Search modal](../VoiceSearch/README.md) when `onVoiceSearch` is supplied.
+Browser recognition and keyboard dictation require browser support and microphone
+permission; errors do not fabricate a transcript. Cancel preserves the Search
+draft and its return destination. Camera artwork remains passive.
 
 ## Search history
 
@@ -107,12 +116,15 @@ AS owns the source icon, optional logo and trailing arrow; missing/failed logos
 leave no placeholder. The original Airbnb/NBC exports keep their 25 px geometry
 inside 24 px slots. The card stays 280 px high with four dividers and 12 px top gap.
 
-`Search.suggestions.ts` supplies fixed Key screen fixtures. Prototype uses
-`useSearchSuggestions` and the public Bing autocomplete endpoint through the
-same-origin `/api/search-suggestions` middleware in `server/searchSuggestions.ts`.
-The middleware runs in both `npm run dev` and `npm run preview`; it is needed
-because the upstream does not allow cross-origin browser fetches. Chinese input
-uses the `zh-CN` market; other input uses `en-US`, matching the English prototype.
+`Search.suggestions.ts` supplies fixed Key screen fixtures. Prototype's Search
+and Recent screens share `useSearchSuggestions` and the public Bing autocomplete
+adapter at `/api/search-suggestions` in `server/searchSuggestions.ts`.
+Both `npm run dev` and `npm run preview` include this route locally; the standalone
+Node backend exposes the same adapter for a deployed workbench. `publicApiUrl`
+selects the local route or the HTTPS backend configured by `VITE_API_BASE_URL`.
+The adapter is needed because the upstream does not allow cross-origin browser
+fetches. Chinese input uses the `zh-CN` market; other input uses `en-US`, matching
+the English prototype.
 This public endpoint has no availability guarantee and is not a production API contract.
 
 Requests debounce by 80 ms, cancel on new/cleared input and screen exit, and time
@@ -136,17 +148,24 @@ row presentation to the shared AS `AppList`; matching-text weights stay unchange
 The wrapper's `data-suggestions-source` reports `preview`, `loading`, `live` or
 `fallback` for verification without adding workbench controls or product UI.
 
-A static GitHub Pages deployment cannot run this middleware. Hosting live
-suggestions there requires a same-origin backend route; without it no live AS
-card appears. No third-party proxy, API key or credential is used.
+A static GitHub Pages deployment serves the workbench while a separate backend
+serves the live adapters. Set `VITE_API_BASE_URL` before building the frontend and
+allow the Pages origin in the backend's CORS configuration; see
+[backend deployment](../../../docs/backend-deployment.md). Without a reachable
+adapter, no live AS card appears. Requests omit cookies and authorization;
+the autocomplete adapter uses no API key or third-party proxy.
 
 Prototype uses the shared [iOS-inspired motion defaults](../../../docs/motion.md).
-The composer, keyboard and reserved keyboard space share the same 420 ms
-transition in both navigation directions. Independent keyboard focus/dismissal
-uses 350 ms. Pressing Back keeps input focus until activation, then navigation
-owns the dismissal, including any blur caused by the outgoing screen becoming
-inert. Back reverses the entry while preserving Homepage scroll. The keyboard stays mounted for smooth
-interruptions, but is inert and hidden from accessibility when dismissed.
+Homepage and SERP entry move the shared composer, keyboard and reserved keyboard
+space together over 420 ms; cancelling reverses toward the measured origin.
+These are tuned web timings, not published iOS constants. Independent keyboard
+focus/dismissal uses 350 ms. Pressing Back keeps input focus until activation,
+then navigation owns dismissal, including blur caused by the outgoing screen
+becoming inert. Cancelling preserves Homepage scroll or the retained result
+document. SERP's own Back-to-Homepage action slides the whole result
+screen to the right; see [SERP Back motion](../../../docs/motion.md#serp--homepage-back).
+The keyboard stays mounted for smooth interruptions, but is inert and hidden
+from accessibility when dismissed.
 Reduced-motion preferences disable these transitions. Key screens stay static.
 Both search-field appearances crossfade during travel, with shared icon/text
 spacing, so returning does not swap icons after landing. Content retains its
@@ -164,4 +183,4 @@ The regular supplied states are Light; InPrivate is always Dark. Existing Consum
 tokens provide regular Search's Dark appearance. The shared iOS 27 keyboard follows Light/Dark appearance, including InPrivate.
 See [OS reference and adaptations](../../../docs/ios-native.md).
 Segoe Sans intermediate font weights remain limited by the shared Segoe UI
-fallback, as documented in the root README.
+fallback; the original variable font is unavailable.

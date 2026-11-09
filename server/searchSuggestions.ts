@@ -1,6 +1,7 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Plugin } from "vite";
 import { normalizeSearchQuery, parseBingSuggestions, SEARCH_QUERY_MAX_LENGTH, SEARCH_SUGGESTIONS_PATH } from "../src/services/searchSuggestions";
+import { sendJson } from "./http";
 
 const UPSTREAM_TIMEOUT_MS = 4000;
 
@@ -9,18 +10,13 @@ export async function handleSearchSuggestions(req: IncomingMessage, res: ServerR
   const url = new URL(req.url ?? "/", "http://localhost");
   if (url.pathname !== SEARCH_SUGGESTIONS_PATH) return next();
 
-  const send = (status: number, body: unknown) => {
-    if (res.destroyed || res.writableEnded) return;
-    res.writeHead(status, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" });
-    res.end(JSON.stringify(body));
-  };
   if (req.method !== "GET") {
     res.setHeader("Allow", "GET");
-    return send(405, { error: "Method not allowed" });
+    return sendJson(res, 405, { error: "Method not allowed" });
   }
   const query = normalizeSearchQuery(url.searchParams.get("query") ?? "");
-  if (query.length > SEARCH_QUERY_MAX_LENGTH) return send(400, { error: "Search query is too long" });
-  if (!query) return send(200, ["", []]);
+  if (query.length > SEARCH_QUERY_MAX_LENGTH) return sendJson(res, 400, { error: "Search query is too long" });
+  if (!query) return sendJson(res, 200, ["", []]);
 
   const controller = new AbortController();
   const abort = () => controller.abort();
@@ -37,9 +33,9 @@ export async function handleSearchSuggestions(req: IncomingMessage, res: ServerR
     });
     if (!upstream.ok) throw new Error("Bing suggestions are unavailable");
     const items = parseBingSuggestions(await upstream.json());
-    send(200, [query, items.map((item) => item.query)]);
+    sendJson(res, 200, [query, items.map((item) => item.query)]);
   } catch {
-    send(controller.signal.aborted ? 504 : 502, { error: "Search suggestions are unavailable" });
+    sendJson(res, controller.signal.aborted ? 504 : 502, { error: "Search suggestions are unavailable" });
   } finally {
     clearTimeout(timeout);
     res.off("close", abort);

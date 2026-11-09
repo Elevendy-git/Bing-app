@@ -18,10 +18,12 @@ the origin's private palette without changing its geometry or motion parameters.
   embedded in the Figma node, cropped beneath the live App chrome. This is a
   passive design reference, not real-time weather or an error fallback.
 - **Prototype** submits Search via Enter, the keyboard Search action, or a query
-  suggestion. `LiveBingResults` requests `/api/bing-serp?query=…`. The Vite server
-  fetches Bing's mobile HTML and retains its result markup and CSS. The viewport
-  scrolls independently beneath fixed App chrome. Result links navigate inside
-  the App; Back/Forward traverse the current tab's visited pages. At the first
+  suggestion. `LiveBingResults` requests `/api/bing-serp?query=…` through the shared
+  API URL resolver. The adapter runs in Vite locally and in the standalone Node
+  backend online; it fetches Bing's mobile HTML and retains its result markup
+  and CSS. The viewport scrolls independently beneath fixed App chrome.
+  Result links navigate inside the App; Back/Forward traverse the current tab's
+  visited pages. At the first
   entry Back slides the result screen out to the right, revealing Homepage.
   The result document stays mounted; Reduce Motion returns instantly. See
   [SERP Back motion](../../../docs/motion.md#serp--homepage-back). Tapping the composer opens query
@@ -51,7 +53,10 @@ cards, lazy content and controls may be absent or inactive. Ordinary links open
 their real destination through `/api/web-page` in the same App viewport. Bing
 search links become another SERP entry. Each tab retains its documents and scroll
 positions for Back/Forward and Recent; a new link after Back replaces only the
-forward branch. More, Copilot and voice stay passive until their flows are supplied.
+forward branch. The composer microphone opens the shared
+[Voice Search modal](../VoiceSearch/README.md) in Prototype; successful recognition
+replaces the active tab's result session and Cancel restores the retained page.
+More and Copilot remain passive.
 Bing's returned layout, ranking, locale and content may vary, and will not
 necessarily match the historical weather reference.
 
@@ -71,7 +76,11 @@ See [IAB preview](../../../docs/iab-preview.md) for the webpage endpoint and its
 Failed, challenged or unrecognized responses display an error with Retry instead
 of replacing live data with a screenshot. The extraction relies on Bing's current
 `b_content` / `b_results` markup and can break if Bing changes it. Both `npm run dev`
-and `npm run preview` provide the API. Static hosting alone cannot provide it.
+and `npm run preview` provide the API locally. A GitHub Pages workbench uses the
+separate HTTPS backend selected by `VITE_API_BASE_URL`; build configuration and
+CORS origins are documented in [backend deployment](../../../docs/backend-deployment.md).
+Static hosting alone cannot provide the adapters. Public requests omit cookies
+and authorization, and unavailable providers retain the error/Retry behavior.
 
 A production mobile app needing complete Bing interaction should replace the
 viewport with a real native WebView loading the mobile Bing URL, following the

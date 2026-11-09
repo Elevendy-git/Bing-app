@@ -3,6 +3,29 @@
 The maintained application is `src/main.tsx` → `src/App.tsx` → `PreviewWorkbench`.
 Library, Key screens, and Prototype share the same components and themes.
 
+## Code structure
+
+- `src/App.tsx` connects the live account session and the workbench.
+- `src/previewCatalog.tsx` registers Library components and variants.
+- `src/keyScreenCatalog.tsx` registers static Key screen presets separately from
+  the live prototype's account and activity.
+- `src/screens/BingAppPrototype.tsx` connects screens, navigation, focus and voice.
+- `src/screens/activity/` owns collection/session types and the prototype's
+  history, tabs, bookmarks and retained page snapshots, including shared bookmark
+  operations. Screen `*.data.ts` files supply design fixtures, screen-specific
+  view projections and compatibility exports; shared activity lives separately.
+- `src/auth/` manages Microsoft sign-in, Graph identity and local Rewards captures.
+- `src/services/` validates public data and calls the configured API backend.
+- `server/` exposes public read-only APIs and a separate local Rewards route.
+  `http.ts` shares response helpers; `previewHtml.ts` shares HTML sanitization.
+  Bing-specific result extraction remains in `bingSerpHtml.ts`, and public website
+  transport/SSRF protection remains in `webPageFetch.ts`.
+
+Keep component implementations, styles, assets, examples and tests together.
+Register new components and screens in their corresponding catalogs. Preserve
+Figma source links in component/screen READMEs; `docs/qa/` contains historical
+visual evidence, not runtime settings or duplicate application entry points.
+
 ## Ownership
 
 - `PreviewWorkbench` owns the active view, settings visibility, and appearance.
@@ -32,6 +55,8 @@ Library, Key screens, and Prototype share the same components and themes.
   shared bottom safe area; Search has its own keyboard and InPrivate area.
   Prototype owns Private Mode across screen navigation; Homepage changes only its
   Avatar, and Search's Switcher controls the shared value.
+  `usePrototypeActivity` owns collection changes and result sessions; navigation
+  delegates those operations rather than maintaining another copy of the data.
 - Product components own their native Figma sizes. Screens own constrained widths,
   safe areas, composition, and scrolling. Shared `*.examples.tsx` files belong to
   Library and are not separate application entry points.
@@ -92,8 +117,9 @@ Components remain passive unless a caller supplies `onSelectedChange`.
 Bing Search Box includes Homepage, Search page and Recent page. The latter two
 compose `AppSearchBox`, each showing one preview with a side State selector for
 Zero Input / Focus / Input. Focus and Input are static artwork with an unanimated
-cursor. The Search screen explicitly opts into native input, clear and back;
-Library and Recent keep their passive states.
+cursor. Search and Recent opt into native input and clear in Prototype;
+Search also provides a Back action.
+Library and Key screen examples keep their passive states.
 
 List's Overview uses a 244 px right-side control area and a centered preview.
 At less than 680 px of available container width the controls become a top toolbar;
@@ -106,7 +132,8 @@ expose six List types and preserve selection when switching.
 
 - Key screens use fixed 9:41; Prototype uses system time.
 - Homepage keeps one search input outside its native scrolling surface. Its
-  position clamps at 332 px; height transitions from 64 to 56 px over 200 ms.
+  position clamps at 332 px; height follows the same scroll sample, shrinking
+  from 64 to 56 px over the final 96 px of travel.
 - Compact search has 16 px horizontal insets (370 px on the 402 px screen).
 - Wallpaper fades into the solid feed background over 280 ms. Dark mode's 5%
   black overlay sits above the wallpaper and below UI elements.
@@ -129,8 +156,9 @@ states. A motion preset does not authorize a new interaction or destination.
 
 ## Development checks
 
-Search has six 402 × 874 Key screens: Zero input, Keyboard and Input, each in
-regular and InPrivate mode. Prototype opens Search with its keyboard from Homepage's search field.
+Search's 402 × 874 Key screens include Zero input, Empty, Keyboard, Input,
+history editing/clearing and InPrivate states. `src/keyScreenCatalog.tsx` defines
+the current gallery. Prototype opens Search with its keyboard from Homepage's search field.
 Typing (physical keyboard or the letter/delete/space keys), clearing, blurring,
 scrolling to dismiss the keyboard, Escape and returning to Homepage are wired.
 Key screens use the supplied Weather suggestion fixtures; Prototype uses live
@@ -144,7 +172,6 @@ Typing and private queries do not add normal activity. The workbench's Reset but
 is shown only for Prototype and remounts its content to clear records, query drafts,
 navigation and private mode, returning to Homepage. Appearance and design presets
 are unaffected. Prototype activity is session-only; reload also starts empty.
-Quick features and the privacy statement remain passive until their flows are supplied.
 See `src/screens/Search/README.md` for source nodes and asset details.
 
 Recent is available through the third footer destination and in Key screens.
@@ -157,14 +184,16 @@ retain the design fixtures. Implement only interactions supplied by the user;
 do not infer destinations from static Figma controls.
 
 Use `npm run dev` at http://127.0.0.1:5174/. Run relevant tests during changes and
-`npm test` plus `npm run build` before integration. `npm run preview` serves the
+`npm test -- --maxWorkers=1`, `npm run build` and `npm run build:server` before
+integration. The worker cap matches CI and prevents animation-heavy DOM tests
+from competing for CPU. `npm run preview` serves the
 compiled build at http://127.0.0.1:4174/ for production verification.
 
 Verify Library search and variants, both List controls, theme changes, enlarged
 screen open/close and focus, Prototype scrolling, and input retention after
 switching views when a shared dependency or workbench shell changes.
 
-Figma source links live in the root/component READMEs. `docs/qa/` preserves design
+Figma source links live in component/screen READMEs. `docs/qa/` preserves design
 references and historical screenshots; its recorded geometry is evidence, not
 runtime configuration. Font-weight fidelity remains limited by the unavailable
 original Segoe Sans variable font.

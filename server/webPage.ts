@@ -3,30 +3,26 @@ import type { Plugin } from "vite";
 import { fetchWebPage, publicWebUrl } from "./webPageFetch";
 import { prepareWebPageDocument } from "./webPageHtml";
 import { fetchMsnArticle, msnArticleRequest } from "./msnArticle";
+import { sendJson } from "./http";
 
 let pending = 0;
 export async function handleWebPage(req: IncomingMessage, res: ServerResponse, next: () => void) {
   const url = new URL(req.url ?? "/", "http://localhost");
   if (url.pathname !== "/api/web-page") return next();
-  const send = (status: number, body: unknown) => {
-    if (res.destroyed || res.writableEnded) return;
-    res.writeHead(status, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" });
-    res.end(JSON.stringify(body));
-  };
-  if (req.method !== "GET") { res.setHeader("Allow", "GET"); return send(405, { error: "Method not allowed" }); }
+  if (req.method !== "GET") { res.setHeader("Allow", "GET"); return sendJson(res, 405, { error: "Method not allowed" }); }
   const requestedUrl = url.searchParams.get("url") ?? "";
-  try { publicWebUrl(requestedUrl); } catch { return send(400, { error: "Invalid destination" }); }
-  if (pending >= 6) return send(503, { error: "Preview busy" });
+  try { publicWebUrl(requestedUrl); } catch { return sendJson(res, 400, { error: "Invalid destination" }); }
+  if (pending >= 6) return sendJson(res, 503, { error: "Preview busy" });
   const controller = new AbortController();
   const abort = () => controller.abort();
-  const timeout = setTimeout(() => { abort(); send(504, { error: "Page preview timed out" }); }, 8000);
+  const timeout = setTimeout(() => { abort(); sendJson(res, 504, { error: "Page preview timed out" }); }, 8000);
   res.on("close", abort); pending++;
   try {
     const msnArticle = msnArticleRequest(requestedUrl);
     const { source, sourceUrl } = await (msnArticle
       ? fetchMsnArticle(msnArticle, controller.signal) : fetchWebPage(requestedUrl, controller.signal));
-    send(200, { ...prepareWebPageDocument(source, sourceUrl), requestedUrl, sourceUrl, fetchedAt: new Date().toISOString() });
-  } catch { send(502, { error: "This page cannot be previewed" }); }
+    sendJson(res, 200, { ...prepareWebPageDocument(source, sourceUrl), requestedUrl, sourceUrl, fetchedAt: new Date().toISOString() });
+  } catch { sendJson(res, 502, { error: "This page cannot be previewed" }); }
   finally { clearTimeout(timeout); res.off("close", abort); pending--; }
 }
 

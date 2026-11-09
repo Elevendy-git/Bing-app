@@ -1,4 +1,5 @@
-export interface SearchHistoryItem { id: string; query: string }
+import type { SearchHistoryItem } from "../activity/types";
+export type { SearchHistoryItem } from "../activity/types";
 
 // C2 1039:29433 / 395:14844 specimens; Prototype supplies only submitted queries.
 export const RECENT_SEARCHES: readonly SearchHistoryItem[] = [

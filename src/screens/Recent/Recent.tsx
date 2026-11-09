@@ -7,7 +7,8 @@ import { IABFooter, AppList, AppListCard, AppSearchBox, HistoryMenu, IOSHomeIndi
 import { IOS_METRICS } from "../../components/IOSNative/iosMetrics";
 import { ScreenFooter } from "../ScreenFooter";
 import { NewTabButton } from "../NewTabButton";
-import { RECENT_BOOKMARKS, RECENT_CONVERSATIONS, RECENT_SITES, RECENT_TABS, type RecentEntry, type RecentTab } from "./Recent.data";
+import { RECENT_BOOKMARKS, RECENT_CONVERSATIONS, RECENT_SITES, RECENT_TABS } from "./Recent.data";
+import type { RecentEntry, RecentTab } from "../activity/types";
 import { HistoryListRow } from "../History/HistoryListRow";
 import { recentTabPreview } from "../Tabs/Tabs.data";
 import { SearchSuggestions } from "../Search/SearchSuggestions";

@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { AnimatePresence, motion, useIsPresent, useReducedMotion } from "motion/react";
 import { ChevronLeft24Regular, MoreHorizontal24Regular } from "@fluentui/react-icons";
 import { AppHeader, IOSHomeIndicator, IOSStatusBar, TabsCard, TabsMenu } from "../../components";
-import type { RecentTab } from "../Recent/Recent.data";
+import type { RecentTab } from "../activity/types";
 import { NewTabButton } from "../NewTabButton";
 import { iosMotion } from "../../motion/iosMotion";
 import { MotionLayout, MotionPresence } from "../../motion/MotionPresence";

@@ -4,6 +4,7 @@ import { handleSearchSuggestions } from "./searchSuggestions";
 import { createMsnFeedHandler } from "./msnFeed";
 import { handleBingSerp } from "./bingSerp";
 import { handleWebPage } from "./webPage";
+import { sendJson as send } from "./http";
 
 const DEFAULT_ORIGINS = ["https://elevendy-git.github.io", "http://localhost:5174", "http://127.0.0.1:5174"];
 const RATE_WINDOW_MS = 60_000;
@@ -41,12 +42,6 @@ export function productionConfig(env: NodeJS.ProcessEnv = process.env): Producti
     rateLimitRequests: positiveInteger(env.API_RATE_LIMIT_REQUESTS, 120, 1000, "API_RATE_LIMIT_REQUESTS"),
     maxConcurrent: positiveInteger(env.API_MAX_CONCURRENT, 8, 32, "API_MAX_CONCURRENT"),
   };
-}
-
-function send(res: ServerResponse, status: number, body: unknown) {
-  if (res.destroyed || res.writableEnded) return;
-  res.writeHead(status, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" });
-  res.end(JSON.stringify(body));
 }
 
 /** Anonymous, read-only API service. No static files, Rewards, account data or request logging. */

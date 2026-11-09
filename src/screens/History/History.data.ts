@@ -1,11 +1,6 @@
-import { RECENT_SITES, type RecentEntry } from "../Recent/Recent.data";
-
-export interface HistoryEntry extends RecentEntry {
-  groupId: string;
-  groupLabel: string;
-  /** Real Prototype visits are regrouped by their local date when History is rendered. */
-  visitedAt?: number;
-}
+import { RECENT_SITES } from "../Recent/Recent.data";
+import type { HistoryEntry } from "../activity/types";
+export type { HistoryEntry } from "../activity/types";
 
 /** Supplied browsing-history fixtures; each visit has its own identity. */
 export const HISTORY_ENTRIES: readonly HistoryEntry[] = [
