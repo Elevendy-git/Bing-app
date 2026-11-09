@@ -1,3 +1,5 @@
+import { publicApiUrl } from "./apiUrl";
+
 export interface SearchSuggestion {
   query: string;
   source: "history" | "prediction";
@@ -45,7 +47,7 @@ export async function fetchSearchSuggestions(input: string, signal: AbortSignal)
   if (!query) return [];
   if (query.length > SEARCH_QUERY_MAX_LENGTH) throw new Error("Search query is too long");
   const params = new URLSearchParams({ query });
-  const response = await fetch(`${import.meta.env.BASE_URL}${SEARCH_SUGGESTIONS_PATH.slice(1)}?${params}`, {
+  const response = await fetch(publicApiUrl(`${SEARCH_SUGGESTIONS_PATH}?${params}`), {
     signal,
     cache: "no-store",
     credentials: "omit",

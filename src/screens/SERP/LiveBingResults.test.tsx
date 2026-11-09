@@ -2,10 +2,40 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { LiveBingResults } from "./LiveBingResults";
 
-afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
 const response = (query: string) => ({ ok: true, json: async () => ({ query, html: `<p>${query} result</p>`, fetchedAt: "2026-10-15T06:00:00Z" }) });
 
 describe("Live Bing result viewport", () => {
+  it("loads both results and web destinations from the configured public backend", async () => {
+    vi.stubEnv("VITE_API_BASE_URL", "https://bing-backend.onrender.com/");
+    vi.stubEnv("BASE_URL", "/Bing-app/");
+    const destination = "https://example.com/article?topic=weather&lang=en";
+    const fetcher = vi.fn().mockResolvedValueOnce(response("Weather & news")).mockResolvedValueOnce({ ok: true, json: async () => ({
+      requestedUrl: destination, sourceUrl: destination, html: "<p>Article</p>", fetchedAt: "2026-11-01T10:00:00Z",
+    }) });
+    vi.stubGlobal("fetch", fetcher);
+    const { rerender } = render(<LiveBingResults query="Weather & news" />);
+    await screen.findByTitle("Bing results for Weather & news");
+    rerender(<LiveBingResults query="Weather & news" url={destination} />);
+    await screen.findByTitle(`Web page: ${destination}`);
+    expect(fetcher.mock.calls.map(([url]) => url)).toEqual([
+      "https://bing-backend.onrender.com/api/bing-serp?query=Weather+%26+news",
+      `https://bing-backend.onrender.com/api/web-page?${new URLSearchParams({ url: destination })}`,
+    ]);
+    for (const [, options] of fetcher.mock.calls) {
+      expect(options).toMatchObject({ credentials: "omit", referrerPolicy: "no-referrer", cache: "no-store", headers: { Accept: "application/json" } });
+    }
+  });
+
+  it("shows a recoverable result error when the deployment backend URL is invalid", async () => {
+    vi.stubEnv("VITE_API_BASE_URL", "http://remote.example.com");
+    const fetcher = vi.fn();
+    vi.stubGlobal("fetch", fetcher);
+    render(<LiveBingResults query="Weather" />);
+    expect(await screen.findByRole("alert")).toHaveTextContent("Couldn’t load results");
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
   it("isolates the web document and allows retry after a fetch failure", async () => {
     const fetcher = vi.fn().mockRejectedValueOnce(new Error("offline")).mockResolvedValueOnce(response("Weather"));
     vi.stubGlobal("fetch", fetcher);

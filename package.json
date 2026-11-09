@@ -12,6 +12,8 @@
     "typecheck": "npm run check:tokens && tsc --noEmit",
     "test": "vitest run",
     "build": "npm run check:tokens && tsc --noEmit && vite build",
+    "build:server": "tsc --noEmit && vite build --config vite.server.config.ts",
+    "start:server": "node dist-server/production.js",
     "preview": "vite preview --host 127.0.0.1 --port 4174 --strictPort"
   },
   "dependencies": {

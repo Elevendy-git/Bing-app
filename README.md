@@ -229,14 +229,18 @@ new previews in `src/previewCatalog.tsx`, and screens in `src/App.tsx`. Document
 Figma sources in a component README. Check relevant interactions and Light/Dark
 appearance directly in the workbench before submitting changes.
 
-The pull-request workflow runs types, token checks, tests, and the workbench build.
-The deployment workflow publishes `dist/` to GitHub Pages only when manually
-dispatched from Actions. Code pushes still run the automatic workbench checks.
-Before starting a deployment, enable Pages in the repository settings and use
-**GitHub Actions** as the deployment source. The production build uses relative
-asset URLs for project-based Pages paths. No deployment is triggered by local edits.
-GitHub Pages serves static files only, so live suggestions would need a separately
-hosted API behind the same-origin `/api/search-suggestions` route. The current
-static deployment shows no live AS card when this route is unavailable.
-Live SERP also requires `/api/bing-serp`; without it the result viewport shows an
-explicit load error and Retry. It never substitutes the static design reference.
+The public source repository is [Elevendy-git/Bing-app](https://github.com/Elevendy-git/Bing-app).
+The published workbench is [Bing App](https://elevendy-git.github.io/Bing-app/).
+The checks workflow runs types, token checks, tests, and both frontend and backend
+builds. Successful checks for a push to `main` trigger GitHub Pages deployment;
+the deployment workflow also supports manual dispatch. Pages uses **GitHub Actions**
+as its source, and the production build uses relative asset URLs for project paths.
+
+GitHub Pages hosts the frontend. A separate anonymous Node service supplies live
+suggestions, MSN feed, Bing SERP and web-page previews. Set the repository Actions
+variable `VITE_API_BASE_URL` to its HTTPS origin before publishing. Empty configuration
+preserves local Vite API routes; missing upstream data shows the existing error/retry
+states rather than substituting design fixtures. See [backend deployment](docs/backend-deployment.md)
+for Render configuration and [Microsoft sign-in](docs/microsoft-sign-in.md) for the
+online SPA callback. Rewards snapshots remain local and are never exposed by the
+public backend.

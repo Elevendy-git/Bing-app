@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: bing-app-api
+    runtime: node
+    plan: free
+    buildCommand: npm ci --include=dev && npm run build:server
+    startCommand: npm run start:server
+    healthCheckPath: /health
+    autoDeployTrigger: "off"
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: NODE_ENV
+        value: production
+      - key: API_ALLOWED_ORIGINS
+        value: https://elevendy-git.github.io,http://localhost:5174,http://127.0.0.1:5174
+      - key: API_RATE_LIMIT_REQUESTS
+        value: "120"
+      - key: API_MAX_CONCURRENT
+        value: "8"

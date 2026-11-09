@@ -6,7 +6,8 @@ export function useRewardsSnapshot(accountEmail?: string) {
   const email = normalizeRewardsAccount(accountEmail || "");
   const [reading, setReading] = useState<{ email: string; snapshot: RewardsSnapshot | null } | null>(null);
   useEffect(() => {
-    if (!email) { setReading(null); return; }
+    // The saved capture is private to this machine, never part of a public deployment.
+    if (!email || !["localhost", "127.0.0.1", "[::1]"].includes(window.location.hostname)) { setReading(null); return; }
     let disposed = false;
     let request: AbortController | null = null;
     const refresh = async () => {

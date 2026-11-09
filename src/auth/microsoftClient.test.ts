@@ -4,8 +4,17 @@ import { fetchMicrosoftProfile, microsoftSignInError } from "./microsoftClient";
 import { canonicalMicrosoftOrigin, microsoftConfig } from "./microsoftConfig";
 
 const identity = { username: "person@outlook.com", name: "Person" } as AccountInfo;
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); vi.restoreAllMocks(); });
 describe("Microsoft SPA configuration and optional Graph profile", () => {
+  it("uses the dedicated Pages callback and does not route sign-in through the data backend", () => {
+    vi.spyOn(document, "baseURI", "get").mockReturnValue("https://elevendy-git.github.io/Bing-app/?view=prototype");
+    vi.stubEnv("VITE_API_BASE_URL", "https://bing-backend.onrender.com");
+    const config = microsoftConfig();
+    expect(config.auth.redirectUri).toBe("https://elevendy-git.github.io/Bing-app/redirect.html");
+    expect(config.auth.authority).toBe("https://login.microsoftonline.com/consumers");
+    expect(canonicalMicrosoftOrigin("https://elevendy-git.github.io/Bing-app/")).toBeNull();
+  });
+
   it("uses personal accounts, the dedicated same-origin bridge and session-scoped MSAL cache", () => {
     const config = microsoftConfig();
     expect(config.auth.clientId).toBe("ec6fea2d-15f4-44ec-8954-5b49d94a2e2e");

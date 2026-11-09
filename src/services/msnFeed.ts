@@ -1,3 +1,5 @@
+import { publicApiUrl } from "./apiUrl";
+
 export const MSN_FEED_PATH = "/api/msn-feed";
 export const MSN_FEED_LIMIT = 12;
 // MSN may return more stories than newsTop; keep the page before following its cursor.
@@ -34,7 +36,7 @@ export function newsElapsedTime(publishedAt: string, now = Date.now()): string {
 
 export async function fetchMsnFeed(signal: AbortSignal, cursor?: string): Promise<MsnFeed> {
   const query = cursor ? `?cursor=${encodeURIComponent(cursor)}` : "";
-  const response = await fetch(`${import.meta.env.BASE_URL}${MSN_FEED_PATH.slice(1)}${query}`, {
+  const response = await fetch(publicApiUrl(`${MSN_FEED_PATH}${query}`), {
     signal, credentials: "omit", referrerPolicy: "no-referrer", headers: { Accept: "application/json" },
   });
   // A long-idle preview may outlive the server's cursor cache. Resume with a new

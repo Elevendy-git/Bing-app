@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { AppSearchBoxLoadState } from "../../components/AppSearchBox/SearchBoxProgress";
+import { publicApiUrl } from "../../services/apiUrl";
 import { bingPageIdentity, type BingPageSnapshot } from "../../services/bingPage";
 import { resultDestination, webUrl, withIABNavigation } from "../../services/webNavigation";
 import styles from "./LiveBingResults.module.css";
@@ -45,7 +46,10 @@ export function LiveBingResults({ query, url, active = true, onNavigate, onLoadS
       onLoadStateChange?.("error", attempt);
     };
     const timeout = setTimeout(() => { controller.abort(); fail(); }, 10000);
-    void fetch(url ? `/api/web-page?${new URLSearchParams({ url })}` : `/api/bing-serp?${new URLSearchParams({ query })}`, { signal: controller.signal, credentials: "omit", cache: "no-store" })
+    const load = async () => fetch(publicApiUrl(url ? `/api/web-page?${new URLSearchParams({ url })}` : `/api/bing-serp?${new URLSearchParams({ query })}`), {
+      signal: controller.signal, credentials: "omit", cache: "no-store", referrerPolicy: "no-referrer", headers: { Accept: "application/json" },
+    });
+    void load()
       .then(async (response) => {
         if (!response.ok) throw new Error("Unavailable");
         const body: unknown = await response.json();

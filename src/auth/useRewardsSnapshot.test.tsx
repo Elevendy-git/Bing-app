@@ -7,9 +7,21 @@ const snapshot = {
   observedAt: "2026-01-01T10:00:00.000Z", source: "microsoft-rewards-dashboard",
 };
 const response = (data: unknown) => ({ ok: true, json: async () => ({ snapshot: data }) });
-afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
 
 describe("Rewards snapshot account lifecycle", () => {
+  it("never requests a private account capture from a public host or the configured backend", () => {
+    const deployedWindow = Object.create(window) as Window;
+    Object.defineProperty(deployedWindow, "location", { value: new URL("https://elevendy-git.github.io/Bing-app/") });
+    vi.stubGlobal("window", deployedWindow);
+    vi.stubEnv("VITE_API_BASE_URL", "https://bing-backend.onrender.com");
+    const fetcher = vi.fn();
+    vi.stubGlobal("fetch", fetcher);
+    const { result } = renderHook(() => useRewardsSnapshot(snapshot.accountEmail));
+    expect(result.current).toBeNull();
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
   it("only requests data for a signed-in email and sends no credentials", async () => {
     const fetcher = vi.fn().mockResolvedValue(response(snapshot));
     vi.stubGlobal("fetch", fetcher);

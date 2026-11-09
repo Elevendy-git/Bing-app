@@ -16,11 +16,13 @@ Under Authentication → Single-page application, register exactly:
 
 ```text
 http://localhost:5174/redirect.html
+https://elevendy-git.github.io/Bing-app/redirect.html
 ```
 
-The user's Overview screenshot shows one SPA URI, but not its value. Confirm the
-exact URI in the portal if Microsoft reports a redirect mismatch. Do not select
-Web instead of SPA, enable an implicit grant, or create a secret for this code.
+The production callback includes the case-sensitive `/Bing-app/` project path.
+Keep the development callback so both local and online prototypes can sign in.
+Do not select Web instead of SPA, enable an implicit grant, or create a secret
+for this code.
 The development app canonicalizes 127.0.0.1 to localhost before mounting. Both the
 workbench and callback must use the same origin for the MSAL bridge to work.
 
@@ -28,7 +30,64 @@ Optional `.env.local` can override `VITE_MICROSOFT_CLIENT_ID`; see `.env.example
 Every Vite environment variable exposed to this frontend is public. Production
 and preview use their own origin and need the corresponding `/redirect.html`
 SPA URI registered before login, e.g. `http://localhost:4174/redirect.html` for
-build preview. No online deployment or portal settings are changed by this code.
+build preview.
+
+## GitHub Pages and Render deployment
+
+The public workbench URL is `https://elevendy-git.github.io/Bing-app/`.
+Vite builds `index.html` and the separate `redirect.html` bridge together. Deploy
+the complete `dist` directory, including the callback and hashed assets. The
+current relative Vite build base keeps assets under the Pages project path;
+`microsoftConfig()` resolves the callback against the frontend document URL.
+The callback always belongs to Pages, never to the Render data backend.
+
+For the existing Entra registration, use these settings:
+
+| Portal setting | Value |
+| --- | --- |
+| Application (client) ID | `ec6fea2d-15f4-44ec-8954-5b49d94a2e2e` |
+| Supported account types | Personal Microsoft accounts only |
+| Authentication platform | Single-page application |
+| Production redirect URI | `https://elevendy-git.github.io/Bing-app/redirect.html` |
+| Development redirect URI | `http://localhost:5174/redirect.html` |
+| Implicit grant: Access tokens / ID tokens | Both unchecked |
+| Allow public client flows | No; browser authorization code + PKCE uses the SPA platform |
+| API permission | Microsoft Graph → Delegated → `User.Read` |
+| Client secret | None |
+
+Set the following **frontend build** variables before `npm run build`:
+
+```dotenv
+VITE_MICROSOFT_CLIENT_ID=ec6fea2d-15f4-44ec-8954-5b49d94a2e2e
+VITE_API_BASE_URL=https://your-service.onrender.com
+```
+
+Replace the sample backend hostname with the deployed Render service URL. Both
+values are public and embedded in the frontend bundle. Changing them requires a
+new Pages build; setting a variable only on Render does not update the frontend.
+Do not add passwords, secrets or access tokens to any `VITE_` variable.
+
+`VITE_API_BASE_URL` routes autocomplete, MSN feed, Bing results and IAB webpage
+requests through the same HTTPS backend. It accepts an optional backend base
+path and never adds the Pages project path. Empty preserves the current local
+Vite middleware URLs. HTTP backend URLs are accepted only for loopback testing.
+Requests omit cookies and authentication headers. The backend CORS setting
+`API_ALLOWED_ORIGINS` must include `https://elevendy-git.github.io` (an origin has
+no `/Bing-app/` path); local testing can also include `http://localhost:5174` and
+`http://127.0.0.1:5174`. The data backend does not receive Microsoft identity or
+Graph tokens.
+
+Rewards captures remain local: `.local/rewards.json` is excluded from Git and
+the public build, the deployed backend has no Rewards route, and the frontend
+does not request a capture or send its account email from a public host. Online
+Profile shows the Rewards introduction and can open the official Rewards site.
+Real Microsoft sign-in still works independently of those local captures.
+
+After deployment, open the Pages URL, allow its login popup, complete personal
+account login, and confirm Profile receives the name or initial fallback.
+Verify the callback returns to Pages rather than Render. Test sign-out, page
+reload and a new explicit sign-in. An `AADSTS50011` error requires correcting
+the exact SPA callback in Entra; changing CORS on Render cannot fix it.
 
 ## Flow and boundaries
 
@@ -53,8 +112,9 @@ and reloading within this browser session retain the active identity; activity
 and identity do not overwrite each other. Only the cached active account is
 restored, not an arbitrary other cached account. Private-mode browsing remains
 separate. Microsoft login does not itself sync Bing history, bookmarks, tabs or Rewards.
-The real signed-in account shows the Rewards introduction unless a matching
-[local Rewards capture](rewards.md) exists. A capture replaces it with real
+The real signed-in account shows the Rewards introduction unless the workbench
+is running on loopback and a matching [local Rewards capture](rewards.md) exists.
+A capture replaces it with real
 available/claimable points and streaks. The capture time is retained in metadata.
 Profile's **Explore now** and **Microsoft Rewards** entries open the official
 `https://rewards.bing.com/` site in a new tab (`noopener,noreferrer`). Its own
@@ -102,6 +162,10 @@ clearing, and explicit retry superseding an old login.
 Profile checks cover real identity propagation, private artwork, pending/error
 feedback, sign-out confirmation and omission of fixture Rewards points. Existing
 demo, Search history and Private-mode regression checks remain in place.
+Deployment checks cover the exact Pages callback, all four public API routes,
+query escaping, omitted credentials, and suppression of local Rewards requests
+on the public hostname. These checks use mocked responses and do not claim that
+an Entra redirect has been registered or a live online login has completed.
 
 Chrome checks open the real Microsoft personal-account login page and inspect the
 public authorization request for this client ID, the localhost callback, code
