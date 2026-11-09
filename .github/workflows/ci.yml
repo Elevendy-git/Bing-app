@@ -34,7 +34,8 @@ jobs:
         run: npm run typecheck
 
       - name: Run workbench and component tests
-        run: npm test
+        # Keep animation-heavy DOM flows from competing for runner CPU.
+        run: npm test -- --maxWorkers=1
 
       - name: Build workbench
         run: npm run build
