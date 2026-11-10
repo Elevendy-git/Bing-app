@@ -1,3 +1,6 @@
+import { installIABFindBridge } from "./iabFindBridge";
+export type { IABFindRequest, IABFindResult } from "./iabFindBridge";
+
 /** Only web destinations can enter the preview; app/system URL schemes stay inert. */
 export function webUrl(value: string, base?: string): string | null {
   try {
@@ -38,6 +41,7 @@ export function withIABNavigation(html: string, channel: string, parentOrigin: s
     };
     document.addEventListener('click', open, true);
     document.addEventListener('auxclick', open, true);
+    (${installIABFindBridge.toString()})(window, document, ${JSON.stringify(channel)}, ${JSON.stringify(parentOrigin)});
   })();</script>`;
   const document = html.replace(/<meta\b[^>]*http-equiv="Content-Security-Policy"[^>]*>/gi, "");
   // This policy must precede the document, including when a test supplies only a fragment.

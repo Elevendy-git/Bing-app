@@ -24,6 +24,12 @@ SERP follows [Shareout 1:20518](https://www.figma.com/design/yClrtwNrFJhE7W5waPR
 It has no clear icon or static caret. The screen supplies its actual fluid width
 and may use a readonly input to reopen query editing.
 
+For a webpage address, set `webPage`: the leading Bing icon disappears and the
+microphone becomes a star. `bookmarked` controls its filled state and
+`onToggleBookmark` enables the action. SERP still uses voice search. The same
+Search variant also supports Find on page; `showSearchActions={false}` hides its
+empty-field camera/voice artwork without changing the input or clear behavior.
+
 For IAB loading, `loadState` accepts `loading`, `rendering` or `complete`.
 The 2 px blue line clips to the bottom of the search capsule and adds no layout
 height. Set `loadKey` for a new request/retry and opt into live motion with

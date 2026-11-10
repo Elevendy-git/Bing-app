@@ -83,7 +83,7 @@ closing an enlarged screen.
 Library uses five categories in this order: Navigation, Inputs, Content,
 Overlays, OS Native. Header and Footer form the page navigation; Search Box and
 Switcher are inputs; Avatar, List, Glance Card, Feed Card and Tabs Card present
-content. Menu, Feed Menu and Toast share Overlays. System-provided components
+content. Menu (including SERP/Webpage variants), Feed Menu and Toast share Overlays. System-provided components
 stay together in OS Native at the end.
 
 Use these categories by purpose rather than creating a category for each new

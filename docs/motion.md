@@ -575,3 +575,46 @@ microphone, no speech and connection failure. Closing Voice Search, switching
 language or leaving the active app cancels the old session so a late callback
 cannot submit a query or reopen the interface. Do not simulate a successful
 recording, transcript or network response.
+
+## IAB browser actions and Find on page — 9 November 2026
+
+Rechecked [Apple HIG: Sheets](https://developer.apple.com/design/human-interface-guidelines/sheets),
+[UISheetPresentationController](https://developer.apple.com/documentation/uikit/uisheetpresentationcontroller),
+[Apple HIG: Motion](https://developer.apple.com/design/human-interface-guidelines/motion)
+and [UIModalTransitionStyle.coverVertical](https://developer.apple.com/documentation/uikit/uimodaltransitionstyle/coververtical).
+The native analogy is a contextual action sheet above the current browser page:
+present from the bottom, dismiss downwards, retain the underlying document and
+keep background interaction blocked until the dismissal finishes. Apple publishes
+the direction, modal ownership, detents and dismissal behavior; it does not
+publish an exact iOS 27 timing or easing constant for this menu.
+
+Browser and Feed menus use the same sheet presentation, `iosMotion.sheet`
+(420 ms, cubic-bezier(0.32, 0.72, 0, 1)), independent `iosMotion.fade` backdrop
+(200 ms, ease-out) and overlay-presence ownership. These existing values are
+web-prototype tuning. No new duration, curve or spring is introduced. Reversing
+the sheet retains its drawn position, reduced motion uses `iosMotion.instant`,
+and dismissal restores focus after the page becomes available. A subsequent
+local task starts after the previous menu releases its modal ownership.
+
+Find on page keeps the current document mounted and reuses the existing Search
+input and keyboard. The keyboard references the earlier keyboard interaction
+and uses `iosMotion.keyboard` (350 ms, the same settle curve), with instant
+presentation for reduced motion. Query changes, match counts and highlights
+update directly; selecting a match scrolls immediately rather than starting a
+new smooth-scroll animation on each keystroke. Highlighting is scoped to the
+active snapshot and clears when the task closes or the document is covered.
+
+The Find keyboard enters by growing its spacer from zero while sliding upwards
+with the same keyboard preset. Task dismissal retains the Find footer while
+its root height collapses using `iosMotion.keyboard` and its opacity uses
+`iosMotion.fade`; the child keyboard spacer does not also collapse on exit.
+The presence guard disables departing controls until the host releases the
+footer and restores focus. Reopening reverses the retained root from its drawn
+position. Reduced motion applies `iosMotion.instant` to both paths. These are
+reused web-prototype parameters, not new Apple-published system constants.
+
+Clipboard, native share and opening the default browser begin directly within
+the initiating click because browser APIs can require transient user activation;
+they do not wait for the sheet exit animation. Clipboard success feedback follows
+the resolved API result, and cancelling native sharing produces no success toast.
+Browser API behavior is governed by the web platform, not an iOS timing constant.

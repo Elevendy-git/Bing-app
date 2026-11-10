@@ -373,6 +373,7 @@ export function BingAppPrototype({ initialPage = "home", account = PROFILE_ACCOU
           className={`${styles.screen} ${session !== activeResult ? styles.inactiveResult : ""}`}
           aria-hidden={session !== activeResult || undefined} {...(session !== activeResult ? { inert: "" } : {})}>
           <LiveSERP query={session.query} initialUrl={session.initialUrl} timeSource={timeSource} privateMode={session.privateMode}
+            isBookmarked={activity.isBookmarked} onToggleBookmark={page => activity.toggleBookmark(page, session.privateMode)}
             onPageReady={(snapshot, navigationId) => saveResultPage(session, snapshot, navigationId)}
             active={previewActive && page === "serp" && session === activeResult && !voicePresence.presented} searchConcealed={serpTransition}
             onBack={() => navigate("home", "serp", "pop")} backLabel="Back to Home" onEditLocation={editSearch} onEditQuery={() => editSearch()}

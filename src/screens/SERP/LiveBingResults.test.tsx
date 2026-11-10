@@ -69,4 +69,89 @@ describe("Live Bing result viewport", () => {
     expect(onPageReady).toHaveBeenCalledOnce();
     expect(onPageReady).toHaveBeenCalledWith(expect.objectContaining({ html: "<p>News result</p>", sourceUrl: "https://www.bing.com/search?q=News", faviconUrl: null }));
   });
+
+  it("queues find until the document loads, searches without refetching, and clears covered or closed tasks", async () => {
+    const fetcher = vi.fn().mockResolvedValue(response("Weather"));
+    vi.stubGlobal("fetch", fetcher);
+    const onFindResult = vi.fn(), onPageReady = vi.fn();
+    const first = { query: "weather", index: 0, requestId: 1 };
+    const { rerender } = render(<LiveBingResults query="Weather" findRequest={first} onFindResult={onFindResult} onPageReady={onPageReady} />);
+    const frame = await screen.findByTitle("Bing results for Weather") as HTMLIFrameElement;
+    const post = vi.spyOn(frame.contentWindow!, "postMessage").mockImplementation(() => {});
+    const channel = frame.srcdoc.match(/nonce="([^"]+)"/)![1];
+    expect(frame).toHaveAttribute("sandbox", "allow-scripts");
+    expect(frame.getAttribute("sandbox")).not.toMatch(/same-origin|popups/);
+    expect(post).not.toHaveBeenCalled();
+    fireEvent.load(frame);
+    expect(post).toHaveBeenLastCalledWith({ type: "bing-iab-find", channel, ...first }, "*");
+    const srcdoc = frame.srcdoc;
+    const next = { query: "result", index: -1, requestId: 2 };
+    rerender(<LiveBingResults query="Weather" findRequest={next} onFindResult={onFindResult} onPageReady={onPageReady} />);
+    expect(post).toHaveBeenLastCalledWith({ type: "bing-iab-find", channel, ...next }, "*");
+    expect(frame.srcdoc).toBe(srcdoc);
+    expect(fetcher).toHaveBeenCalledOnce();
+    expect(onPageReady).toHaveBeenCalledOnce();
+    expect(onPageReady).toHaveBeenCalledWith(expect.objectContaining({ html: "<p>Weather result</p>" }));
+    rerender(<LiveBingResults query="Weather" active={false} findRequest={next} onFindResult={onFindResult} />);
+    expect(post).toHaveBeenLastCalledWith({ type: "bing-iab-find-clear", channel }, "*");
+    rerender(<LiveBingResults query="Weather" findRequest={next} onFindResult={onFindResult} />);
+    expect(post).toHaveBeenLastCalledWith({ type: "bing-iab-find", channel, ...next }, "*");
+    rerender(<LiveBingResults query="Weather" onFindResult={onFindResult} />);
+    expect(post).toHaveBeenLastCalledWith({ type: "bing-iab-find-clear", channel }, "*");
+    expect(fetcher).toHaveBeenCalledOnce();
+  });
+
+  it("accepts only the latest find result from the current opaque document", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response("Weather")));
+    const onFindResult = vi.fn();
+    const first = { query: "weather", index: 0, requestId: 1 };
+    const { rerender } = render(<LiveBingResults query="Weather" findRequest={first} onFindResult={onFindResult} />);
+    const frame = await screen.findByTitle("Bing results for Weather") as HTMLIFrameElement;
+    vi.spyOn(frame.contentWindow!, "postMessage").mockImplementation(() => {});
+    const channel = frame.srcdoc.match(/nonce="([^"]+)"/)![1];
+    const emit = (data: Record<string, unknown>, override: Partial<MessageEventInit> = {}) => fireEvent(window,
+      new MessageEvent("message", { source: frame.contentWindow, origin: "null", data: { type: "bing-iab-find-result", channel, ...data }, ...override }));
+    fireEvent.load(frame);
+    emit({ ...first, total: 3 });
+    expect(onFindResult).toHaveBeenLastCalledWith({ ...first, total: 3 });
+    onFindResult.mockClear();
+    const latest = { query: "result", index: 1, requestId: 2 };
+    rerender(<LiveBingResults query="Weather" findRequest={latest} onFindResult={onFindResult} />);
+    emit({ ...first, total: 3 });
+    emit({ ...latest, total: 3 }, { source: window });
+    emit({ ...latest, total: 3 }, { origin: window.location.origin });
+    emit({ ...latest, total: 3, channel: "previous-document" });
+    emit({ ...latest, total: -1 });
+    emit({ ...latest, total: 3.5 });
+    emit({ ...latest, total: 3, index: 3 });
+    emit({ ...latest, total: 0, index: 0 });
+    emit({ ...latest, total: 3, query: "old query" });
+    expect(onFindResult).not.toHaveBeenCalled();
+    emit({ ...latest, total: 3 });
+    expect(onFindResult).toHaveBeenCalledOnce();
+    rerender(<LiveBingResults query="Weather" active={false} findRequest={latest} onFindResult={onFindResult} />);
+    emit({ ...latest, total: 3 });
+    expect(onFindResult).toHaveBeenCalledOnce();
+  });
+
+  it("uses a fresh document channel on reload and never applies an old document's results", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce(response("Weather")).mockResolvedValueOnce(response("News")));
+    const onFindResult = vi.fn();
+    const findRequest = { query: "result", index: 0, requestId: 1 };
+    const { rerender } = render(<LiveBingResults query="Weather" findRequest={findRequest} onFindResult={onFindResult} />);
+    const previous = await screen.findByTitle("Bing results for Weather") as HTMLIFrameElement;
+    fireEvent.load(previous);
+    const oldChannel = previous.srcdoc.match(/nonce="([^"]+)"/)![1];
+    rerender(<LiveBingResults query="News" findRequest={findRequest} onFindResult={onFindResult} />);
+    const current = await screen.findByTitle("Bing results for News") as HTMLIFrameElement;
+    fireEvent.load(current);
+    const channel = current.srcdoc.match(/nonce="([^"]+)"/)![1];
+    expect(channel).not.toBe(oldChannel);
+    fireEvent(window, new MessageEvent("message", { source: current.contentWindow, origin: "null",
+      data: { type: "bing-iab-find-result", channel: oldChannel, ...findRequest, total: 1 } }));
+    expect(onFindResult).not.toHaveBeenCalled();
+    fireEvent(window, new MessageEvent("message", { source: current.contentWindow, origin: "null",
+      data: { type: "bing-iab-find-result", channel, ...findRequest, total: 1 } }));
+    expect(onFindResult).toHaveBeenCalledWith({ ...findRequest, total: 1 });
+  });
 });

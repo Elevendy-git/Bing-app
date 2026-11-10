@@ -107,7 +107,8 @@ export const previewComponentGroups: readonly PreviewComponentGroup[] = [
   {
     id: "menu", title: "Menu", category: "overlays", overviewItemId: "overview",
     items: [{ id: "overview", title: "Menu", fullWidth: true, hasControls: true,
-      keywords: ["Dialog", "Flyout", "Tabs", "History", "Tab settings", "Feedback", "Close all tabs", "Clear all history", "Delete"],
+      keywords: ["Dialog", "Flyout", "Bottom sheet", "Tabs", "History", "Tab settings", "Feedback", "Close all tabs", "Clear all history", "Delete",
+        "Browser", "SERP", "Search results", "Webpage", "Refresh", "Copy link", "Open in default browser", "Share", "Search settings", "Find on page", "Cancel"],
       content: <MenuListOverview /> }],
   },
   {

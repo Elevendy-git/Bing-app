@@ -17,10 +17,12 @@ export interface MenuListProps {
   autoFocus?: boolean;
   onDismiss?: () => void;
   layout?: "flyout" | "sheet";
+  /** Optional sheet footer; dismissal remains owned by the host. */
+  cancelLabel?: string;
 }
 
 /** Shareout 1:20756. The host owns anchoring and outside-click dismissal. */
-export function MenuList({ items, label = "Menu", id, className, autoFocus = false, onDismiss, layout = "flyout" }: MenuListProps) {
+export function MenuList({ items, label = "Menu", id, className, autoFocus = false, onDismiss, layout = "flyout", cancelLabel }: MenuListProps) {
   const root = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (autoFocus) root.current?.querySelector<HTMLButtonElement>(layout === "sheet" ? '[role="menuitem"]:not([aria-disabled="true"])' : '[role="menuitem"]')?.focus({ preventScroll: true });
@@ -48,5 +50,11 @@ export function MenuList({ items, label = "Menu", id, className, autoFocus = fal
         <span className={styles.label}>{text}</span>
       </button>)}
     </div>
+    {layout === "sheet" && cancelLabel && <div className={styles.footer}>
+      <button type="button" role="menuitem" tabIndex={-1} aria-disabled={!onDismiss || undefined} onClick={onDismiss}
+        className={`${styles.item} ${styles.cancel}`}>
+        <span className={styles.label}>{cancelLabel}</span>
+      </button>
+    </div>}
   </div>;
 }

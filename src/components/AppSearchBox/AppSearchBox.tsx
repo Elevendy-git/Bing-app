@@ -1,4 +1,4 @@
-import { Camera24Regular, ChevronLeft24Regular, DismissCircle24Filled, SlideSearch24Regular } from "@fluentui/react-icons";
+import { Camera24Regular, ChevronLeft24Regular, DismissCircle24Filled, SlideSearch24Regular, Star24Filled, Star24Regular } from "@fluentui/react-icons";
 import type { InputHTMLAttributes, Ref } from "react";
 import { SearchBoxProgress, type AppSearchBoxLoadState } from "./SearchBoxProgress";
 import styles from "./AppSearchBox.module.css";
@@ -21,6 +21,11 @@ export interface AppSearchBoxProps {
   onClear?: () => void;
   /** Opt-in voice entry; passive artwork keeps its decorative microphone. */
   onVoiceSearch?: () => void;
+  /** The IAB address capsule uses a bookmark action instead of voice search. */
+  webPage?: boolean;
+  bookmarked?: boolean;
+  onToggleBookmark?: () => void;
+  showSearchActions?: boolean;
   /** IAB navigation loading feedback; omitted when idle or failed. */
   loadState?: AppSearchBoxLoadState;
   /** A new request/retry starts a fresh loading bar. */
@@ -42,6 +47,10 @@ export function AppSearchBox({
   onBack,
   onClear,
   onVoiceSearch,
+  webPage = false,
+  bookmarked = false,
+  onToggleBookmark,
+  showSearchActions = true,
   loadState,
   loadKey,
   animateLoading,
@@ -53,10 +62,16 @@ export function AppSearchBox({
     onClick={event => { event.stopPropagation(); onVoiceSearch(); }}>
     <span className={styles.microphone} aria-hidden="true" />
   </button> : <span className={styles.actionSlot} aria-hidden="true"><span className={styles.microphone} /></span>;
+  const star = bookmarked ? <Star24Filled /> : <Star24Regular />;
+  const bookmark = onToggleBookmark ? <button type="button" className={styles.actionSlot}
+    aria-label={bookmarked ? "Remove bookmark" : "Save bookmark"} aria-pressed={bookmarked}
+    onPointerDown={event => event.preventDefault()} onMouseDown={event => event.preventDefault()}
+    onClick={event => { event.stopPropagation(); onToggleBookmark(); }}>{star}</button>
+    : <span className={styles.actionSlot} aria-hidden="true">{star}</span>;
   return (
     <div className={[styles.root, variant === "recent" && styles.recent, variant === "serp" && styles.serp, className].filter(Boolean).join(" ")}
       role="group" aria-label={ariaLabel} data-variant={variant} data-state={state}>
-      {variant === "serp" ? <span className={styles.bingSlot} aria-hidden="true"><img src={new URL("./assets/bing.svg", import.meta.url).href} alt="" /></span>
+      {variant === "serp" ? !webPage && <span className={styles.bingSlot} aria-hidden="true"><img src={new URL("./assets/bing.svg", import.meta.url).href} alt="" /></span>
       : onBack && variant === "search" ? <button type="button" className={styles.iconSlot} aria-label="Back from search"
         // Keep focus until click starts navigation, including a held mouse/touch press.
         onPointerDown={(event) => event.preventDefault()} onMouseDown={(event) => event.preventDefault()} onClick={onBack}>
@@ -71,11 +86,11 @@ export function AppSearchBox({
         {hasInput && variant !== "serp" && <span className={styles.caret} aria-hidden="true" />}
         </>}
       </span>
-      {variant === "serp" ? microphone : hasInput ? (
+      {variant === "serp" ? webPage ? bookmark : microphone : hasInput ? (
         onClear ? <button type="button" className={`${styles.iconSlot} ${styles.dismiss}`} aria-label="Clear search query"
           onMouseDown={(event) => event.preventDefault()} onClick={onClear}><DismissCircle24Filled /></button> :
         <span className={`${styles.iconSlot} ${styles.dismiss}`} aria-hidden="true"><DismissCircle24Filled /></span>
-      ) : variant === "search" ? (
+      ) : variant === "search" && showSearchActions ? (
         <span className={styles.actions} aria-hidden={onVoiceSearch ? undefined : true}>
           <span className={styles.actionSlot} aria-hidden="true"><Camera24Regular /></span>
           {microphone}

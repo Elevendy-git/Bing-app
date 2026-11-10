@@ -46,7 +46,8 @@ describe("Feed follow flow", () => {
     await waitFor(() => expect(first).toHaveFocus());
     fireEvent.click(first);
     await waitFor(() => expect(screen.getByRole("menuitem", { name: "Follow Medium" })).toBeVisible());
-    fireEvent.click(screen.getByRole("dialog").previousElementSibling!);
+    // The dimming artwork is pointer-transparent; an outside click targets the overlay.
+    fireEvent.click(screen.getByRole("dialog").parentElement!);
     await waitFor(() => expect(screen.getByRole("searchbox")).toBeInTheDocument());
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
   });

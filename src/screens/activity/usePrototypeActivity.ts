@@ -6,7 +6,7 @@ import { RECENT_CONVERSATIONS } from "../Recent/Recent.data";
 import { RECENT_SEARCHES } from "../Search/Search.data";
 import { HISTORY_ENTRIES } from "../History/History.data";
 import { BOOKMARK_ENTRIES } from "../Bookmark/Bookmark.data";
-import { deleteBookmark } from "./bookmarks";
+import { bookmarkUrl, deleteBookmark, findBookmark, toggleUrlBookmark, type BookmarkPageMetadata } from "./bookmarks";
 import { OPEN_TABS } from "../Tabs/Tabs.data";
 import type { ResultSession } from "./types";
 
@@ -128,10 +128,19 @@ export function usePrototypeActivity(initialRecentState: "default" | "empty" = "
   };
   const clearHistory = () => { setBrowsingHistory([]); setSearchHistory([]); };
   const deleteBookmarkEntry = (id: string) => setBookmarks(entries => deleteBookmark(entries, id));
+  const isBookmarked = (url: string) => Boolean(findBookmark(bookmarks, url));
+  const toggleBookmark = (page: BookmarkPageMetadata, privateMode = false) => {
+    const existing = findBookmark(bookmarks, page.sourceUrl);
+    if (privateMode || !bookmarkUrl(page.sourceUrl)) return Boolean(existing);
+    const id = existing?.id ?? `bookmark-${++activitySequence.current}`;
+    const next = toggleUrlBookmark(bookmarks, page, id);
+    setBookmarks(next.entries);
+    return next.bookmarked;
+  };
   return {
     resultSessions, activeResultId, activeResult, searchHistory, browsingHistory,
     bookmarks, conversations, tabs, selectedTabId,
     deleteHistoryEntry, updateSearchHistory, saveResultPage, closeTab, closeAllTabs,
-    restoreTab, createResultSession, clearHistory, deleteBookmarkEntry,
+    restoreTab, createResultSession, clearHistory, deleteBookmarkEntry, isBookmarked, toggleBookmark,
   };
 }

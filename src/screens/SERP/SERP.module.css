@@ -1,5 +1,6 @@
 .root, .root * { box-sizing: border-box; }
 .root { position: absolute; inset: 0; display: flex; flex-direction: column; width: 100%; height: 100%; overflow: clip; background: var(--gnrc-color-app-footer-surface); color: var(--gnrc-color-foreground-neutral-primary); }
+.surface { position: absolute; inset: 0; display: flex; flex-direction: column; }
 .header { position: relative; z-index: 1; padding-bottom: 8px; flex: none; background: var(--gnrc-color-app-footer-surface); }
 .header[data-private-mode="true"] { background: var(--gnrc-color-search-private-background); color: var(--gnrc-color-foreground-neutral-primary); }
 .searchRow { display: flex; width: 100%; padding: 0 10px 0 var(--gnrc-layout-search-inset); align-items: center; }
@@ -7,7 +8,13 @@
 .searchConcealed { opacity: 0; }
 .more { display: flex; padding: 8px 10px; flex: none; align-items: center; justify-content: center; }
 .more svg { display: block; width: 24px; height: 24px; }
+button.more { border: 0; margin: 0; background: transparent; color: inherit; cursor: pointer; border-radius: 12px; }
+button.more:focus-visible { outline: 2px solid var(--gnrc-color-app-list-accent); outline-offset: -2px; }
 .viewport { position: relative; width: 100%; min-height: 0; flex: 1; overflow: clip; background: #fff; }
 /* The Figma node is itself a web screenshot. Keep its original crop in passive Key screens. */
 .reference { display: block; width: 100%; height: auto; transform: translateY(-13.484%); }
 .footer { position: relative; z-index: 1; flex: none; }
+.overlayHost { position: absolute; inset: 0; pointer-events: none; }
+.overlayHost > * { pointer-events: auto; }
+.toast { position: absolute; left: var(--gnrc-layout-search-inset); right: var(--gnrc-layout-search-inset); bottom: calc(var(--gnrc-ios-safe-bottom) + 60px); z-index: 3; }
+.toast > * { width: 100%; }

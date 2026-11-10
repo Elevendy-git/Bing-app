@@ -5,6 +5,7 @@ export * from "./AppFooter";
 export * from "./AppBrowserToolbar";
 export * from "./IABFooter";
 export * from "./MenuList";
+export * from "./BrowserMenu";
 export * from "./FeedMenu";
 export * from "./Toast";
 export * from "./ConfirmationDialog";

@@ -53,12 +53,35 @@ cards, lazy content and controls may be absent or inactive. Ordinary links open
 their real destination through `/api/web-page` in the same App viewport. Bing
 search links become another SERP entry. Each tab retains its documents and scroll
 positions for Back/Forward and Recent; a new link after Back replaces only the
-forward branch. The composer microphone opens the shared
+forward branch. In SERP the composer microphone opens the shared
 [Voice Search modal](../VoiceSearch/README.md) in Prototype; successful recognition
 replaces the active tab's result session and Cancel restores the retained page.
-More and Copilot remain passive.
+Webpage addresses use a bookmark star instead, saving the actual canonical URL,
+title and favicon into the shared Bookmark activity. Tapping again removes it.
+InPrivate does not write normal bookmarks. Copilot remains passive.
 Bing's returned layout, ranking, locale and content may vary, and will not
 necessarily match the historical weather reference.
+
+## Browser actions
+
+More presents the shared `BrowserMenu` / `MenuSheet` using the Feed menu material.
+SERP includes Refresh, Copy link, Open in default browser, Share, Search settings,
+Feedback and Find on page; webpages omit Search settings. Both include Cancel.
+Cancel, outside click and Escape restore the page and trigger focus after exit.
+Refresh reloads only the current document, preserving the rest of the tab's stack.
+Copy and Share use the current canonical URL; native sharing is used when available,
+otherwise Share copies the link with explicit feedback. Search settings and
+Feedback open their official Bing browser destinations; the prototype does not
+submit feedback itself. Both menu variants are available in Library → Overlays → Menu.
+
+Find on page opens after the sheet exits and reuses the Search input and iOS
+keyboard. Literal, case-insensitive matches are highlighted inside the current
+isolated document, with count, Previous/Next, Clear and Done. Counts remain visible
+while stepping between matches. Closing or covering the document clears highlights;
+the iframe stays mounted. The App-owned bridge authenticates the parent/frame,
+origin, per-document channel and latest request, without same-origin access.
+Presentation references and web timing distinctions are recorded in
+[motion.md](../../../docs/motion.md#iab-browser-actions-and-find-on-page--9-november-2026).
 
 The search endpoint calls only `https://www.bing.com/search`, uses a mobile user agent,
 does not forward browser credentials, and follows no redirects. Queries are
@@ -68,7 +91,7 @@ English/Chinese input selects the corresponding language. Location-sensitive
 results can reflect the server's network location; no device location is sent.
 Result assets load from their original HTTPS sources in an isolated, credentialless
 iframe (where supported). The only executable script is the App-owned, nonce-authorized
-link bridge. The iframe has no same-origin access or popup permission. CSP blocks
+navigation/find bridge. The iframe has no same-origin access or popup permission. CSP blocks
 remote scripts, forms and embedded frames; the parent validates message source and
 channel before navigating. Thumbnail snapshots contain no bridge and allow no scripts.
 See [IAB preview](../../../docs/iab-preview.md) for the webpage endpoint and its limits.
