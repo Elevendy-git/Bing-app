@@ -10,7 +10,8 @@ describe("Live Bing result viewport", () => {
     vi.stubEnv("VITE_API_BASE_URL", "https://bing-backend.onrender.com/");
     vi.stubEnv("BASE_URL", "/Bing-app/");
     const destination = "https://example.com/article?topic=weather&lang=en";
-    const fetcher = vi.fn().mockResolvedValueOnce(response("Weather & news")).mockResolvedValueOnce({ ok: true, json: async () => ({
+    const fetcher = vi.fn().mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ status: "ok" }) })
+      .mockResolvedValueOnce(response("Weather & news")).mockResolvedValueOnce({ ok: true, json: async () => ({
       requestedUrl: destination, sourceUrl: destination, html: "<p>Article</p>", fetchedAt: "2026-11-01T10:00:00Z",
     }) });
     vi.stubGlobal("fetch", fetcher);
@@ -19,6 +20,7 @@ describe("Live Bing result viewport", () => {
     rerender(<LiveBingResults query="Weather & news" url={destination} />);
     await screen.findByTitle(`Web page: ${destination}`);
     expect(fetcher.mock.calls.map(([url]) => url)).toEqual([
+      "https://bing-backend.onrender.com/health",
       "https://bing-backend.onrender.com/api/bing-serp?query=Weather+%26+news",
       `https://bing-backend.onrender.com/api/web-page?${new URLSearchParams({ url: destination })}`,
     ]);

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 import { FeedCard, type FeedCardItem, type FeedMoreOptionsHandler, type FeedArticleOpenHandler } from "../../components/FeedCard";
 import { fetchMsnFeed, newsElapsedTime, type MsnFeed } from "../../services/msnFeed";
+import { awaitPublicApiReady } from "../../services/publicApiReady";
 import styles from "./Homepage.module.css";
 import liveStyles from "./LiveHomepageFeed.module.css";
 
@@ -66,8 +67,11 @@ export function LiveHomepageFeed({ scrollRef, active = true, onMoreOptions, onOp
     setLoading(request);
     failedRequest.current = null;
     setError(null);
-    const timeout = setTimeout(() => controller.abort(), 10000);
+    let timeout: ReturnType<typeof setTimeout> | undefined;
     try {
+      if (import.meta.env.VITE_API_BASE_URL?.trim()) await awaitPublicApiReady(controller.signal);
+      if (requestRef.current !== controller || controller.signal.aborted) return;
+      timeout = setTimeout(() => controller.abort(), 10000);
       const cursor = request.kind === "more" ? request.cursor : undefined;
       const data = await fetchMsnFeed(controller.signal, cursor);
       if (requestRef.current !== controller || controller.signal.aborted) return;

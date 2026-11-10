@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { fetchSearchSuggestions, normalizeSearchQuery, type SearchSuggestion } from "../../services/searchSuggestions";
+import { awaitPublicApiReady } from "../../services/publicApiReady";
 import { getPreviewSearchSuggestions } from "./Search.suggestions";
 
 export type SuggestionDataSource = "preview" | "loading" | "live" | "fallback";
@@ -53,11 +54,13 @@ export function useSearchSuggestions(input: string, interactive: boolean, active
     const fallback = () => setResult({ query, items: [], source: "fallback" });
     setResult({ query, items: pendingSuggestions(query, lastLive.current), source: "loading" });
     const debounce = setTimeout(async () => {
-      timeout = setTimeout(() => {
-        controller.abort();
-        if (!disposed) fallback();
-      }, 5000);
       try {
+        if (import.meta.env.VITE_API_BASE_URL?.trim()) await awaitPublicApiReady(controller.signal);
+        if (disposed || controller.signal.aborted) return;
+        timeout = setTimeout(() => {
+          controller.abort();
+          if (!disposed) fallback();
+        }, 5000);
         const items = await fetchSearchSuggestions(query, controller.signal);
         if (!disposed && !controller.signal.aborted) {
           const next: SuggestionResult = { query, items, source: "live" };

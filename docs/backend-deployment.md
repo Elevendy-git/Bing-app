@@ -77,9 +77,23 @@ and private addresses; every redirect is checked and DNS connections are pinned.
 Upstream bodies and timeouts retain their existing limits, and scripts are removed
 from page previews. The app emits no request or query logs.
 
-Free Render services sleep after inactivity and can take time to wake; the current
-frontend request deadlines can therefore show Retry on the first request after
-idle. A cold-start failure is not replaced with fabricated news or search results.
+Free Render services sleep after inactivity and can take time to wake. Before
+live suggestions, SERP/webpage previews or news start their provider deadline,
+the configured remote frontend waits for the shared anonymous `/health` readiness
+check for up to 65 seconds. Concurrent requests share that on-demand wait, and a
+successful check is reused for ten minutes. Local Vite requests skip the check.
+Host startup pages may omit CORS headers, causing browsers to report a network
+`TypeError`; health checks retry these errors and HTTP 503 every two seconds
+within the same 65-second limit. Other HTTP/JSON failures fail immediately, and
+provider requests are never retried automatically by this readiness check.
+The existing SERP loading line and news skeletons remain while the service wakes;
+no background keep-alive or fabricated results are added.
+
+After readiness, suggestions retain their five-second client deadline and
+SERP/webpage/news requests retain their ten-second deadline. Clearing input,
+replacing a query or unmounting cancels that consumer's wait and cannot fetch or
+display its obsolete result. A failed readiness check or unavailable upstream
+retains the existing empty-AS/error/Retry behavior; retry can start a fresh check.
 Check the current [Render free-service limits](https://render.com/docs/free) before
 sharing a prototype session. An always-on service is an option if that startup
 delay becomes disruptive. Refer to [Render web-service deployment](https://render.com/docs/web-services)

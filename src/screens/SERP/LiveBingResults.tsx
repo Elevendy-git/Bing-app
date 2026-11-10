@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { AppSearchBoxLoadState } from "../../components/AppSearchBox/SearchBoxProgress";
 import { publicApiUrl } from "../../services/apiUrl";
+import { awaitPublicApiReady } from "../../services/publicApiReady";
 import { bingPageIdentity, type BingPageSnapshot } from "../../services/bingPage";
 import { resultDestination, webUrl, withIABNavigation, type IABFindRequest, type IABFindResult } from "../../services/webNavigation";
 import styles from "./LiveBingResults.module.css";
@@ -76,12 +77,15 @@ export function LiveBingResults({ query, url, active = true, onNavigate, onLoadS
       setError(true);
       onLoadStateChange?.("error", attempt);
     };
-    const timeout = setTimeout(() => { controller.abort(); fail(); }, 10000);
-    const load = async () => fetch(publicApiUrl(url ? `/api/web-page?${new URLSearchParams({ url })}` : `/api/bing-serp?${new URLSearchParams({ query })}`), {
-      signal: controller.signal, credentials: "omit", cache: "no-store", referrerPolicy: "no-referrer", headers: { Accept: "application/json" },
-    });
-    void load()
-      .then(async (response) => {
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    const load = async () => {
+      try {
+        if (import.meta.env.VITE_API_BASE_URL?.trim()) await awaitPublicApiReady(controller.signal);
+        if (!active || controller.signal.aborted) return;
+        timeout = setTimeout(() => { controller.abort(); fail(); }, 10000);
+        const response = await fetch(publicApiUrl(url ? `/api/web-page?${new URLSearchParams({ url })}` : `/api/bing-serp?${new URLSearchParams({ query })}`), {
+          signal: controller.signal, credentials: "omit", cache: "no-store", referrerPolicy: "no-referrer", headers: { Accept: "application/json" },
+        });
         if (!response.ok) throw new Error("Unavailable");
         const body: unknown = await response.json();
         if (!body || typeof body !== "object" || (url ? !("requestedUrl" in body) || body.requestedUrl !== url : !("query" in body) || body.query !== query)
@@ -95,7 +99,10 @@ export function LiveBingResults({ query, url, active = true, onNavigate, onLoadS
             title: "title" in body && typeof body.title === "string" ? body.title : undefined });
           onLoadStateChange?.("rendering", attempt);
         }
-      }).catch(fail).finally(() => clearTimeout(timeout));
+      } catch { fail(); }
+      finally { clearTimeout(timeout); }
+    };
+    void load();
     return () => { active = false; ++currentRequest.current; clearTimeout(timeout); controller.abort(); };
   }, [query, url, attempt, onLoadStateChange]);
 
