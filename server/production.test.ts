@@ -18,6 +18,7 @@ let server: Server | undefined;
 let origin: string;
 
 beforeEach(() => {
+  vi.stubEnv("BING_SERP_RENDERER", "http");
   vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
     const url = new URL(String(input));
     if (url.hostname === "api.bing.com") return new Response(JSON.stringify(["weather", ["weather forecast"]]), { headers: { "Content-Type": "application/json" } });
@@ -35,6 +36,7 @@ afterEach(async () => {
     server = undefined;
   }
   vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
   vi.restoreAllMocks();
 });
 

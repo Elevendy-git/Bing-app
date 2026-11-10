@@ -22,25 +22,30 @@ as part of an ordinary code update.
 
 ```sh
 npm ci --include=dev
+export PLAYWRIGHT_BROWSERS_PATH=0
+npm run setup:browser
 npm run build:server
 npm run start:server
 ```
 
 The standalone server binds `0.0.0.0`, uses `PORT` (default `3000`), and serves
 `GET /health` without calling any provider. The build writes `dist-server/production.js`
-and imports `parse5` from the installed production dependencies. It does not load
-Vite middleware or the React workbench at runtime.
+and imports `parse5` and Playwright from the installed production dependencies.
+`setup:browser` installs Chromium's headless shell; keep `PLAYWRIGHT_BROWSERS_PATH=0`
+set during installation and runtime so the deployed service can find that binary.
+It does not load Vite middleware or the React workbench at runtime.
 
 ## Deploy to Render
 
 1. Connect Render to the public `Elevendy-git/Bing-app` repository.
 2. Create a Blueprint from `render.yaml`, or a **Web Service** with runtime
    **Node**, instance **Free**, build command
-   `npm ci --include=dev && npm run build:server`, start command
+   `npm ci --include=dev && npm run setup:browser && npm run build:server`, start command
    `npm run start:server`, and health check `/health`. If the service-creation API
    cannot set an HTTP health check, configure `/health` in its Render settings.
    Choose automatic deployment explicitly for a directly created service if desired.
-3. Set `NODE_VERSION=24` and the origins below. Render provides `PORT`.
+3. Set `NODE_VERSION=24`, `PLAYWRIGHT_BROWSERS_PATH=0`, `BING_SERP_RENDERER=browser`
+   and the origins below. Render provides `PORT`.
 4. Once the service is healthy, set `VITE_API_BASE_URL` to its HTTPS origin when
    building the GitHub Pages workbench, currently `https://bing-app-backend.onrender.com`.
    Use the actual service URL issued by Render, then rebuild and publish Pages.
@@ -54,6 +59,8 @@ Vite middleware or the React workbench at runtime.
 | `API_ALLOWED_ORIGINS` | `https://elevendy-git.github.io,http://localhost:5174,http://127.0.0.1:5174` | Comma-separated HTTP(S) origins without page paths or wildcards. |
 | `API_RATE_LIMIT_REQUESTS` | `120` | Requests per minute per connection IP; accepted range 1–1000. |
 | `API_MAX_CONCURRENT` | `8` | Maximum active API requests per server process; accepted range 1–32. |
+| `PLAYWRIGHT_BROWSERS_PATH` | `0` in Render | Install and load Chromium from the application's Playwright package directory. Required at build and runtime. |
+| `BING_SERP_RENDERER` | `browser` | Render Bing in anonymous Chromium. Set `http` explicitly for the lower-resource HTML-fetch fallback. |
 | `MSN_FEED_API_KEY` | Existing anonymous MSN public client identifier | Optional server-only override for the fixed MSN provider adapter. |
 
 CORS origins contain only scheme, host and optional port. The Pages origin is
@@ -76,7 +83,7 @@ and do not store queries, account identities, cookies or history.
 | `GET /health` | None | `{ "status": "ok" }` independent of upstream availability. |
 | `GET /api/search-suggestions` | `query` | Bing autocomplete's `[query, suggestions]` JSON. |
 | `GET /api/msn-feed` | Optional opaque `cursor` | Existing MSN public feed JSON and continuation cursor. |
-| `GET /api/bing-serp` | `query` | Sanitized Bing mobile results document and page metadata. |
+| `GET /api/bing-serp` | `query` | Sanitized browser-rendered Bing mobile results document and page metadata. |
 | `GET /api/web-page` | `url` | Sanitized public article/page document and page metadata. |
 
 The service does not expose `/api/rewards`, account tokens, Microsoft cookies,
@@ -84,8 +91,22 @@ The service does not expose `/api/rewards`, account tokens, Microsoft cookies,
 use fixed provider endpoints or the existing public-IP-pinned webpage transport.
 Webpage destinations reject credentials, non-default ports, local/system hosts
 and private addresses; every redirect is checked and DNS connections are pinned.
-Upstream bodies and timeouts retain their existing limits, and scripts are removed
-from page previews. The app emits no request or query logs.
+Upstream body limits remain enforced, and scripts are removed from page previews.
+The app emits no request or query logs.
+
+SERP uses anonymous Chromium by default, capturing rendered Bing mobile markup,
+including available rich cards such as weather. Each search gets an isolated
+browser context: no user's Bing cookies, account tokens or browser profile are
+copied. One search page runs at a time per server process, and the browser is
+released after an idle period. `BING_SERP_RENDERER=http` explicitly selects the
+lower-resource fetch adapter; browser failures do not silently switch transports.
+
+The response is an HTML snapshot, not a fully interactive Bing browser. Remote
+scripts are removed, so captured weather and other rich cards can be displayed
+without preserving script-driven controls such as forecast switching. Ordinary
+result links still navigate through the App's IAB flow. Content, ranking and
+location can differ from a user's signed-in Bing page; regional results reflect
+the anonymous backend network, not the user's device location.
 
 Free Render services sleep after inactivity and can take time to wake. Before
 live suggestions, SERP/webpage previews or news start their provider deadline,
@@ -99,8 +120,11 @@ provider requests are never retried automatically by this readiness check.
 The existing SERP loading line and news skeletons remain while the service wakes;
 no background keep-alive or fabricated results are added.
 
-After readiness, suggestions retain their five-second client deadline and
-SERP/webpage/news requests retain their ten-second deadline. Clearing input,
+After readiness, suggestions retain their five-second client deadline. Browser
+SERP rendering has an 18-second server budget and a 22-second client deadline;
+the explicit HTTP fallback retains its eight-second server budget. Webpage and
+news requests retain their ten-second client deadline. The server socket idle
+timeout is 25 seconds to allow the browser response budget. Clearing input,
 replacing a query or unmounting cancels that consumer's wait and cannot fetch or
 display its obsolete result. A failed readiness check or unavailable upstream
 retains the existing empty-AS/error/Retry behavior; retry can start a fresh check.

@@ -6,7 +6,7 @@ services:
     runtime: node
     region: singapore
     plan: free
-    buildCommand: npm ci --include=dev && npm run build:server
+    buildCommand: npm ci --include=dev && npm run setup:browser && npm run build:server
     startCommand: npm run start:server
     healthCheckPath: /health
     autoDeployTrigger: commit
@@ -15,6 +15,10 @@ services:
         value: "24"
       - key: NODE_ENV
         value: production
+      - key: PLAYWRIGHT_BROWSERS_PATH
+        value: "0"
+      - key: BING_SERP_RENDERER
+        value: browser
       - key: API_ALLOWED_ORIGINS
         value: https://elevendy-git.github.io,http://localhost:5174,http://127.0.0.1:5174
       - key: API_RATE_LIMIT_REQUESTS

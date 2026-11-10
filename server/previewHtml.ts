@@ -9,6 +9,12 @@ export const isElement = (node: PreviewNode): node is PreviewElement => "tagName
 export const attr = (node: PreviewElement, name: string) => node.attrs.find(item => item.name === name)?.value;
 export const walk = (node: PreviewNode): PreviewNode[] => [node, ...("childNodes" in node ? node.childNodes.flatMap(walk) : [])];
 
+/** Local SVG paint/shape references belong to this document, not the upstream page. */
+function localFragment(value: string): string | undefined {
+  const fragment = value.trim();
+  return /^#[^\s\u0000-\u001f\u007f"'()<>\\]+$/u.test(fragment) ? fragment : undefined;
+}
+
 function setAttr(node: PreviewElement, name: string, value: string) {
   node.attrs = node.attrs.filter(item => item.name !== name);
   node.attrs.push({ name, value });
@@ -25,7 +31,7 @@ export function resourceUrl(value: string, image: boolean, base: string): string
 
 export function cssUrls(css: string, base: string) {
   return css.replace(/url\(\s*(['"]?)(.*?)\1\s*\)/gi, (_, _quote: string, value: string) => {
-    const url = resourceUrl(value, true, base);
+    const url = localFragment(value) ?? resourceUrl(value, true, base);
     return url ? `url(${JSON.stringify(url)})` : "none";
   });
 }
@@ -39,7 +45,8 @@ export function cleanPreviewNode(node: PreviewNode, base: string) {
     for (const item of [...node.attrs]) {
       if (item.name === "style") item.value = cssUrls(item.value, base);
       if (item.name === "href" || item.name === "src") {
-        const url = node.tagName === "a" && item.name === "href" ? webUrl(item.value, base) : resourceUrl(item.value, item.name === "src", base);
+        const svgReference = node.namespaceURI === "http://www.w3.org/2000/svg" && item.name === "href" ? localFragment(item.value) : undefined;
+        const url = svgReference ?? (node.tagName === "a" && item.name === "href" ? webUrl(item.value, base) : resourceUrl(item.value, item.name === "src", base));
         if (url) item.value = url;
         else node.attrs = node.attrs.filter(candidate => candidate !== item);
       }

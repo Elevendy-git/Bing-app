@@ -83,7 +83,7 @@ export function LiveBingResults({ query, url, active = true, onNavigate, onLoadS
       try {
         if (import.meta.env.VITE_API_BASE_URL?.trim()) await awaitPublicApiReady(controller.signal);
         if (!active || controller.signal.aborted) return;
-        timeout = setTimeout(() => { controller.abort(); fail(); }, 10000);
+        timeout = setTimeout(() => { controller.abort(); fail(); }, url ? 10_000 : 22_000);
         const response = await fetch(publicApiUrl(url ? `/api/web-page?${new URLSearchParams({ url })}` : `/api/bing-serp?${new URLSearchParams({ query })}`), {
           signal: controller.signal, credentials: "omit", cache: "no-store", referrerPolicy: "no-referrer", headers: { Accept: "application/json" },
         });

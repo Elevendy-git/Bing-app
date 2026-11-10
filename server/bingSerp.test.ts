@@ -3,11 +3,15 @@ import { createServer, request, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { handleBingSerp } from "./bingSerp";
+import { renderBingSearch } from "./bingBrowser";
+
+vi.mock("./bingBrowser", () => ({ renderBingSearch: vi.fn() }));
 
 const html = '<main id="b_content"><ol id="b_results"><li><a href="https://example.com">Live result</a></li></ol></main>';
 let server: Server;
 let origin: string;
 beforeEach(async () => {
+  vi.stubEnv("BING_SERP_RENDERER", "http");
   vi.stubGlobal("fetch", vi.fn().mockImplementation(async () => new Response(html, { headers: { "Content-Type": "text/html" } })));
   server = createServer((req, res) => { void handleBingSerp(req, res, () => { res.writeHead(404); res.end("{}"); }); });
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
@@ -17,6 +21,8 @@ afterEach(async () => {
   server.closeAllConnections();
   await new Promise<void>((resolve) => server.close(() => resolve()));
   vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
+  vi.mocked(renderBingSearch).mockReset();
 });
 function call(path: string, method = "GET") {
   return new Promise<{ status: number; body: Record<string, string>; cache?: string }>((resolve, reject) => {
@@ -31,6 +37,28 @@ function call(path: string, method = "GET") {
 }
 describe("Bing result endpoint", () => {
   const organic = (text: string) => `<title>weather - Search</title><input id="sb_form_q" name="q" value="weather"><main id="b_content"><ol id="b_results"><li class="b_algo"><h2><a href="https://example.com">${text}</a></h2></li></ol></main>`;
+
+  it("preserves rendered Bing answer cards while removing remote scripts", async () => {
+    vi.stubEnv("BING_SERP_RENDERER", "browser");
+    vi.mocked(renderBingSearch).mockResolvedValue(organic("Weather forecast today").replace('<ol id="b_results">', '<section class="b_wpt_container"><h2>Weather forecast</h2><p>18°C · Cloudy</p><script>window.remote()</script></section><ol id="b_results">'));
+    const result = await call("/api/bing-serp?query=weather");
+    expect(result.status).toBe(200);
+    expect(result.body.renderMode).toBe("browser");
+    expect(result.body.html).toContain("b_wpt_container");
+    expect(result.body.html).toContain("18°C · Cloudy");
+    expect(result.body.html).not.toContain("window.remote");
+    expect(fetch).not.toHaveBeenCalled();
+    expect(renderBingSearch).toHaveBeenCalledWith("weather", expect.objectContaining({ locale: "en-US", signal: expect.any(AbortSignal) }));
+  });
+
+  it("also rejects unrelated browser-rendered results", async () => {
+    vi.stubEnv("BING_SERP_RENDERER", "browser");
+    vi.mocked(renderBingSearch).mockResolvedValue(organic("Unrelated recipes and cooking"));
+    const result = await call("/api/bing-serp?query=weather");
+    expect(result.status).toBe(502);
+    expect(result.body.code).toBe("RESULT_QUERY_MISMATCH");
+    expect(fetch).not.toHaveBeenCalled();
+  });
 
   it("rejects unrelated organic content even when the upstream title and search field echo the requested query", async () => {
     vi.mocked(fetch).mockImplementation(async () => new Response(organic("Claude by Anthropic: AI assistant"), { headers: { "Content-Type": "text/html" } }));

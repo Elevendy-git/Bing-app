@@ -5,6 +5,7 @@ import { createMsnFeedHandler } from "./msnFeed";
 import { handleBingSerp } from "./bingSerp";
 import { handleWebPage } from "./webPage";
 import { sendJson as send } from "./http";
+import { closeBingBrowser } from "./bingBrowser";
 
 const DEFAULT_ORIGINS = ["https://elevendy-git.github.io", "http://localhost:5174", "http://127.0.0.1:5174"];
 const RATE_WINDOW_MS = 60_000;
@@ -132,7 +133,7 @@ export function createProductionServer(config = productionConfig()) {
   server.requestTimeout = 15_000;
   server.headersTimeout = 10_000;
   server.keepAliveTimeout = 5000;
-  server.setTimeout(15_000, socket => socket.destroy());
+  server.setTimeout(25_000, socket => socket.destroy());
   return server;
 }
 
@@ -143,6 +144,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     console.info(`Bing App public API listening on port ${config.port}`);
   });
   for (const signal of ["SIGINT", "SIGTERM"] as const) process.once(signal, () => {
+    void closeBingBrowser();
     server.close(() => process.exit(0));
     setTimeout(() => { server.closeAllConnections(); process.exit(0); }, 10_000).unref();
   });
