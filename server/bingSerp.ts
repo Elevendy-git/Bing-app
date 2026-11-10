@@ -5,6 +5,7 @@ import { prepareBingSerpDocument } from "./bingSerpHtml";
 import { assertBingSerpQuery, BingSerpQueryMismatchError } from "./bingSerpValidation";
 import { MOBILE_USER_AGENT, sendJson } from "./http";
 import { renderBingSearch } from "./bingBrowser";
+import { bingSearchUrl } from "../src/services/bingPage";
 
 const MAX_HTML_BYTES = 4 * 1024 * 1024;
 
@@ -22,20 +23,17 @@ export async function handleBingSerp(req: IncomingMessage, res: ServerResponse, 
   const timeout = setTimeout(abort, budgetMs);
   res.on("close", abort);
   try {
-    const upstream = new URL("https://www.bing.com/search");
-    upstream.searchParams.set("q", query);
-    const chinese = /\p{Script=Han}/u.test(query);
-    upstream.searchParams.set("setlang", chinese ? "zh-Hans" : "en");
+    const upstream = new URL(bingSearchUrl(query));
     for (let attempt = 0; attempt < 2; attempt++) {
       const requestUrl = new URL(upstream);
       if (attempt) requestUrl.searchParams.set("cvid", crypto.randomUUID().replaceAll("-", ""));
       let source = "";
       if (browserRendering) {
-        source = await renderBingSearch(query, { signal: controller.signal, locale: chinese ? "zh-CN" : "en-US", timeoutMs: Math.max(1, deadline - Date.now()) });
+        source = await renderBingSearch(query, { signal: controller.signal, timeoutMs: Math.max(1, deadline - Date.now()) });
         if (Buffer.byteLength(source, "utf8") > MAX_HTML_BYTES) throw new Error("Document too large");
       } else {
         const response = await fetch(requestUrl, { signal: controller.signal, redirect: "error", cache: "no-store",
-          headers: { "User-Agent": MOBILE_USER_AGENT, Accept: "text/html", "Cache-Control": "no-cache", "Accept-Language": chinese ? "zh-CN,zh;q=0.9,en;q=0.8" : "en-US,en;q=0.9" } });
+          headers: { "User-Agent": MOBILE_USER_AGENT, Accept: "text/html", "Cache-Control": "no-cache", "Accept-Language": "en-US,en;q=0.9" } });
         if (!response.ok || !response.headers.get("content-type")?.includes("text/html") || !response.body) throw new Error("Unavailable");
         const reader = response.body.getReader();
         const decoder = new TextDecoder();

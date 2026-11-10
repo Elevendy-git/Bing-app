@@ -1,5 +1,6 @@
 import { chromium, type Browser, type BrowserContext, type Page, type Route } from "playwright";
 import { MOBILE_USER_AGENT } from "./http";
+import { BING_MARKET, bingSearchUrl } from "../src/services/bingPage";
 
 const VIEWPORT = { width: 402, height: 874 };
 const DEFAULT_TIMEOUT_MS = 18_000;
@@ -106,6 +107,20 @@ async function sharedBrowser() {
   return pending;
 }
 
+/** Live sessions and snapshots share one browser/page budget on the free host. */
+export async function acquireBingBrowser(signal: AbortSignal): Promise<{ browser: Browser; release: () => void }> {
+  const release = await acquireSlot(signal);
+  try {
+    signal.throwIfAborted();
+    const instance = await abortable(sharedBrowser(), signal);
+    signal.throwIfAborted();
+    return { browser: instance, release };
+  } catch (error) {
+    release();
+    throw error;
+  }
+}
+
 async function routeResource(route: Route, rejectedHosts: Set<string>) {
   const request = route.request();
   try {
@@ -159,7 +174,6 @@ async function visibleSnapshot(page: Page): Promise<string | null> {
 
 export interface BingBrowserOptions {
   signal: AbortSignal;
-  locale: string;
   /** One budget includes browser launch, queueing, navigation and hydration. */
   timeoutMs?: number;
 }
@@ -188,7 +202,7 @@ export async function renderBingSearch(query: string, options: BingBrowserOption
     const instance = await abortable(sharedBrowser(), signal);
     context = await abortable(instance.newContext({
       viewport: VIEWPORT, screen: VIEWPORT, userAgent: MOBILE_USER_AGENT,
-      locale: options.locale, isMobile: true, hasTouch: true, deviceScaleFactor: 1,
+      locale: BING_MARKET, extraHTTPHeaders: { "Accept-Language": "en-US,en;q=0.9" }, isMobile: true, hasTouch: true, deviceScaleFactor: 1,
       colorScheme: "light", serviceWorkers: "block", acceptDownloads: false,
     }), signal, late => late.close());
     signal.addEventListener("abort", abort, { once: true });
@@ -197,9 +211,7 @@ export async function renderBingSearch(query: string, options: BingBrowserOption
     const page = await abortable(context.newPage(), signal);
     page.on("popup", popup => { void popup.close().catch(() => undefined); });
     page.on("pageerror", () => { pageErrorCount++; });
-    const url = new URL("https://www.bing.com/search");
-    url.searchParams.set("q", query);
-    url.searchParams.set("setlang", options.locale.toLowerCase().startsWith("zh") ? "zh-Hans" : "en");
+    const url = new URL(bingSearchUrl(query));
     phase = "navigate";
     const response = await abortable(page.goto(url.href, { waitUntil: "domcontentloaded", timeout: remaining() }), signal);
     if (!response?.ok() || new URL(page.url()).origin !== url.origin) throw new Error("Bing did not return a result page");

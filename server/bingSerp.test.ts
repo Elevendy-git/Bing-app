@@ -48,7 +48,7 @@ describe("Bing result endpoint", () => {
     expect(result.body.html).toContain("18°C · Cloudy");
     expect(result.body.html).not.toContain("window.remote");
     expect(fetch).not.toHaveBeenCalled();
-    expect(renderBingSearch).toHaveBeenCalledWith("weather", expect.objectContaining({ locale: "en-US", signal: expect.any(AbortSignal) }));
+    expect(renderBingSearch).toHaveBeenCalledWith("weather", expect.objectContaining({ signal: expect.any(AbortSignal) }));
   });
 
   it("also rejects unrelated browser-rendered results", async () => {
@@ -85,7 +85,7 @@ describe("Bing result endpoint", () => {
     expect(result.status).toBe(200);
     expect(result.body.html).toContain("Weather forecast today");
     expect(result.body.html).not.toContain("Claude by Anthropic");
-    expect(result.body.sourceUrl).toBe("https://www.bing.com/search?q=weather&setlang=en");
+    expect(result.body.sourceUrl).toBe("https://www.bing.com/search?q=weather&setlang=en-US&mkt=en-US&cc=US");
     expect(fetch).toHaveBeenCalledTimes(2);
     const [url, options] = vi.mocked(fetch).mock.calls[1];
     expect(new URL(String(url)).searchParams.get("q")).toBe("weather");
@@ -101,7 +101,7 @@ describe("Bing result endpoint", () => {
     vi.mocked(fetch).mockResolvedValueOnce(new Response('<link rel="shortcut icon" href="/sa/bing-icon.ico">' + html,
       { headers: { "Content-Type": "text/html" } }));
     const result = await call("/api/bing-serp?query=baidu");
-    expect(result.body.sourceUrl).toBe("https://www.bing.com/search?q=baidu&setlang=en");
+    expect(result.body.sourceUrl).toBe("https://www.bing.com/search?q=baidu&setlang=en-US&mkt=en-US&cc=US");
     expect(result.body.faviconUrl).toBe("https://www.bing.com/sa/bing-icon.ico");
   });
 
@@ -120,7 +120,7 @@ describe("Bing result endpoint", () => {
     expect(result.body.html).toContain("Live result");
     expect(Number.isNaN(Date.parse(result.body.fetchedAt))).toBe(false);
     const [url, options] = vi.mocked(fetch).mock.calls[0];
-    expect(String(url)).toBe("https://www.bing.com/search?q=Weather&setlang=en");
+    expect(String(url)).toBe("https://www.bing.com/search?q=Weather&setlang=en-US&mkt=en-US&cc=US");
     const headers = new Headers(options?.headers);
     expect(headers.get("user-agent")).toContain("iPhone");
     expect(headers.has("cookie")).toBe(false);
@@ -128,12 +128,14 @@ describe("Bing result endpoint", () => {
     expect(options?.redirect).toBe("error");
   });
 
-  it("preserves query punctuation and requests Chinese content for Chinese queries", async () => {
+  it("preserves Chinese query text while keeping the global English market and interface", async () => {
     await call(`/api/bing-serp?${new URLSearchParams({ query: "天气 & C++" })}`);
     const [url, options] = vi.mocked(fetch).mock.calls[0];
     expect(new URL(String(url)).searchParams.get("q")).toBe("天气 & C++");
-    expect(new URL(String(url)).searchParams.get("setlang")).toBe("zh-Hans");
-    expect(new Headers(options?.headers).get("accept-language")).toContain("zh-CN");
+    expect(new URL(String(url)).searchParams.get("setlang")).toBe("en-US");
+    expect(new URL(String(url)).searchParams.get("mkt")).toBe("en-US");
+    expect(new URL(String(url)).searchParams.get("cc")).toBe("US");
+    expect(new Headers(options?.headers).get("accept-language")).toBe("en-US,en;q=0.9");
   });
 
   it("rejects invalid input before contacting Bing", async () => {

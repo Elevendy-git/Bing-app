@@ -6,6 +6,7 @@ import { bingSerpPlugin } from "./server/bingSerp";
 import { webPagePlugin } from "./server/webPage";
 import { msnFeedPlugin } from "./server/msnFeed";
 import { rewardsPlugin } from "./server/rewards";
+import { liveBrowserPlugin } from "./server/liveBrowser";
 
 export default defineConfig(({ mode }) => ({
   server: { host: "127.0.0.1", port: 5174, strictPort: true,
@@ -19,7 +20,7 @@ export default defineConfig(({ mode }) => ({
       },
     },
   },
-  plugins: [react(), searchSuggestionsPlugin(), bingSerpPlugin(), webPagePlugin(), msnFeedPlugin(), rewardsPlugin()],
+  plugins: [react(), searchSuggestionsPlugin(), bingSerpPlugin(), webPagePlugin(), msnFeedPlugin(), rewardsPlugin(), liveBrowserPlugin()],
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),

@@ -99,7 +99,7 @@ describe("standalone public API boundary", () => {
     expect(suggestions.headers["set-cookie"]).toBeUndefined();
     expect(await call("/api/msn-feed", { headers })).toMatchObject({ status: 200, body: { source: "msn", items: [{ id: "AA123" }] } });
     const results = await call("/api/bing-serp?query=weather", { headers });
-    expect(results).toMatchObject({ status: 200, body: { query: "weather", sourceUrl: "https://www.bing.com/search?q=weather&setlang=en" } });
+    expect(results).toMatchObject({ status: 200, body: { query: "weather", sourceUrl: "https://www.bing.com/search?q=weather&setlang=en-US&mkt=en-US&cc=US" } });
     expect(await call("/api/web-page?url=https://example.com/article", { headers })).toMatchObject({ status: 200, body: { title: "Original article", sourceUrl: "https://example.com/article" } });
     expect(fetchWebPage).toHaveBeenCalledWith("https://example.com/article", expect.any(AbortSignal));
     for (const [, options] of vi.mocked(fetch).mock.calls) {

@@ -58,7 +58,7 @@ describe("anonymous Bing browser renderer", () => {
     vi.restoreAllMocks();
   });
 
-  const options = () => ({ signal: new AbortController().signal, locale: "en-US" });
+  const options = () => ({ signal: new AbortController().signal });
 
   it("reuses Chromium while giving each result an isolated mobile context", async () => {
     const first = await renderer.renderBingSearch("weather", options());
@@ -72,7 +72,7 @@ describe("anonymous Bing browser renderer", () => {
       serviceWorkers: "block", acceptDownloads: false,
     }));
     expect(contexts[1].page.goto).toHaveBeenCalledWith(
-      "https://www.bing.com/search?q=weather+Seattle&setlang=en", expect.any(Object));
+      "https://www.bing.com/search?q=weather+Seattle&setlang=en-US&mkt=en-US&cc=US", expect.any(Object));
     for (const context of contexts) expect(context.close).toHaveBeenCalledTimes(1);
     expect(console.warn).not.toHaveBeenCalled();
   });
@@ -94,6 +94,24 @@ describe("anonymous Bing browser renderer", () => {
     expect(browser.newContext).toHaveBeenCalledTimes(2);
   });
 
+  it("keeps snapshots queued behind a live browser lease and cancels abandoned lease waits", async () => {
+    const live = await renderer.acquireBingBrowser(options().signal);
+    expect(live.browser).toBe(browser);
+    const pending = renderer.renderBingSearch("weather", options());
+    const cancelled = new AbortController();
+    const waiting = renderer.acquireBingBrowser(cancelled.signal);
+    cancelled.abort();
+    await expect(waiting).rejects.toMatchObject({ name: "AbortError" });
+    expect(browser.newContext).not.toHaveBeenCalled();
+    live.release();
+    await expect(pending).resolves.toContain("Weather card");
+    expect(browser.newContext).toHaveBeenCalledOnce();
+    // Repeated cleanup cannot release a lease owned by a newer consumer.
+    live.release();
+    const next = await renderer.acquireBingBrowser(options().signal);
+    next.release();
+  });
+
   it("cancels a queued request without consuming or leaking the renderer slot", async () => {
     const loading = deferred<{ ok: () => boolean }>();
     const started = deferred<void>();
@@ -103,7 +121,7 @@ describe("anonymous Bing browser renderer", () => {
     const first = renderer.renderBingSearch("weather", options());
     await started.promise;
     const cancelled = new AbortController();
-    const second = renderer.renderBingSearch("discarded", { signal: cancelled.signal, locale: "en-US" });
+    const second = renderer.renderBingSearch("discarded", { signal: cancelled.signal });
     cancelled.abort();
     await expect(second).rejects.toMatchObject({ name: "AbortError" });
     expect(browser.newContext).toHaveBeenCalledTimes(1);
@@ -119,7 +137,7 @@ describe("anonymous Bing browser renderer", () => {
     firstContext.page.goto.mockImplementation(() => { started.resolve(); return new Promise(() => undefined); });
     browser.newContext.mockResolvedValueOnce(firstContext);
     const cancelled = new AbortController();
-    const first = renderer.renderBingSearch("weather", { signal: cancelled.signal, locale: "en-US" });
+    const first = renderer.renderBingSearch("weather", { signal: cancelled.signal });
     await started.promise;
     cancelled.abort();
     await expect(first).rejects.toMatchObject({ name: "AbortError" });
