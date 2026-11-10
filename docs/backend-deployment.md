@@ -18,12 +18,13 @@ service; target the existing replacement for future deploys. It was created
 directly in Render, so do not apply a new Blueprint or create a duplicate service
 as part of an ordinary code update.
 
-The live service currently sets `BING_SERP_RENDERER=http`, matching `render.yaml`.
-Browser rendering produced a complete weather card in local macOS verification,
-but anonymous Render verification did not reliably produce usable results within
-the 18-second budget. Rich-card rendering is not verified as reliable in the
-cloud. The browser remains installed by the build for optional testing; it is not
-the active production transport.
+The legacy HTML endpoint sets `BING_SERP_RENDERER=http`, matching `render.yaml`.
+The service also sets `LIVE_BROWSER_ENABLED=true`, and the Pages build uses
+`VITE_LIVE_BROWSER=true` for the separate interactive Bing viewport. Local
+verification showed live weather-card controls. Render verification returned
+usable English results and working page search in about 20 seconds, but did not
+show a weather card. Bing controls which cards an anonymous cloud visitor gets;
+the stream does not guarantee the same cards as a signed-in device.
 
 ## Run locally
 
@@ -68,6 +69,7 @@ It does not load Vite middleware or the React workbench at runtime.
 | `API_MAX_CONCURRENT` | `8` | Maximum active API requests per server process; accepted range 1–32. |
 | `PLAYWRIGHT_BROWSERS_PATH` | `0` in Render | Install and load Chromium from the application's Playwright package directory. Required at build and runtime. |
 | `BING_SERP_RENDERER` | `browser` in code; `http` in Render | The live override selects the lower-resource HTML-fetch adapter. Optional `browser` mode renders Bing in anonymous Chromium; cloud reliability remains unverified. |
+| `LIVE_BROWSER_ENABLED` | `false` in code; `true` in Render | Enables the isolated `/api/live-browser` WebSocket endpoint. The Pages build separately opts in with `VITE_LIVE_BROWSER=true`. |
 | `MSN_FEED_API_KEY` | Existing anonymous MSN public client identifier | Optional server-only override for the fixed MSN provider adapter. |
 
 CORS origins contain only scheme, host and optional port. The Pages origin is
@@ -92,6 +94,7 @@ and do not store queries, account identities, cookies or history.
 | `GET /api/msn-feed` | Optional opaque `cursor` | Existing MSN public feed JSON and continuation cursor. |
 | `GET /api/bing-serp` | `query` | Sanitized Bing mobile results document and page metadata, using the configured renderer. |
 | `GET /api/web-page` | `url` | Sanitized public article/page document and page metadata. |
+| `WSS /api/live-browser` | None; query in the start message | Isolated interactive Bing viewport, limited to one visitor at a time. |
 
 The service does not expose `/api/rewards`, account tokens, Microsoft cookies,
 `.local/` snapshots, source files, or arbitrary static files. Upstream requests
@@ -118,10 +121,12 @@ result links still navigate through the App's IAB flow. Content, ranking and
 location can differ from a user's signed-in Bing page; regional results reflect
 the anonymous backend network, not the user's device location.
 
-An optional [interactive Bing viewport](live-browser.md) uses a separate
-WebSocket transport while retaining the same app chrome. It is enabled locally
-for verification; production requires separate backend and frontend flags.
-The HTML adapter described above remains available independently.
+The [interactive Bing viewport](live-browser.md) uses a separate WebSocket
+transport while retaining the same app chrome. Both production flags are
+configured for the free-host rollout. The HTML adapters described above remain
+available independently and still serve external IAB previews. Search requests
+use the global English market (`en-US`, country `US`) on all transports, without
+changing the user's query text.
 
 Free Render services sleep after inactivity and can take time to wake. Before
 live suggestions, SERP/webpage previews or news start their provider deadline,

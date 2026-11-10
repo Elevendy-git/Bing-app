@@ -28,6 +28,11 @@ frontend value from its repository variable. Leaving the variable unset keeps
 the published HTML transport. Keep `BING_SERP_RENDERER=http` on the free backend
 so callers of the legacy endpoint do not launch unnecessary browser work.
 
+Both production flags are configured for the current rollout. The deployed free
+host returned English results and working Find in about 20 seconds; local
+verification also exercised weather units and forecast dates. The cloud response
+did not include that weather card, so card availability is not guaranteed.
+
 ## Lifecycle and limits
 
 - One live session per process. Live sessions and browser snapshots share the
@@ -37,6 +42,9 @@ so callers of the legacy endpoint do not launch unnecessary browser work.
   document first ends the previous context. It may reload when revisited.
 - Inactivity ends a session after 90 seconds; the hard session limit is ten
   minutes. A disconnected or expired page can be reopened with Retry.
+- After backend wake-up, connection and document startup have a 55-second client
+  deadline. Once ready, the first frame has ten seconds of foreground time;
+  opening Recent pauses that frame budget.
 - The wire format uses binary JPEG frames with explicit ACKs. Only the latest
   waiting frame is retained. Input queues, connection attempts, payload sizes,
   bandwidth and upstream requests are bounded. ACKs do not extend inactivity.
