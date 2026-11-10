@@ -11,9 +11,8 @@ export interface BingPageSnapshot {
   viewportHeight: number;
 }
 
-/** Global prototype locale is independent of the language of a user's query. */
-export const BING_MARKET = "en-US";
-export const bingSearchUrl = (query: string) => `https://www.bing.com/search?${new URLSearchParams({ q: query, setlang: BING_MARKET, mkt: BING_MARKET, cc: "US" })}`;
+/** Global interface language stays English, including for non-English queries. */
+export const bingSearchUrl = (query: string) => `https://www.bing.com/search?${new URLSearchParams({ q: query, setlang: "en-US", mkt: "en-US", cc: "US" })}`;
 
 /** Reopen the recorded query, rather than searching for a display title or URL. */
 export function bingSearchQuery(sourceUrl: string): string | null {

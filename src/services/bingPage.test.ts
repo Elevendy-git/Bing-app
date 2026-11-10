@@ -2,11 +2,6 @@ import { describe, expect, it } from "vitest";
 import { bingPageIdentity, bingSearchQuery, bingSearchUrl } from "./bingPage";
 
 describe("Bing search page identity", () => {
-  it("keeps the global English market even when the query contains Chinese or punctuation", () => {
-    const url = new URL(bingSearchUrl("天气 & C++"));
-    expect(Object.fromEntries(url.searchParams)).toEqual({ q: "天气 & C++", setlang: "en-US", mkt: "en-US", cc: "US" });
-  });
-
   it("normalizes only the decoded query and preserves valid recorded URLs", () => {
     const sourceUrl = "https://www.bing.com/search?q=++Weather+++forecast%09&form=related";
     expect(bingSearchQuery(sourceUrl)).toBe("Weather forecast");

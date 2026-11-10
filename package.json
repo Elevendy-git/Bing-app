@@ -8,7 +8,6 @@
   },
   "scripts": {
     "dev": "vite",
-    "setup:browser": "playwright install chromium --only-shell",
     "check:tokens": "node scripts/check-tokens.mjs",
     "typecheck": "npm run check:tokens && tsc --noEmit",
     "test": "vitest run",
@@ -22,10 +21,8 @@
     "@fluentui/react-icons": "2.0.270",
     "motion": "12.42.2",
     "parse5": "^8.0.1",
-    "playwright": "1.64.1",
     "react": "18.3.1",
-    "react-dom": "18.3.1",
-    "ws": "8.22.1"
+    "react-dom": "18.3.1"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "6.9.1",
@@ -33,7 +30,6 @@
     "@types/node": "24.10.1",
     "@types/react": "18.3.18",
     "@types/react-dom": "18.3.5",
-    "@types/ws": "8.18.2",
     "@vitejs/plugin-react": "4.3.4",
     "jsdom": "29.1.1",
     "typescript": "5.7.3",

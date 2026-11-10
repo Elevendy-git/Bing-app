@@ -2,12 +2,12 @@ import { createContext, useCallback, useContext, useLayoutEffect, useMemo, useRe
 
 export const PREVIEW_PROTOTYPE_PAGES = [
   { id: "home", label: "Home" },
-  { id: "profile", label: "Profile" },
+  { id: "search", label: "Search" },
   { id: "recent", label: "Recent" },
   { id: "tabs", label: "Tabs" },
   { id: "history", label: "History" },
   { id: "bookmark", label: "Bookmark" },
-  { id: "search", label: "Search" },
+  { id: "profile", label: "Profile" },
 ] as const;
 
 export type PreviewPrototypePage = typeof PREVIEW_PROTOTYPE_PAGES[number]["id"];

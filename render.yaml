@@ -1,24 +1,17 @@
-# Mirrors the existing Bing app / Production service; do not create a duplicate.
-# Project membership is managed in Render. See docs/backend-deployment.md.
 services:
   - type: web
-    name: bing-app-backend
+    name: bing-app-api
     runtime: node
-    region: singapore
     plan: free
-    buildCommand: npm ci --include=dev && npm run setup:browser && npm run build:server
+    buildCommand: npm ci --include=dev && npm run build:server
     startCommand: npm run start:server
     healthCheckPath: /health
-    autoDeployTrigger: commit
+    autoDeployTrigger: "off"
     envVars:
       - key: NODE_VERSION
         value: "24"
       - key: NODE_ENV
         value: production
-      - key: PLAYWRIGHT_BROWSERS_PATH
-        value: "0"
-      - key: BING_SERP_RENDERER
-        value: http
       - key: API_ALLOWED_ORIGINS
         value: https://elevendy-git.github.io,http://localhost:5174,http://127.0.0.1:5174
       - key: API_RATE_LIMIT_REQUESTS

@@ -23,29 +23,14 @@ not inferred from a display name.
 3. `useRewardsSnapshot` lives above workbench Reset alongside the account hook.
    It refreshes the saved capture on focus/visibility and every 30 seconds while
    visible. This checks for a new local capture; it does not scrape Microsoft.
-4. Only the matching signed-in Microsoft identity receives captured values.
-   Switching identities hides the old account's values immediately; stale
-   requests cannot restore them. Signing out returns to the introduction.
-   Key screens remain design fixtures.
+4. Only the matching signed-in Microsoft identity receives the stat card.
+   Switching identities or signing out hides it immediately; stale requests
+   cannot restore the old account's data. Key screens remain design fixtures.
 
 The file's schema is `accountEmail`, nonnegative integer `availablePoints`,
 nullable nonnegative `readyToClaim` and `dailyStreakDays`, ISO `observedAt`, and
 `source: "microsoft-rewards-dashboard"`. No private example account/balance is
-checked in. This local-only data path is unchanged by the online presentation.
-
-## Profile presentation
-
-The Rewards introduction is reserved for signed-out Profile. Signed-in Microsoft
-accounts always receive the Rewards summary card. Without a matching capture,
-its existing three artwork columns show **Available points**, **Ready to claim**
-and **Daily streaks** with em dashes, followed by **Points are unavailable here.**
-and a **View points** button. That button opens the official Rewards website;
-it does not claim that this prototype has read the account's points. Missing
-data is never represented by zero or the Figma sample values.
-
-The public workbench does not request the private local capture, and the public
-backend has no Rewards route. Signing in supplies identity, not a Rewards data
-permission. The signed-in summary therefore uses the unavailable state online.
+checked in. Missing, invalid or mismatched captures show the introduction.
 
 The existing three-stat layout and artwork are reused. The actual dashboard
 currently provides available points, ready-to-claim points and daily streaks;
@@ -60,8 +45,6 @@ Opening Rewards externally does not update that timestamp.
 Endpoint tests cover account isolation, field whitelisting, missing/corrupt data,
 cache headers and rejected origins/methods. Client tests cover account changes,
 late responses, sign-out and temporary outages. Profile checks cover real-value
-propagation through the prototype, the zero-day streak, signed-in unavailable
-values, account changes, capture arrival/removal and signed-out promotion.
-Browser checks use
+propagation through the prototype and the zero-day streak. Browser checks use
 the real local endpoint with a test-only identity adapter, separate from live
 Microsoft login. No reward claiming, redemption or search activity is automated.

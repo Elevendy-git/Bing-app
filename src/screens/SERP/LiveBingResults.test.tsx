@@ -1,46 +1,11 @@
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { LiveBingResults } from "./LiveBingResults";
 
-afterEach(() => { cleanup(); vi.useRealTimers(); vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
 const response = (query: string) => ({ ok: true, json: async () => ({ query, html: `<p>${query} result</p>`, fetchedAt: "2026-10-15T06:00:00Z" }) });
 
 describe("Live Bing result viewport", () => {
-  it("gives rendered results time to hydrate while retaining the shorter article deadline", async () => {
-    vi.useFakeTimers();
-    const fetcher = vi.fn().mockImplementation(() => new Promise(() => {}));
-    vi.stubGlobal("fetch", fetcher);
-    const { rerender } = render(<LiveBingResults query="weather" />);
-    const resultSignal = fetcher.mock.calls[0][1].signal as AbortSignal;
-    await act(() => vi.advanceTimersByTimeAsync(12_000));
-    expect(resultSignal.aborted).toBe(false);
-    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
-    await act(() => vi.advanceTimersByTimeAsync(10_000));
-    expect(resultSignal.aborted).toBe(true);
-    expect(screen.getByRole("alert")).toHaveTextContent("Couldn’t load results");
-    rerender(<LiveBingResults query="weather" url="https://example.com/article" />);
-    const articleSignal = fetcher.mock.calls[1][1].signal as AbortSignal;
-    await act(() => vi.advanceTimersByTimeAsync(10_000));
-    expect(articleSignal.aborted).toBe(true);
-    expect(screen.getByRole("alert")).toHaveTextContent("This page can’t be previewed");
-  });
-
-  it("never renders a mismatched provider document and offers the exact official query plus a working retry", async () => {
-    const open = vi.spyOn(window, "open").mockReturnValue(null);
-    const query = "weather & forecast";
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce({ ok: false, json: async () => ({ code: "RESULT_QUERY_MISMATCH" }) })
-      .mockResolvedValueOnce(response(query)));
-    render(<LiveBingResults query={query} />);
-    expect(await screen.findByRole("alert")).toHaveTextContent("Results didn’t match your search");
-    expect(screen.queryByTitle(`Bing results for ${query}`)).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Open Bing" }));
-    expect(open).toHaveBeenCalledWith("https://www.bing.com/search?q=weather+%26+forecast&setlang=en-US&mkt=en-US&cc=US", "_blank", "noopener,noreferrer");
-    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
-    expect(await screen.findByTitle(`Bing results for ${query}`)).toHaveAttribute("srcdoc", `<p>${query} result</p>`);
-    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
-    open.mockRestore();
-  });
-
   it("loads both results and web destinations from the configured public backend", async () => {
     vi.stubEnv("VITE_API_BASE_URL", "https://bing-backend.onrender.com/");
     vi.stubEnv("BASE_URL", "/Bing-app/");

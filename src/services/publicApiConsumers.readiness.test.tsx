@@ -31,21 +31,21 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.useRealTimers(); vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
 
 describe("Public backend readiness at consumer boundaries", () => {
-  it("keeps SERP loading during a long wake, then gives the provider its full deadline", async () => {
+  it.each([undefined, "https://example.com/article"])("keeps SERP or webpage loading during a long wake, then gives the provider its full deadline (%s)", async (url) => {
     const wake = deferred();
     vi.mocked(awaitPublicApiReady).mockReturnValue(wake.promise);
     const onLoadStateChange = vi.fn();
-    render(<LiveBingResults query="weather" onLoadStateChange={onLoadStateChange} />);
+    render(<LiveBingResults query="weather" url={url} onLoadStateChange={onLoadStateChange} />);
     await advance(20_000);
     expect(fetch).not.toHaveBeenCalled();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     expect(onLoadStateChange).toHaveBeenLastCalledWith("loading", 0);
     await settle(wake.resolve);
     expect(fetch).toHaveBeenCalledOnce();
-    await advance(21_999);
+    await advance(9_999);
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     await advance(1);
-    expect(screen.getByRole("alert")).toHaveTextContent("Couldn’t load results");
+    expect(screen.getByRole("alert")).toHaveTextContent(url ? "This page can’t be previewed" : "Couldn’t load results");
     expect(vi.mocked(fetch).mock.calls[0][1]?.signal?.aborted).toBe(true);
   });
 

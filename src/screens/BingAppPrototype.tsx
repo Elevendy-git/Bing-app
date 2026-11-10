@@ -308,7 +308,7 @@ export function BingAppPrototype({ initialPage = "home", account = PROFILE_ACCOU
         aria-hidden={homeInactive || undefined} {...(homeInactive ? { inert: "" } : {})}>
         <Homepage timeSource={timeSource} feedSource={feedSource} interactiveFeed initialState={initialHomeState} privateMode={privateMode} onNavigate={navigate}
           onOpenArticle={({ url, title }) => { if (page === "home" && webUrl(url)) submitSearch(url, "feed", title); }}
-          profileAvatar={profileAvatar(currentAccount)} onOpenProfile={openProfile}
+          profileAvatar={profileAvatar(currentAccount)} onOpenProfile={openProfile} onViewRewards={openMicrosoftRewards}
           onOpenSearch={openSearch} onVoiceSearch={openVoice} searchConcealed={searchOrigin !== null} scrollSnapEnabled={!homeInactive} />
       </ScreenLayer>
       <AnimatePresence initial={initialPage !== "profile"} onExitComplete={() => {

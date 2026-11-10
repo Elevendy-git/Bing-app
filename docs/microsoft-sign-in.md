@@ -80,8 +80,7 @@ Graph tokens.
 Rewards captures remain local: `.local/rewards.json` is excluded from Git and
 the public build, the deployed backend has no Rewards route, and the frontend
 does not request a capture or send its account email from a public host. Online
-Profile shows the signed-in Rewards card with unavailable values and a link to
-the official Rewards site. The introduction is reserved for signed-out accounts.
+Profile shows the Rewards introduction and can open the official Rewards site.
 Real Microsoft sign-in still works independently of those local captures.
 
 After deployment, open the Pages URL, allow its login popup, complete personal
@@ -113,13 +112,11 @@ and reloading within this browser session retain the active identity; activity
 and identity do not overwrite each other. Only the cached active account is
 restored, not an arbitrary other cached account. Private-mode browsing remains
 separate. Microsoft login does not itself sync Bing history, bookmarks, tabs or Rewards.
-The real signed-in account shows a Rewards summary. Without a matching
-[local Rewards capture](rewards.md), its values are em dashes with an unavailable
-message and **View points** action. A matching loopback capture fills the card
-with real available/claimable points and streaks; missing optional metrics stay
-omitted. The capture time is retained in metadata.
-Profile's **Explore now** (signed out), **View points** (unavailable summary) and
-**Microsoft Rewards** entries open the official
+The real signed-in account shows the Rewards introduction unless the workbench
+is running on loopback and a matching [local Rewards capture](rewards.md) exists.
+A capture replaces it with real
+available/claimable points and streaks. The capture time is retained in metadata.
+Profile's **Explore now** and **Microsoft Rewards** entries open the official
 `https://rewards.bing.com/` site in a new tab (`noopener,noreferrer`). Its own
 browser session handles login and real points; it may require sign-in again.
 This link opens the website; it does not refresh the separate local capture.

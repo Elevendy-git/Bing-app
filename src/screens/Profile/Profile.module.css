@@ -43,10 +43,6 @@
 .stat strong, .stat span { width: 100%; text-align: center; overflow-wrap: anywhere; }
 .stat strong { font-size: 16px; font-weight: var(--gnrc-font-weight-functional-strong); line-height: 22px; font-feature-settings: "calt" 0; }
 .stat span { color: var(--gnrc-color-foreground-neutral-secondary); font-size: 12px; font-weight: 450; line-height: 16px; letter-spacing: 0; }
-.rewardsUnavailable { display: flex; padding: 0 16px 14px; flex-direction: column; align-items: center; gap: 6px; }
-.rewardsUnavailable p { margin: 0; color: var(--gnrc-color-foreground-neutral-secondary); font-size: 12px; line-height: 16px; text-align: center; }
-.rewardsLink { padding: 4px 8px; border: 0; border-radius: 6px; background: transparent; color: var(--gnrc-color-app-list-accent); font: inherit; font-size: 14px; line-height: 20px; cursor: pointer; }
-.rewardsLink:focus-visible { outline: 2px solid var(--gnrc-color-app-list-accent); outline-offset: 2px; }
 .promo { position: relative; height: 128px; overflow: hidden; padding: 16px; }
 .promoCopy { position: relative; z-index: 1; display: flex; width: calc(100% - 114px); height: 96px; flex-direction: column; align-items: flex-start; gap: 12px; }
 .promoCopy p { margin: 0; font-size: 16px; font-weight: 450; line-height: 26px; }

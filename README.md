@@ -24,7 +24,6 @@ Requires Node.js 24 LTS.
 
 ```sh
 npm ci
-npm run setup:browser
 npm run dev
 ```
 

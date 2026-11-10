@@ -30,7 +30,7 @@ visual evidence, not runtime settings or duplicate application entry points.
 
 - `PreviewWorkbench` owns the active view, settings visibility, and appearance.
 - `PreviewPrototypeNavigation` connects the sidebar to the retained live phone.
-  The prototype owns its routes and activity; the workbench forwards navigation
+  The prototype owns routes and activity; the workbench forwards navigation
   commands and reads the current page. Independent Key screen presets cannot
   register as the live navigation target.
 - `PreviewLibrary` owns search and category/item selection; `previewLibrarySearch.ts`
@@ -74,14 +74,15 @@ and InPrivate introduction. Horizontal Glance/Tab/Event cards keep intrinsic
 widths within their full-width scrolling containers. Library specimens keep their
 source dimensions. See [device QA](qa/iphone18-layout-qa.md).
 
-Desktop uses a 232 px gray navigation column, a flexible light-gray canvas and a
-284 px Inspector. Prototype, Screens and Library switch inside the Inspector;
-Reset and Close live in its header. Closing Inspector exposes its reopen button
-on the canvas. Device information reads the shared iPhone preset, and the phone
-fits the canvas automatically. Appearance uses a compact segmented control.
-Library and Screens share the brand/navigation column; their galleries scroll
-independently. Below 1100 px the columns narrow; at 900 px Inspector docks at the
-bottom, and below 600 px navigation becomes a horizontal strip.
+Desktop uses a 232 px navigation sidebar, a flexible preview canvas and a 284 px
+Inspector. Prototype pages, Key screen groups and Library categories share the
+same sidebar styling. View selection and Appearance use compact segmented
+controls in the Inspector; Reset and Close sit in its header. The fixed iPhone
+18 Pro geometry is shown as read-only device information. The phone fits the
+available canvas automatically and keeps the product's typography separate from
+the workbench font. Below 1100 px the side columns narrow; at 900 px and below
+the Inspector docks at the bottom. Library content remains capped at 1120 px and
+scrolls independently.
 
 Search spans the entire Library even when an individual component was selected.
 Selecting a result narrows the query. Clear or Escape restores all items and

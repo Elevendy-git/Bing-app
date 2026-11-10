@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { LiveBingResults, type BingLoadState } from "./LiveBingResults";
-import { LiveBrowserResults } from "./LiveBrowserResults";
 import { SERP, type SERPProps } from "./SERP";
 import { bingSearchQuery, bingSearchUrl, type BingPageSnapshot } from "../../services/bingPage";
 import { resultDestination, type IABFindRequest, type IABFindResult } from "../../services/webNavigation";
@@ -97,12 +96,6 @@ function Document({ page, active, onNavigate, onLoad, onReady, findRequest, onFi
   findRequest?: IABFindRequest; onFindResult?: (result: IABFindResult) => void }) {
   const load = useCallback((state: BingLoadState, attempt: number) => onLoad(page.id, state, attempt), [page.id, onLoad]);
   const ready = useCallback((snapshot: BingPageSnapshot) => onReady(page.id, snapshot), [page.id, onReady]);
-  // Keep the published snapshot transport until the free cloud stream is verified.
-  // Local development exercises the live page without changing reference screens.
-  const liveBrowser = !page.url && (import.meta.env.VITE_LIVE_BROWSER === "true"
-    || (import.meta.env.MODE === "development" && import.meta.env.VITE_LIVE_BROWSER !== "false"));
-  if (liveBrowser) return <LiveBrowserResults query={page.query} active={active} onNavigate={onNavigate} onLoadStateChange={load}
-    onPageReady={ready} findRequest={findRequest} onFindResult={onFindResult} />;
   return <LiveBingResults query={page.query} url={page.url} active={active} onNavigate={onNavigate} onLoadStateChange={load} onPageReady={ready}
     findRequest={findRequest} onFindResult={onFindResult} />;
 }

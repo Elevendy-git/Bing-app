@@ -32,27 +32,4 @@ describe("Website preview document", () => {
     expect(resultDestination('https://example.com/?u=a1abc')).toBe('https://example.com/?u=a1abc');
     expect(resultDestination('javascript:alert(1)')).toBeNull();
   });
-  it("decodes the Bing mobile Continue-in-browser wrapper to its real destination", () => {
-    const wrapper = 'https://www.bing.com/fd/ls/GLinkPing.aspx?IG=example&&ID=SERP,5169.2&SUIH=example&redir=aHR0cHM6Ly93d3cuYWNjdXdlYXRoZXIuY29tL2VuL2pwL2NoaXlvZGEta3UvMjIxMjMxL2hvdXJseS13ZWF0aGVyLWZvcmVjYXN0LzIyMTIzMQ';
-    expect(resultDestination(wrapper)).toBe('https://www.accuweather.com/en/jp/chiyoda-ku/221231/hourly-weather-forecast/221231');
-    const unicode = 'https://example.com/café?q=日本語';
-    expect(resultDestination(`https://bing.com/fd/ls/GLinkPing.aspx?redir=${Buffer.from(unicode).toString('base64url')}`)).toBe(new URL(unicode).href);
-  });
-  it.each(['javascript:alert(1)', 'data:text/html,example', 'file:///private/file', 'https://user:password@example.com/', '/relative'])('keeps the original Bing wrapper when its destination is unsafe: %s', destination => {
-    const wrapper = `https://www.bing.com/fd/ls/GLinkPing.aspx?redir=${Buffer.from(destination).toString('base64url')}`;
-    expect(resultDestination(wrapper)).toBe(wrapper);
-  });
-  it.each(['', 'abc', '%%%', 'a=b', '===='])('keeps malformed mobile redirect payloads unchanged: %s', encoded => {
-    const wrapper = `https://www.bing.com/fd/ls/GLinkPing.aspx?redir=${encoded}`;
-    expect(resultDestination(wrapper)).toBe(wrapper);
-  });
-  it("only decodes one redir parameter on the exact HTTPS Bing wrapper", () => {
-    const encoded = Buffer.from('https://example.com/').toString('base64url');
-    for (const wrapper of [
-      `https://bing.com.attacker.example/fd/ls/GLinkPing.aspx?redir=${encoded}`,
-      `https://www.bing.com/other?redir=${encoded}`,
-      `http://www.bing.com/fd/ls/GLinkPing.aspx?redir=${encoded}`,
-      `https://www.bing.com/fd/ls/GLinkPing.aspx?redir=${encoded}&redir=${encoded}`,
-    ]) expect(resultDestination(wrapper)).toBe(wrapper);
-  });
 });

@@ -44,6 +44,8 @@ export interface HomepageProps {
   onOpenSearch?: () => void;
   onVoiceSearch?: () => void;
   onOpenProfile?: () => void;
+  /** Opens the official Rewards site using the host prototype's browser action. */
+  onViewRewards?: () => void;
   onOpenArticle?: FeedArticleOpenHandler;
   profileAvatar?: AvatarProps;
   /** The live Search composer takes over during the shared transition. */
@@ -53,7 +55,7 @@ export interface HomepageProps {
 }
 
 /** Homepage shares one persistent input above the scrolling content and its fade mask. */
-export function Homepage({ timeSource = "fixed", feedSource = "preview", interactiveFeed = false, initialFeedOverlay, initialState = "top", privateMode = false, onNavigate, onOpenSearch, onVoiceSearch, onOpenProfile, onOpenArticle, profileAvatar, searchConcealed = false, scrollSnapEnabled = true }: HomepageProps) {
+export function Homepage({ timeSource = "fixed", feedSource = "preview", interactiveFeed = false, initialFeedOverlay, initialState = "top", privateMode = false, onNavigate, onOpenSearch, onVoiceSearch, onOpenProfile, onViewRewards, onOpenArticle, profileAvatar, searchConcealed = false, scrollSnapEnabled = true }: HomepageProps) {
   const feedActions = useFeedFollow(initialFeedOverlay);
   const reducedMotion = useReducedMotion();
   const toastMotion = interactiveFeed && !reducedMotion ? iosMotion.toast : iosMotion.instant;
@@ -124,7 +126,8 @@ export function Homepage({ timeSource = "fixed", feedSource = "preview", interac
             </header>
           </div>
           <div className={styles.searchSpacer} aria-hidden="true" />
-          <GlanceCardGroup items={homepageGlanceCards} className={styles.glanceCards} />
+          <GlanceCardGroup items={homepageGlanceCards} className={styles.glanceCards}
+            onCardClick={id => { if (id === "rewards") onViewRewards?.(); }} />
           {feedSource === "msn" ? <LiveHomepageFeed scrollRef={scrollRef} active={scrollSnapEnabled && !searchConcealed && !feedActions.menuPresented}
             onOpenArticle={onOpenArticle}
             onMoreOptions={interactiveFeed ? feedActions.openMenu : undefined} />

@@ -5,8 +5,6 @@ import { createMsnFeedHandler } from "./msnFeed";
 import { handleBingSerp } from "./bingSerp";
 import { handleWebPage } from "./webPage";
 import { sendJson as send } from "./http";
-import { closeBingBrowser } from "./bingBrowser";
-import { attachLiveBrowserServer } from "./liveBrowser";
 
 const DEFAULT_ORIGINS = ["https://elevendy-git.github.io", "http://localhost:5174", "http://127.0.0.1:5174"];
 const RATE_WINDOW_MS = 60_000;
@@ -47,7 +45,7 @@ export function productionConfig(env: NodeJS.ProcessEnv = process.env): Producti
 }
 
 /** Anonymous, read-only API service. No static files, Rewards, account data or request logging. */
-export function createProductionServer(config = productionConfig(), { liveBrowserEnabled = process.env.LIVE_BROWSER_ENABLED === "true" } = {}) {
+export function createProductionServer(config = productionConfig()) {
   const origins = new Set(config.allowedOrigins);
   const handlers = new Map([
     ["/api/search-suggestions", handleSearchSuggestions],
@@ -134,11 +132,8 @@ export function createProductionServer(config = productionConfig(), { liveBrowse
   server.requestTimeout = 15_000;
   server.headersTimeout = 10_000;
   server.keepAliveTimeout = 5000;
-  server.setTimeout(25_000, socket => socket.destroy());
-  const liveBrowser = liveBrowserEnabled ? attachLiveBrowserServer(server, { allowedOrigins: config.allowedOrigins }) : undefined;
-  return Object.assign(server, {
-    closeBrowserSessions: async () => { await liveBrowser?.close(); },
-  });
+  server.setTimeout(15_000, socket => socket.destroy());
+  return server;
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
@@ -148,7 +143,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     console.info(`Bing App public API listening on port ${config.port}`);
   });
   for (const signal of ["SIGINT", "SIGTERM"] as const) process.once(signal, () => {
-    void server.closeBrowserSessions().then(() => closeBingBrowser()).finally(() => server.close(() => process.exit(0)));
+    server.close(() => process.exit(0));
     setTimeout(() => { server.closeAllConnections(); process.exit(0); }, 10_000).unref();
   });
 }
