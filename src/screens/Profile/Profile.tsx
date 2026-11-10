@@ -65,10 +65,15 @@ export function Profile({ account = PROFILE_ACCOUNTS.image, timeSource = "fixed"
   const interactive = Boolean(onBack);
   const microsoft = authentication?.provider === "microsoft";
   const captured = microsoft && account?.email && rewardsSnapshot?.accountEmail === normalizeRewardsAccount(account.email) ? rewardsSnapshot : null;
+  const rewardsUnavailable = Boolean(microsoft && account && !captured);
   const rewardStats = captured ? [
     { ...rewards[0], label: "Available points", value: captured.availablePoints.toLocaleString("en-US") },
     ...(captured.readyToClaim === null ? [] : [{ ...rewards[1], label: "Ready to claim", value: captured.readyToClaim.toLocaleString("en-US") }]),
     ...(captured.dailyStreakDays === null ? [] : [{ ...rewards[2], label: "Daily streaks", value: `${captured.dailyStreakDays} ${captured.dailyStreakDays === 1 ? "day" : "days"}` }]),
+  ] : rewardsUnavailable ? [
+    { ...rewards[0], label: "Available points", value: "—" },
+    { ...rewards[1], label: "Ready to claim", value: "—" },
+    { ...rewards[2], value: "—" },
   ] : rewards;
   const pending = authentication?.pending;
   const feedback = authentication?.error || (pending === "initializing" ? "Preparing Microsoft sign-in…"
@@ -115,11 +120,17 @@ export function Profile({ account = PROFILE_ACCOUNTS.image, timeSource = "fixed"
           className={`${styles.accountAction} ${styles.authRetry}`} onClick={authentication.onRetrySignIn}>Closed the window? Try again</button>}
       </div>
       <div className={styles.content}>
-        {(captured || account && !microsoft) ? <div className={`${styles.card} ${styles.rewards}`} role="group" aria-label="Microsoft Rewards summary">
-          {rewardStats.map(item => <div key={item.label} className={styles.stat}>
-            <img src={item.icon} alt="" draggable={false} />
-            <strong>{item.value}</strong><span>{item.label}</span>
-          </div>)}
+        {account ? <div className={styles.card} role="group" aria-label="Microsoft Rewards summary">
+          <div className={styles.rewards}>
+            {rewardStats.map(item => <div key={item.label} className={styles.stat}>
+              <img src={item.icon} alt="" draggable={false} />
+              <strong>{item.value}</strong><span>{item.label}</span>
+            </div>)}
+          </div>
+          {rewardsUnavailable && <div className={styles.rewardsUnavailable}>
+            <p>Points are unavailable here.</p>
+            {onViewRewards && <button type="button" className={styles.rewardsLink} onClick={onViewRewards}>View points</button>}
+          </div>}
         </div> : <div className={`${styles.card} ${styles.promo}`} role="group" aria-label="Microsoft Rewards introduction">
           <div className={styles.promoCopy}>
             <p>Earn free gift cards and more with Microsoft Rewards</p>

@@ -96,6 +96,19 @@ remote scripts, forms and embedded frames; the parent validates message source a
 channel before navigating. Thumbnail snapshots contain no bridge and allow no scripts.
 See [IAB preview](../../../docs/iab-preview.md) for the webpage endpoint and its limits.
 
+Before stripping Bing's search chrome, the adapter rejects a mismatched search
+field when present. A conservative check also rejects organic result lists with
+no meaningful Latin query term in their visible title/snippet or destination
+hostname. Query echoes in navigation, tracking URLs and page titles do not count.
+This detects obvious cross-topic responses such as `weather` returning only AI
+sites; it is not semantic relevance scoring. Non-Latin and answer-only documents
+are not rejected by this lexical check. A rejected document is requested once
+more within the same eight-second deadline; repeated mismatches return a distinct
+error, never the unrelated HTML. The screen offers Retry and an explicit Open Bing
+action for the exact query. Neither no-cache requests nor fresh retry identifiers
+guarantee that anonymous website scraping will return correct results. A supported
+search API is required for a stronger relevance/availability contract.
+
 Failed, challenged or unrecognized responses display an error with Retry instead
 of replacing live data with a screenshot. The extraction relies on Bing's current
 `b_content` / `b_results` markup and can break if Bing changes it. Both `npm run dev`

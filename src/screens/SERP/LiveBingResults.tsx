@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import type { AppSearchBoxLoadState } from "../../components/AppSearchBox/SearchBoxProgress";
 import { publicApiUrl } from "../../services/apiUrl";
 import { awaitPublicApiReady } from "../../services/publicApiReady";
-import { bingPageIdentity, type BingPageSnapshot } from "../../services/bingPage";
+import { bingPageIdentity, bingSearchUrl, type BingPageSnapshot } from "../../services/bingPage";
+import { openBrowserLink } from "./browserActions";
 import { resultDestination, webUrl, withIABNavigation, type IABFindRequest, type IABFindResult } from "../../services/webNavigation";
 import styles from "./LiveBingResults.module.css";
 
@@ -20,7 +21,7 @@ export function LiveBingResults({ query, url, active = true, onNavigate, onLoadS
   onFindResult?: (result: IABFindResult) => void;
 }) {
   const [result, setResult] = useState<Result | null>(null);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<"unavailable" | "query-mismatch" | null>(null);
   const [attempt, setAttempt] = useState(0);
   const currentRequest = useRef(0);
   const publishedRequest = useRef<number>();
@@ -70,11 +71,11 @@ export function LiveBingResults({ query, url, active = true, onNavigate, onLoadS
     setResult(null);
     setReadyRequest(null);
     postedFindRequest.current = null;
-    setError(false);
+    setError(null);
     onLoadStateChange?.("loading", attempt);
-    const fail = () => {
+    const fail = (reason: "unavailable" | "query-mismatch" = "unavailable") => {
       if (!active) return;
-      setError(true);
+      setError(reason);
       onLoadStateChange?.("error", attempt);
     };
     let timeout: ReturnType<typeof setTimeout> | undefined;
@@ -86,7 +87,14 @@ export function LiveBingResults({ query, url, active = true, onNavigate, onLoadS
         const response = await fetch(publicApiUrl(url ? `/api/web-page?${new URLSearchParams({ url })}` : `/api/bing-serp?${new URLSearchParams({ query })}`), {
           signal: controller.signal, credentials: "omit", cache: "no-store", referrerPolicy: "no-referrer", headers: { Accept: "application/json" },
         });
-        if (!response.ok) throw new Error("Unavailable");
+        if (!response.ok) {
+          const failure: unknown = await response.json().catch(() => null);
+          if (!url && failure && typeof failure === "object" && "code" in failure && failure.code === "RESULT_QUERY_MISMATCH") {
+            fail("query-mismatch");
+            return;
+          }
+          throw new Error("Unavailable");
+        }
         const body: unknown = await response.json();
         if (!body || typeof body !== "object" || (url ? !("requestedUrl" in body) || body.requestedUrl !== url : !("query" in body) || body.query !== query)
           || !("html" in body) || typeof body.html !== "string" || !("fetchedAt" in body) || typeof body.fetchedAt !== "string") throw new Error("Invalid result");
@@ -106,9 +114,11 @@ export function LiveBingResults({ query, url, active = true, onNavigate, onLoadS
     return () => { active = false; ++currentRequest.current; clearTimeout(timeout); controller.abort(); };
   }, [query, url, attempt, onLoadStateChange]);
 
-  if (error) return <div className={styles.message} role="alert"><p>{url ? "This page can’t be previewed" : "Couldn’t load results"}</p>
+  if (error) return <div className={styles.message} role="alert"><p>{url ? "This page can’t be previewed" : error === "query-mismatch" ? "Results didn’t match your search" : "Couldn’t load results"}</p>
     {url && <p className={styles.explanation}>You can try again or go back to your results.</p>}
-    <button type="button" onClick={() => setAttempt((current) => current + 1)}>Try again</button></div>;
+    {error === "query-mismatch" && <p className={styles.explanation}>Bing returned unrelated content. Try again or view your results on Bing.</p>}
+    <button type="button" onClick={() => setAttempt((current) => current + 1)}>Try again</button>
+    {!url && <button type="button" onClick={() => openBrowserLink(bingSearchUrl(query))}>Open Bing</button>}</div>;
   if (!result || result.query !== query) return null;
   return <iframe ref={frame} className={styles.frame} title={url ? `Web page: ${url}` : `Bing results for ${query}`}
     srcDoc={bridgeEnabled ? withIABNavigation(result.html, channel, window.location.origin) : result.html}
@@ -124,7 +134,7 @@ export function LiveBingResults({ query, url, active = true, onNavigate, onLoadS
     }}
     onError={() => {
       if (currentRequest.current !== result.requestId) return;
-      setError(true);
+      setError("unavailable");
       onLoadStateChange?.("error", attempt);
     }}
     sandbox={bridgeEnabled ? "allow-scripts" : ""} referrerPolicy="no-referrer" {...{ credentialless: "" }}

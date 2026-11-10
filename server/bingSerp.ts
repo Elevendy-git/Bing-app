@@ -2,6 +2,7 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Plugin } from "vite";
 import { normalizeSearchQuery, SEARCH_QUERY_MAX_LENGTH } from "../src/services/searchSuggestions";
 import { prepareBingSerpDocument } from "./bingSerpHtml";
+import { assertBingSerpQuery, BingSerpQueryMismatchError } from "./bingSerpValidation";
 import { MOBILE_USER_AGENT, sendJson } from "./http";
 
 const MAX_HTML_BYTES = 4 * 1024 * 1024;
@@ -21,23 +22,35 @@ export async function handleBingSerp(req: IncomingMessage, res: ServerResponse, 
     upstream.searchParams.set("q", query);
     const chinese = /\p{Script=Han}/u.test(query);
     upstream.searchParams.set("setlang", chinese ? "zh-Hans" : "en");
-    const response = await fetch(upstream, { signal: controller.signal, redirect: "error",
-      headers: { "User-Agent": MOBILE_USER_AGENT, Accept: "text/html", "Accept-Language": chinese ? "zh-CN,zh;q=0.9,en;q=0.8" : "en-US,en;q=0.9" } });
-    if (!response.ok || !response.headers.get("content-type")?.includes("text/html") || !response.body) throw new Error("Unavailable");
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let bytes = 0, source = "";
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      bytes += value.byteLength;
-      if (bytes > MAX_HTML_BYTES) { await reader.cancel(); throw new Error("Document too large"); }
-      source += decoder.decode(value, { stream: true });
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const requestUrl = new URL(upstream);
+      if (attempt) requestUrl.searchParams.set("cvid", crypto.randomUUID().replaceAll("-", ""));
+      const response = await fetch(requestUrl, { signal: controller.signal, redirect: "error", cache: "no-store",
+        headers: { "User-Agent": MOBILE_USER_AGENT, Accept: "text/html", "Cache-Control": "no-cache", "Accept-Language": chinese ? "zh-CN,zh;q=0.9,en;q=0.8" : "en-US,en;q=0.9" } });
+      if (!response.ok || !response.headers.get("content-type")?.includes("text/html") || !response.body) throw new Error("Unavailable");
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let bytes = 0, source = "";
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        bytes += value.byteLength;
+        if (bytes > MAX_HTML_BYTES) { await reader.cancel(); throw new Error("Document too large"); }
+        source += decoder.decode(value, { stream: true });
+      }
+      source += decoder.decode();
+      try { assertBingSerpQuery(source, query); }
+      catch (error) {
+        if (attempt === 0 && error instanceof BingSerpQueryMismatchError && !controller.signal.aborted) continue;
+        throw error;
+      }
+      const document = prepareBingSerpDocument(source);
+      return sendJson(res, 200, { query, ...document, sourceUrl: upstream.href, fetchedAt: new Date().toISOString() });
     }
-    source += decoder.decode();
-    const document = prepareBingSerpDocument(source);
-    sendJson(res, 200, { query, ...document, sourceUrl: upstream.href, fetchedAt: new Date().toISOString() });
-  } catch {
+  } catch (error) {
+    if (error instanceof BingSerpQueryMismatchError && !controller.signal.aborted) {
+      return sendJson(res, 502, { error: "Bing returned unrelated results", code: "RESULT_QUERY_MISMATCH" });
+    }
     sendJson(res, controller.signal.aborted ? 504 : 502, { error: "Bing results are unavailable" });
   } finally { clearTimeout(timeout); res.off("close", abort); }
 }

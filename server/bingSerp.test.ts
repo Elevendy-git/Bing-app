@@ -30,6 +30,36 @@ function call(path: string, method = "GET") {
   });
 }
 describe("Bing result endpoint", () => {
+  const organic = (text: string) => `<title>weather - Search</title><input id="sb_form_q" name="q" value="weather"><main id="b_content"><ol id="b_results"><li class="b_algo"><h2><a href="https://example.com">${text}</a></h2></li></ol></main>`;
+
+  it("rejects unrelated organic content even when the upstream title and search field echo the requested query", async () => {
+    vi.mocked(fetch).mockImplementation(async () => new Response(organic("Claude by Anthropic: AI assistant"), { headers: { "Content-Type": "text/html" } }));
+    const result = await call("/api/bing-serp?query=weather");
+    expect(result.status).toBe(502);
+    expect(result.body).toEqual({ error: "Bing returned unrelated results", code: "RESULT_QUERY_MISMATCH" });
+    expect(result.body.html).toBeUndefined();
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it("retries a mismatched document once without forwarding cache or credentials, then returns the matching document", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(new Response(organic("Claude by Anthropic"), { headers: { "Content-Type": "text/html" } }))
+      .mockResolvedValueOnce(new Response(organic("Weather forecast today"), { headers: { "Content-Type": "text/html" } }));
+    const result = await call("/api/bing-serp?query=weather");
+    expect(result.status).toBe(200);
+    expect(result.body.html).toContain("Weather forecast today");
+    expect(result.body.html).not.toContain("Claude by Anthropic");
+    expect(result.body.sourceUrl).toBe("https://www.bing.com/search?q=weather&setlang=en");
+    expect(fetch).toHaveBeenCalledTimes(2);
+    const [url, options] = vi.mocked(fetch).mock.calls[1];
+    expect(new URL(String(url)).searchParams.get("q")).toBe("weather");
+    expect(new URL(String(url)).searchParams.get("cvid")).toMatch(/^[a-f0-9]{32}$/);
+    expect(options?.cache).toBe("no-store");
+    const headers = new Headers(options?.headers);
+    expect(headers.get("cache-control")).toBe("no-cache");
+    expect(headers.has("cookie")).toBe(false);
+    expect(headers.has("authorization")).toBe(false);
+  });
+
   it("returns the visited page URL and its own favicon, ignoring result-site branding", async () => {
     vi.mocked(fetch).mockResolvedValueOnce(new Response('<link rel="shortcut icon" href="/sa/bing-icon.ico">' + html,
       { headers: { "Content-Type": "text/html" } }));
