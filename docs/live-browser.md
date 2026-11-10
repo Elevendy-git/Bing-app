@@ -28,10 +28,12 @@ frontend value from its repository variable. Leaving the variable unset keeps
 the published HTML transport. Keep `BING_SERP_RENDERER=http` on the free backend
 so callers of the legacy endpoint do not launch unnecessary browser work.
 
-Both production flags are configured for the current rollout. The deployed free
-host returned English results and working Find in about 20 seconds; local
-verification also exercised weather units and forecast dates. The cloud response
-did not include that weather card, so card availability is not guaranteed.
+Both production flags remain `false`. The deployed free host returned English
+results and working Find in about 20 seconds. Local verification also exercised
+weather units and forecast dates. The cloud response lacked that card and
+showed Singapore results in the first frames of an explicit Seattle query.
+A later observation attempt failed before connecting, so later hydration was
+not verified. The interactive stream is not enabled in production.
 
 ## Lifecycle and limits
 

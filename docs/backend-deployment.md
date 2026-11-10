@@ -19,12 +19,14 @@ directly in Render, so do not apply a new Blueprint or create a duplicate servic
 as part of an ordinary code update.
 
 The legacy HTML endpoint sets `BING_SERP_RENDERER=http`, matching `render.yaml`.
-The service also sets `LIVE_BROWSER_ENABLED=true`, and the Pages build uses
-`VITE_LIVE_BROWSER=true` for the separate interactive Bing viewport. Local
+The service keeps `LIVE_BROWSER_ENABLED=false`, and the Pages build keeps
+`VITE_LIVE_BROWSER=false`. Local
 verification showed live weather-card controls. Render verification returned
 usable English results and working page search in about 20 seconds, but did not
 show a weather card. Bing controls which cards an anonymous cloud visitor gets;
-the stream does not guarantee the same cards as a signed-in device.
+the stream does not guarantee the same cards as a signed-in device. An explicit
+Seattle query also showed Singapore results in its first frames, so the interactive transport is
+not enabled on the published frontend.
 
 ## Run locally
 
@@ -69,7 +71,7 @@ It does not load Vite middleware or the React workbench at runtime.
 | `API_MAX_CONCURRENT` | `8` | Maximum active API requests per server process; accepted range 1–32. |
 | `PLAYWRIGHT_BROWSERS_PATH` | `0` in Render | Install and load Chromium from the application's Playwright package directory. Required at build and runtime. |
 | `BING_SERP_RENDERER` | `browser` in code; `http` in Render | The live override selects the lower-resource HTML-fetch adapter. Optional `browser` mode renders Bing in anonymous Chromium; cloud reliability remains unverified. |
-| `LIVE_BROWSER_ENABLED` | `false` in code; `true` in Render | Enables the isolated `/api/live-browser` WebSocket endpoint. The Pages build separately opts in with `VITE_LIVE_BROWSER=true`. |
+| `LIVE_BROWSER_ENABLED` | `false` | Enables the isolated `/api/live-browser` WebSocket endpoint for verification. It and the Pages `VITE_LIVE_BROWSER` flag remain disabled in production. |
 | `MSN_FEED_API_KEY` | Existing anonymous MSN public client identifier | Optional server-only override for the fixed MSN provider adapter. |
 
 CORS origins contain only scheme, host and optional port. The Pages origin is
@@ -122,8 +124,9 @@ location can differ from a user's signed-in Bing page; regional results reflect
 the anonymous backend network, not the user's device location.
 
 The [interactive Bing viewport](live-browser.md) uses a separate WebSocket
-transport while retaining the same app chrome. Both production flags are
-configured for the free-host rollout. The HTML adapters described above remain
+transport while retaining the same app chrome. It is enabled locally; the
+published frontend keeps the HTML transport while cloud query fidelity remains
+unresolved. The HTML adapters described above remain
 available independently and still serve external IAB previews. Search requests
 use the global English market (`en-US`, country `US`) on all transports, without
 changing the user's query text.
