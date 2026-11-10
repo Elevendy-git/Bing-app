@@ -22,9 +22,14 @@ describe("Feed follow flow", () => {
     fireEvent.click(first);
     fireEvent.click(screen.getByRole("menuitem", { name: "Follow Medium" }));
     await screen.findByText("You've followed this channel");
-    fireEvent.click(screen.getAllByRole("button", { name: "More options" })[1]);
+    // Text queries can find the previous toast while it is still exiting.
+    // Reopen only after the sheet releases the background and returns focus.
+    await waitFor(() => expect(first).toHaveFocus());
+    const second = screen.getAllByRole("button", { name: "More options" })[1];
+    fireEvent.click(second);
     fireEvent.click(screen.getByRole("menuitem", { name: "Unfollow Medium" }));
     await waitFor(() => expect(screen.getByText("You've unfollowed this channel")).toBeVisible());
+    await waitFor(() => expect(second).toHaveFocus());
     fireEvent.click(screen.getByRole("button", { name: "Undo" }));
     await waitFor(() => expect(screen.queryByRole("status")).not.toBeInTheDocument());
     fireEvent.click(first);
