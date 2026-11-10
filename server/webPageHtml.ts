@@ -1,7 +1,11 @@
 import { parse, serializeOuter } from "parse5";
 import { attr, cleanPreviewNode, cssUrls, isElement, resourceUrl, walk, type PreviewNode } from "./previewHtml";
 
-const text = (node: PreviewNode) => walk(node).map(child => "value" in child ? child.value : "").join(" ").replace(/\s+/g, " ").trim();
+const text = (node: PreviewNode): string => {
+  if (node.nodeName === "#text" && "value" in node) return node.value;
+  if (isElement(node) && ["style", "script", "noscript", "template"].includes(node.tagName)) return "";
+  return "childNodes" in node ? node.childNodes.map(text).join(" ").replace(/\s+/g, " ").trim() : "";
+};
 
 /** Read-only mobile HTML, retaining the site's layout while removing executable content. */
 export function prepareWebPageDocument(source: string, sourceUrl: string) {

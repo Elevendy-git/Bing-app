@@ -4,7 +4,7 @@ import { webUrl } from "../src/services/webNavigation";
 export type PreviewNode = DefaultTreeAdapterMap["node"];
 export type PreviewElement = DefaultTreeAdapterMap["element"];
 
-const blocked = new Set(["script", "iframe", "object", "embed", "base", "meta", "form", "input", "textarea", "select", "foreignObject", "animate", "set"]);
+const blocked = new Set(["script", "noscript", "template", "iframe", "object", "embed", "base", "meta", "input", "textarea", "select", "foreignObject", "animate", "set"]);
 export const isElement = (node: PreviewNode): node is PreviewElement => "tagName" in node;
 export const attr = (node: PreviewElement, name: string) => node.attrs.find(item => item.name === name)?.value;
 export const walk = (node: PreviewNode): PreviewNode[] => [node, ...("childNodes" in node ? node.childNodes.flatMap(walk) : [])];
@@ -33,6 +33,12 @@ export function cssUrls(css: string, base: string) {
 /** Remove executable content and hand normal links to the app's IAB navigation bridge. */
 export function cleanPreviewNode(node: PreviewNode, base: string) {
   if (isElement(node)) {
+    // ASP.NET/Sitefinity pages often wrap their entire article in one form.
+    // Keep that layout and its safe descendants without retaining a submit target.
+    if (node.tagName === "form") {
+      node.tagName = node.nodeName = "div";
+      node.attrs = node.attrs.filter(({ name }) => !["method", "enctype", "accept-charset", "target", "rel", "novalidate", "autocomplete"].includes(name));
+    }
     node.attrs = node.attrs.filter(({ name }) => !/^on/i.test(name)
       && !["srcdoc", "srcset", "action", "formaction", "ping", "nonce", "autofocus", "contenteditable", "data-iab-href", "download"].includes(name));
     const fragment = node.tagName === "a" && attr(node, "href")?.startsWith("#") ? attr(node, "href") : undefined;

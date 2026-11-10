@@ -21,6 +21,19 @@ describe("Website preview document", () => {
     expect(page.html).not.toMatch(/<script|<iframe|<form|<input|onclick|javascript:|evil\.example|http-equiv="refresh"|foreignObject/);
     expect(page.html).toContain("script-src 'none'");
   });
+  it("retains an ASP.NET form-wrapped article while removing submission and hidden controls", () => {
+    const page = prepareWebPageDocument(`<title>Weather information</title><form id="aspnetForm" class="site-layout" action="/weather" method="post" enctype="multipart/form-data" target="_blank" onsubmit="submitPage()"><input type="hidden" name="__VIEWSTATE" value="private-state"><main><h1>Weather information</h1><p>Read the current weather forecast and official public weather advisories.</p><a href="/weather/forecast">View forecast</a><button type="submit" formaction="/post">Submit</button></main></form>`, "https://example.com/weather");
+    expect(page.html).toContain('<div id="aspnetForm" class="site-layout">');
+    expect(page.html).toContain("Read the current weather forecast and official public weather advisories.");
+    expect(page.html).toContain('data-iab-href="https://example.com/weather/forecast"');
+    expect(page.html).toContain('button type="submit" inert=""');
+    expect(page.html).not.toMatch(/<form|<input|__VIEWSTATE|private-state|action=|method=|enctype=|onsubmit=/);
+  });
+  it("rejects comments, styles and non-rendered fallback markup as page content", () => {
+    expect(() => prepareWebPageDocument(`<title>Weather</title><body><!-- This long server comment is not visible content for a user to read. --><style>.masthead { color: red; background: white; min-height: 100px; }</style><noscript><p>Enable JavaScript to view this website and its content.</p></noscript><template><p>This dormant template is not an article.</p><script>parent.stolen=true</script></template></body>`, "https://example.com/weather")).toThrow("No previewable content");
+    const page = prepareWebPageDocument(`<title>Article</title><p>This is the real article, containing sufficient visible content for the preview.</p><noscript><p>Hidden fallback text</p></noscript><template><script>parent.stolen=true</script></template>`, "https://example.com/");
+    expect(page.html).not.toMatch(/<noscript|<template|Hidden fallback|parent.stolen/);
+  });
   it("reports challenged or script-only pages rather than pretending they loaded", () => {
     expect(() => prepareWebPageDocument('<title>Just a moment...</title><p>Please wait while the page checks the connection to this website.</p>', 'https://example.com/')).toThrow();
     expect(() => prepareWebPageDocument('<div id="root"></div><script>app()</script>', 'https://example.com/')).toThrow();
