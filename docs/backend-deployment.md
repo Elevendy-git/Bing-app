@@ -118,6 +118,11 @@ result links still navigate through the App's IAB flow. Content, ranking and
 location can differ from a user's signed-in Bing page; regional results reflect
 the anonymous backend network, not the user's device location.
 
+An optional [interactive Bing viewport](live-browser.md) uses a separate
+WebSocket transport while retaining the same app chrome. It is enabled locally
+for verification; production requires separate backend and frontend flags.
+The HTML adapter described above remains available independently.
+
 Free Render services sleep after inactivity and can take time to wake. Before
 live suggestions, SERP/webpage previews or news start their provider deadline,
 the configured remote frontend waits for the shared anonymous `/health` readiness
