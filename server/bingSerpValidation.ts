@@ -94,10 +94,11 @@ export function assertBingSerpQuery(source: string, query: string): void {
     if (queryKey(value) !== queryKey(query)) throw new BingSerpQueryMismatchError();
   }
 
-  const significant = new Set(latinWords(query).filter(word => word.length >= 3 && !stopwords.has(word)));
-  if (!significant.size) return;
   const results = elements.find(node => attr(node, "id") === "b_results");
   if (!results) return; // Structural availability is checked by the preview sanitizer.
+  if (hidden(results) || ancestors(results).some(hidden)) throw new Error("Bing result document is not visible");
+  const significant = new Set(latinWords(query).filter(word => word.length >= 3 && !stopwords.has(word)));
+  if (!significant.size) return;
   const rows = walk(results).filter(isElement).filter(node => node.tagName === "li" && hasClass(node, "b_algo")
     && !hidden(node) && !ancestors(node).some(hidden));
   if (!rows.length) return;

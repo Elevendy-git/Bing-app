@@ -17,8 +17,7 @@ function resultContext() {
     goto: vi.fn().mockResolvedValue({ ok: () => true }),
     url: vi.fn().mockReturnValue("https://www.bing.com/search?q=weather"),
     locator: vi.fn().mockReturnValue({ waitFor: vi.fn().mockResolvedValue(undefined) }),
-    evaluate: vi.fn().mockResolvedValue(undefined),
-    content: vi.fn().mockResolvedValue('<main id="b_content"><ol id="b_results"><li>Weather card</li></ol></main>'),
+    evaluate: vi.fn().mockResolvedValue('<main id="b_content"><ol id="b_results"><li>Weather card</li></ol></main>'),
   };
   return {
     page,
@@ -35,6 +34,7 @@ describe("anonymous Bing browser renderer", () => {
 
   beforeEach(async () => {
     vi.resetModules();
+    vi.spyOn(console, "warn").mockImplementation(() => undefined);
     playwright.launch.mockReset();
     contexts = [];
     browser = {
@@ -53,7 +53,9 @@ describe("anonymous Bing browser renderer", () => {
 
   afterEach(async () => {
     await renderer.closeBingBrowser();
+    vi.unstubAllGlobals();
     vi.useRealTimers();
+    vi.restoreAllMocks();
   });
 
   const options = () => ({ signal: new AbortController().signal, locale: "en-US" });
@@ -72,6 +74,7 @@ describe("anonymous Bing browser renderer", () => {
     expect(contexts[1].page.goto).toHaveBeenCalledWith(
       "https://www.bing.com/search?q=weather+Seattle&setlang=en", expect.any(Object));
     for (const context of contexts) expect(context.close).toHaveBeenCalledTimes(1);
+    expect(console.warn).not.toHaveBeenCalled();
   });
 
   it("serializes rendering so a second request never opens a concurrent page", async () => {
@@ -137,6 +140,9 @@ describe("anonymous Bing browser renderer", () => {
     const failure = expect(queued).rejects.toMatchObject({ name: "TimeoutError" });
     await vi.advanceTimersByTimeAsync(31);
     await failure;
+    expect(console.warn).toHaveBeenCalledExactlyOnceWith("Bing browser rendering failed", {
+      phase: "launch", rejectedResourceHosts: [], pageErrorCount: 0, deadline: true,
+    });
     expect(browser.newContext).toHaveBeenCalledTimes(1);
     loading.resolve({ ok: () => true });
     await first;
@@ -151,11 +157,66 @@ describe("anonymous Bing browser renderer", () => {
     await expect(renderer.renderBingSearch("next", options())).resolves.toContain("Weather card");
   });
 
+  it("waits again when hydration hides the result container after its first visible state", async () => {
+    const context = resultContext();
+    const content = { isConnected: true, getClientRects: () => [{ width: 402, height: 800 }], parentElement: null, style: { visibility: "hidden" } };
+    const results = { isConnected: true, getClientRects: () => [{ width: 402, height: 800 }], parentElement: content, children: [{}], style: {} };
+    const snapshot = '<html><body><main id="b_content"><ol id="b_results"><li>Fresh weather card</li></ol></main></body></html>';
+    vi.stubGlobal("document", {
+      querySelector: (selector: string) => selector === "#b_content" ? content : results,
+      doctype: null, documentElement: { outerHTML: snapshot },
+    });
+    vi.stubGlobal("getComputedStyle", (element: typeof content) => element.style);
+    context.page.evaluate
+      .mockImplementationOnce(async () => undefined)
+      .mockImplementationOnce(async (capture: () => string | null) => capture())
+      .mockImplementationOnce(async () => { content.style.visibility = "visible"; })
+      .mockImplementationOnce(async (capture: () => string | null) => capture());
+    browser.newContext.mockResolvedValueOnce(context);
+    await expect(renderer.renderBingSearch("weather", options())).resolves.toContain("Fresh weather card");
+    expect(context.page.locator).toHaveBeenCalledWith("#b_content");
+    expect(context.page.evaluate).toHaveBeenCalledTimes(4);
+    expect(context.close).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not return hidden transition content when the page never becomes visible again", async () => {
+    const context = resultContext();
+    const waitFor = vi.fn().mockResolvedValueOnce(undefined).mockResolvedValueOnce(undefined)
+      .mockRejectedValue(new Error("Visible results timed out"));
+    context.page.locator.mockReturnValue({ waitFor });
+    context.page.evaluate.mockResolvedValueOnce(undefined).mockResolvedValueOnce(null);
+    browser.newContext.mockResolvedValueOnce(context);
+    await expect(renderer.renderBingSearch("weather", options())).rejects.toThrow("Visible results timed out");
+    expect(context.close).toHaveBeenCalledTimes(1);
+  });
+
   it("can launch again after Chromium fails to start", async () => {
     playwright.launch.mockRejectedValueOnce(new Error("Browser unavailable"));
     await expect(renderer.renderBingSearch("weather", options())).rejects.toThrow("Browser unavailable");
     await expect(renderer.renderBingSearch("next", options())).resolves.toContain("Weather card");
     expect(playwright.launch).toHaveBeenCalledTimes(2);
+  });
+
+  it("logs one failure diagnostic containing only phase, unique hostnames, page error count and deadline state", async () => {
+    const context = resultContext();
+    const loading = deferred<never>();
+    const started = deferred<void>();
+    context.page.goto.mockImplementation(() => { started.resolve(); return loading.promise; });
+    browser.newContext.mockResolvedValueOnce(context);
+    const result = renderer.renderBingSearch("a private query", options());
+    await started.promise;
+    const route = context.route.mock.calls[0][1] as (route: unknown) => Promise<void>;
+    for (const path of ["/first?query=private", "/second?token=private"]) {
+      await route({ request: () => ({ url: () => `https://blocked.example${path}`, resourceType: () => "script" }), abort: vi.fn().mockResolvedValue(undefined) });
+    }
+    const pageError = context.page.on.mock.calls.find(call => call[0] === "pageerror")![1] as () => void;
+    pageError();
+    pageError();
+    loading.reject(new Error("Private upstream URL and response text"));
+    await expect(result).rejects.toThrow("Private upstream URL and response text");
+    expect(console.warn).toHaveBeenCalledExactlyOnceWith("Bing browser rendering failed", {
+      phase: "navigate", rejectedResourceHosts: ["blocked.example"], pageErrorCount: 2, deadline: false,
+    });
   });
 
   it("blocks non-provider and private-address resources during browser execution", async () => {

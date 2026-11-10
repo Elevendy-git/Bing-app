@@ -60,6 +60,15 @@ describe("Bing result endpoint", () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
+  it("does not publish a hidden Bing transition document as a successful result", async () => {
+    vi.stubEnv("BING_SERP_RENDERER", "browser");
+    vi.mocked(renderBingSearch).mockResolvedValue(organic("Unrelated recipes").replace('id="b_content"', 'id="b_content" style="visibility: hidden;"'));
+    const result = await call("/api/bing-serp?query=weather");
+    expect(result.status).toBe(502);
+    expect(result.body.html).toBeUndefined();
+    expect(result.body.error).toBe("Bing results are unavailable");
+  });
+
   it("rejects unrelated organic content even when the upstream title and search field echo the requested query", async () => {
     vi.mocked(fetch).mockImplementation(async () => new Response(organic("Claude by Anthropic: AI assistant"), { headers: { "Content-Type": "text/html" } }));
     const result = await call("/api/bing-serp?query=weather");

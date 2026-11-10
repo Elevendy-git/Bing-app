@@ -42,7 +42,7 @@ describe("Public backend readiness at consumer boundaries", () => {
     expect(onLoadStateChange).toHaveBeenLastCalledWith("loading", 0);
     await settle(wake.resolve);
     expect(fetch).toHaveBeenCalledOnce();
-    await advance(9_999);
+    await advance(21_999);
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     await advance(1);
     expect(screen.getByRole("alert")).toHaveTextContent("Couldn’t load results");

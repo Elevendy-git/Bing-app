@@ -106,7 +106,7 @@ async function sharedBrowser() {
   return pending;
 }
 
-async function routeResource(route: Route) {
+async function routeResource(route: Route, rejectedHosts: Set<string>) {
   const request = route.request();
   try {
     const url = new URL(request.url());
@@ -114,7 +114,10 @@ async function routeResource(route: Route) {
     // Never turn browser execution into an arbitrary URL/public-network proxy.
     const allowed = url.protocol === "https:" && !url.username && !url.password && !url.port
       && RESOURCE_HOSTS.some(host => url.hostname === host || url.hostname.endsWith(`.${host}`));
-    if (!allowed || ["media", "websocket", "eventsource"].includes(request.resourceType())) return await route.abort();
+    if (!allowed || ["media", "websocket", "eventsource"].includes(request.resourceType())) {
+      if (url.hostname) rejectedHosts.add(url.hostname);
+      return await route.abort();
+    }
     await route.continue();
   } catch { await route.abort().catch(() => undefined); }
 }
@@ -132,6 +135,26 @@ async function settleResults(page: Page) {
     observer.observe(content, { subtree: true, childList: true, characterData: true, attributes: true });
     changed();
   }));
+}
+
+/** Visibility can change during hydration; verify it in the same task as serialization. */
+async function visibleSnapshot(page: Page): Promise<string | null> {
+  return page.evaluate(() => {
+    const content = document.querySelector("#b_content");
+    const results = document.querySelector("#b_results");
+    const visible = (element: Element | null) => {
+      if (!element?.isConnected || !Array.from(element.getClientRects()).some(rect => rect.width > 0 && rect.height > 0)) return false;
+      for (let current: Element | null = element; current; current = current.parentElement) {
+        const style = getComputedStyle(current);
+        if (style.display === "none" || style.visibility === "hidden" || style.visibility === "collapse"
+          || style.opacity === "0" || style.contentVisibility === "hidden") return false;
+      }
+      return true;
+    };
+    if (!visible(content) || !visible(results) || !results?.children.length) return null;
+    const doctype = document.doctype ? new XMLSerializer().serializeToString(document.doctype) : "";
+    return `${doctype}\n${document.documentElement.outerHTML}`;
+  });
 }
 
 export interface BingBrowserOptions {
@@ -153,6 +176,9 @@ export async function renderBingSearch(query: string, options: BingBrowserOption
   let release: (() => void) | undefined;
   let context: BrowserContext | undefined;
   let closing: Promise<void> | undefined;
+  let phase: "launch" | "navigate" | "ready" | "snapshot" = "launch";
+  let pageErrorCount = 0;
+  const rejectedResourceHosts = new Set<string>();
   const closeContext = () => closing ??= context?.close().catch(() => closeBingBrowser()) ?? Promise.resolve();
   const abort = () => { void closeContext(); };
   const remaining = () => Math.max(1, deadline - Date.now());
@@ -167,19 +193,35 @@ export async function renderBingSearch(query: string, options: BingBrowserOption
     }), signal, late => late.close());
     signal.addEventListener("abort", abort, { once: true });
     signal.throwIfAborted();
-    await abortable(context.route("**/*", routeResource), signal);
+    await abortable(context.route("**/*", route => routeResource(route, rejectedResourceHosts)), signal);
     const page = await abortable(context.newPage(), signal);
     page.on("popup", popup => { void popup.close().catch(() => undefined); });
+    page.on("pageerror", () => { pageErrorCount++; });
     const url = new URL("https://www.bing.com/search");
     url.searchParams.set("q", query);
     url.searchParams.set("setlang", options.locale.toLowerCase().startsWith("zh") ? "zh-Hans" : "en");
+    phase = "navigate";
     const response = await abortable(page.goto(url.href, { waitUntil: "domcontentloaded", timeout: remaining() }), signal);
     if (!response?.ok() || new URL(page.url()).origin !== url.origin) throw new Error("Bing did not return a result page");
-    await abortable(page.locator("#b_content #b_results").waitFor({ state: "visible", timeout: remaining() }), signal);
-    await abortable(settleResults(page), signal);
-    const html = await abortable(page.content(), signal);
-    if (Buffer.byteLength(html, "utf8") > MAX_HTML_BYTES) throw new Error("Bing document is too large");
-    return html;
+    while (true) {
+      signal.throwIfAborted();
+      phase = "ready";
+      await abortable(page.locator("#b_content").waitFor({ state: "visible", timeout: remaining() }), signal);
+      await abortable(page.locator("#b_content #b_results").waitFor({ state: "visible", timeout: remaining() }), signal);
+      await abortable(settleResults(page), signal);
+      phase = "snapshot";
+      const html = await abortable(visibleSnapshot(page), signal);
+      if (html === null) continue;
+      if (Buffer.byteLength(html, "utf8") > MAX_HTML_BYTES) throw new Error("Bing document is too large");
+      return html;
+    }
+  } catch (error) {
+    // No query, URL, title, exception text, cookies or account state enters logs.
+    console.warn("Bing browser rendering failed", {
+      phase, rejectedResourceHosts: [...rejectedResourceHosts].sort(), pageErrorCount,
+      deadline: timeout.signal.aborted || Date.now() >= deadline,
+    });
+    throw error;
   } finally {
     clearTimeout(timer);
     signal.removeEventListener("abort", abort);
