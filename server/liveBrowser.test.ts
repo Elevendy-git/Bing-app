@@ -21,6 +21,7 @@ function browserFixture() {
   const frame = {};
   const page = Object.assign(new EventEmitter(), {
     goto: vi.fn().mockResolvedValue(undefined), addStyleTag: vi.fn().mockResolvedValue(undefined),
+    waitForLoadState: vi.fn().mockResolvedValue(undefined),
     content: vi.fn().mockResolvedValue('<input id="sb_form_q" value="weather"><main id="b_content"><ol id="b_results"><li class="b_algo"><h2>Weather forecast</h2><p>Current weather information.</p></li></ol></main>'),
     waitForFunction: vi.fn().mockResolvedValue(undefined), title: vi.fn().mockResolvedValue("Weather - Bing"),
     url: vi.fn().mockReturnValue(bingSearchUrl("weather")),
@@ -92,6 +93,17 @@ describe("bounded anonymous live browser transport", () => {
   });
   async function connect() { const connection = await client(url); clients.push(connection); return connection; }
   async function loaded() { const connection = await connect(); connection.send(start); await connection.wait(item => item.type === "ready"); return connection; }
+  function startupRoutes() {
+    const frame = { page: () => fixture.page }; fixture.page.mainFrame.mockReturnValue(frame);
+    const intercept = fixture.context.route.mock.calls[0][1] as (route: unknown) => Promise<void>;
+    return async (value: string) => {
+      const request = { url: () => value, isNavigationRequest: () => true, resourceType: () => "document", frame: () => frame, redirectedFrom: () => null };
+      const route = { request: () => request, abort: vi.fn().mockResolvedValue(undefined), continue: vi.fn().mockResolvedValue(undefined) };
+      await intercept(route);
+      if (route.continue.mock.calls.length) fixture.page.emit("framenavigated", frame);
+      return route;
+    };
+  }
 
   it("rejects missing and untrusted Origins without reserving or starting Chromium", async () => {
     for (const origin of [null, "http://untrusted.example"]) {
@@ -353,5 +365,69 @@ describe("bounded anonymous live browser transport", () => {
     connection.send({ type: "touch", phase: "move", x: 120, y: 120 });
     await new Promise(resolve => setTimeout(resolve, 10));
     expect(fixture.cdp.send.mock.calls.filter(args => args[0] === "Input.dispatchTouchEvent" && args[1].type === "touchMove")).toHaveLength(0);
+  });
+
+  it("allows bounded same-query Bing startup JS redirects without emitting app navigation", async () => {
+    const visible = deferred<void>(); fixture.page.waitForFunction.mockReturnValue(visible.promise);
+    const connection = await connect(); connection.send(start);
+    await waitFor(() => fixture.page.waitForFunction.mock.calls.length);
+    const intercept = startupRoutes();
+    await intercept(bingSearchUrl("weather"));
+    const next = new URL(bingSearchUrl("weather")); next.searchParams.set("rdr", "1"); next.searchParams.set("rdrig", "startup-id");
+    const redirected = await intercept(next.href);
+    expect(redirected.continue).toHaveBeenCalled(); expect(redirected.abort).not.toHaveBeenCalled();
+    expect(connection.messages.some(item => item.type === "navigate")).toBe(false);
+    const differentQuery = await intercept(bingSearchUrl("sports")); expect(differentQuery.abort).toHaveBeenCalled();
+    await connection.wait(item => item.type === "navigate" && item.url.includes("q=sports"));
+    const external = await intercept("https://example.com/"); expect(external.abort).toHaveBeenCalled();
+    await connection.wait(item => item.type === "navigate" && item.url === "https://example.com/");
+    visible.resolve(); await connection.wait(item => item.type === "ready");
+  });
+
+  it("rejects market-changing startup redirects and fails a fourth same-query redirect", async () => {
+    const visible = deferred<void>(); fixture.page.waitForFunction.mockReturnValue(visible.promise);
+    const connection = await connect(); connection.send(start);
+    await waitFor(() => fixture.page.waitForFunction.mock.calls.length);
+    const intercept = startupRoutes(); await intercept(bingSearchUrl("weather"));
+    const wrongMarket = new URL(bingSearchUrl("weather")); wrongMarket.searchParams.set("mkt", "zh-CN");
+    const changed = await intercept(wrongMarket.href); expect(changed.abort).toHaveBeenCalled();
+    for (let index = 0; index < 3; index++) {
+      const next = new URL(bingSearchUrl("weather")); next.searchParams.set("rdr", String(index));
+      expect((await intercept(next.href)).continue).toHaveBeenCalled();
+    }
+    const tooMany = new URL(bingSearchUrl("weather")); tooMany.searchParams.set("rdr", "fourth");
+    expect((await intercept(tooMany.href)).abort).toHaveBeenCalled();
+    await connection.wait(item => item.type === "error" && item.code === "unavailable");
+    visible.resolve();
+    expect(connection.messages.some(item => item.type === "navigate" && item.url.includes("fourth"))).toBe(false);
+  });
+
+  it("survives startup navigation interruption and reapplies presentation CSS on the final document", async () => {
+    let intercept: ReturnType<typeof startupRoutes>;
+    fixture.page.goto.mockImplementation(async initialUrl => {
+      intercept = startupRoutes(); await intercept(initialUrl);
+      const next = new URL(initialUrl); next.searchParams.set("rdr", "first"); await intercept(next.href);
+      throw new Error("net::ERR_ABORTED");
+    });
+    fixture.page.waitForFunction.mockRejectedValueOnce(new Error("Execution context was destroyed, most likely because of a navigation"));
+    fixture.page.addStyleTag.mockImplementationOnce(async () => {
+      const next = new URL(bingSearchUrl("weather")); next.searchParams.set("rdr", "second"); await intercept(next.href);
+    });
+    const connection = await loaded();
+    expect(fixture.page.goto).toHaveBeenCalledTimes(1); expect(fixture.page.addStyleTag).toHaveBeenCalledTimes(2);
+    expect(connection.messages.some(item => item.type === "navigate")).toBe(false);
+    expect(fixture.cdp.send.mock.calls.filter(args => args[0] === "Page.startScreencast")).toHaveLength(1);
+  });
+
+  it("clears the queue timer when the slot is owned, allowing a separate cold browser launch", async () => {
+    await transport.close();
+    transport = attachLiveBrowserServer(server, { allowedOrigins: ["http://localhost:5174"], acquireTimeoutMs: 25 });
+    const launching = deferred<{ browser: typeof fixture.browser; release: typeof fixture.release }>();
+    pool.acquire.mockImplementation((_signal, acquired) => { acquired?.(); return launching.promise; });
+    const connection = await connect(); connection.send(start); await waitFor(() => pool.acquire.mock.calls.length);
+    await new Promise(resolve => setTimeout(resolve, 50));
+    expect(connection.messages.some(item => item.type === "error")).toBe(false);
+    launching.resolve({ browser: fixture.browser, release: fixture.release });
+    await connection.wait(item => item.type === "ready");
   });
 });

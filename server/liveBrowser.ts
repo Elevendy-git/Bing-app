@@ -9,7 +9,7 @@ import { MOBILE_USER_AGENT } from "./http";
 import { publicWebUrl } from "./webPageFetch";
 import { assertBingSerpQuery } from "./bingSerpValidation";
 import { resultDestination } from "../src/services/webNavigation";
-import { bingSearchUrl } from "../src/services/bingPage";
+import { BING_MARKET, bingSearchUrl } from "../src/services/bingPage";
 import {
   LIVE_BROWSER_FRAME_HEADER_BYTES, LIVE_BROWSER_FRAME_MAGIC, LIVE_BROWSER_PATH,
   type LiveBrowserClientMessage, type LiveBrowserErrorCode, type LiveBrowserServerMessage,
@@ -25,6 +25,13 @@ const MAX_UPSTREAM_REQUESTS = 1000;
 const MAX_QUEUE = 40;
 const MAX_MESSAGE_BUCKET = 240;
 const FRAME_INTERVAL_MS = 50; // A bandwidth cap, not an iOS animation timing.
+const MAX_STARTUP_NAVIGATIONS = 3;
+const PRESENTATION_CSS = `
+  #sb_form,#id_h,#est_switch_keepH,#est_switch,#b_skip_to_content,#b_a11y_feedback{display:none!important}
+  #b_header{position:static!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important}
+  #ScopeRow,.b_scopebar{position:static!important;top:auto!important;margin-top:0!important}
+  #b_content{padding-top:0!important}
+`;
 const KEY_NAMES = new Set(["Enter", "Backspace", "Delete", "Tab", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Escape", "Home", "End", "PageUp", "PageDown"]);
 const ERROR_MESSAGES: Record<LiveBrowserErrorCode, string> = {
   busy: "The live browser is in use. Please try again shortly.",
@@ -66,7 +73,10 @@ interface Session {
   query: string;
   initialUrl: string;
   initialRequestSeen: boolean;
-  initialLoading: boolean;
+  startupNavigations: number;
+  documentVersion: number;
+  navigationPending: boolean;
+  startupDeadline?: number;
   initialTimer?: ReturnType<typeof setTimeout>;
   acquireTimer?: ReturnType<typeof setTimeout>;
   idleTimer?: ReturnType<typeof setTimeout>;
@@ -110,6 +120,20 @@ function rejectUpgrade(socket: Duplex, status: number, message: string) {
 
 function validQuery(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0 && value.length <= 200 && !/[\u0000-\u001f\u007f]/.test(value);
+}
+const queryKey = (value: string) => value.normalize("NFKC").toLocaleLowerCase().replace(/\s+/gu, " ").trim();
+function sameStartupSearch(value: string, query: string) {
+  try {
+    const url = new URL(value);
+    return url.origin === "https://www.bing.com" && url.pathname === "/search" && !url.username && !url.password
+      && url.searchParams.getAll("q").length === 1 && queryKey(url.searchParams.get("q") ?? "") === queryKey(query)
+      && ["setlang", "mkt"].every(key => url.searchParams.getAll(key).length === 1 && url.searchParams.get(key) === BING_MARKET)
+      && url.searchParams.getAll("cc").length === 1 && url.searchParams.get("cc") === "US";
+  } catch { return false; }
+}
+function navigationInterrupted(error: unknown) {
+  const message = error instanceof Error ? error.message : "";
+  return /Execution context was destroyed|Cannot find context|net::ERR_ABORTED|interrupted by another navigation|page is navigating|different document/iu.test(message);
 }
 function finite(value: unknown): value is number { return typeof value === "number" && Number.isFinite(value); }
 function integer(value: unknown, min: number, max: number): value is number { return finite(value) && Number.isInteger(value) && value >= min && value <= max; }
@@ -241,9 +265,15 @@ export function attachLiveBrowserServer(server: Pick<EventEmitter, "on" | "off">
         const frame = request.frame(), requestPage = frame.page();
         if (frame === requestPage.mainFrame()) {
           const first = requestPage === session.page && !session.initialRequestSeen && request.url() === session.initialUrl;
-          const redirect = requestPage === session.page && session.initialLoading && Boolean(request.redirectedFrom()) && resourceAllowed(request.url());
+          const startup = requestPage === session.page && !session.ready && sameStartupSearch(request.url(), session.query);
           if (first) session.initialRequestSeen = true;
-          else if (!redirect) { navigate(session, request.url()); return await route.abort(); }
+          else if (startup) {
+            if (session.startupNavigations >= MAX_STARTUP_NAVIGATIONS || Date.now() >= (session.startupDeadline ?? 0)) {
+              fail(session, "unavailable"); return await route.abort();
+            }
+            session.startupNavigations++;
+          } else { navigate(session, request.url()); return await route.abort(); }
+          session.documentVersion++; session.navigationPending = true;
         }
       }
       if (!resourceAllowed(request.url()) || ["media", "websocket", "eventsource"].includes(request.resourceType())) return await route.abort();
@@ -331,7 +361,7 @@ export function attachLiveBrowserServer(server: Pick<EventEmitter, "on" | "off">
   };
   const setup = async (session: Session) => {
     session.acquireTimer = setTimeout(() => { if (!session.release) { session.controller.abort(); fail(session, "busy"); } }, acquireTimeout);
-    const lease = await acquireBingBrowser(session.controller.signal);
+    const lease = await acquireBingBrowser(session.controller.signal, () => clearTimeout(session.acquireTimer));
     clearTimeout(session.acquireTimer); session.release = lease.release;
     if (session.closed) return;
     session.context = await lease.browser.newContext({
@@ -354,6 +384,9 @@ export function attachLiveBrowserServer(server: Pick<EventEmitter, "on" | "off">
       }
     });
     session.page.on("crash", () => fail(session, "unavailable"));
+    session.page.on("framenavigated", frame => {
+      if (frame === session.page?.mainFrame()) session.navigationPending = false;
+    });
     session.page.on("download", download => { void download.cancel().catch(() => undefined); });
     session.cdp = await session.context.newCDPSession(session.page);
     if (session.closed) return;
@@ -383,37 +416,49 @@ export function attachLiveBrowserServer(server: Pick<EventEmitter, "on" | "off">
     if (session.closed) return;
     send(session, { type: "status", state: "loading" });
     const deadline = Date.now() + readinessTimeout;
-    await session.page.goto(session.initialUrl, { waitUntil: "domcontentloaded", timeout: readinessTimeout });
-    session.initialLoading = false;
-    if (session.closed) return;
-    // The app owns the search field; retain Bing's category row and live scripts.
-    await session.page.addStyleTag({ content: `
-      #sb_form,#id_h,#est_switch_keepH,#est_switch,#b_skip_to_content,#b_a11y_feedback{display:none!important}
-      #b_header{position:static!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important}
-      #ScopeRow,.b_scopebar{position:static!important;top:auto!important;margin-top:0!important}
-      #b_content{padding-top:0!important}
-    ` });
-    await session.page.waitForFunction(expected => {
-      const content = document.querySelector("#b_content"), results = document.querySelector("#b_results");
-      const visible = (element: Element | null) => {
-        if (!element?.isConnected || !Array.from(element.getClientRects()).some(rect => rect.width > 0 && rect.height > 0)) return false;
-        for (let current: Element | null = element; current; current = current.parentElement) {
-          const style = getComputedStyle(current);
-          if (style.display === "none" || style.visibility === "hidden" || style.visibility === "collapse" || style.opacity === "0" || style.contentVisibility === "hidden") return false;
+    session.startupDeadline = deadline;
+    try { await session.page.goto(session.initialUrl, { waitUntil: "domcontentloaded", timeout: readinessTimeout }); }
+    catch (error) { if (session.closed) return; if (!session.startupNavigations || !navigationInterrupted(error)) throw error; }
+    let title = "";
+    for (;;) {
+      if (session.closed) return;
+      const remaining = deadline - Date.now();
+      if (remaining <= 0) throw new Error("Unavailable result document");
+      const version = session.documentVersion;
+      try {
+        await session.page.waitForLoadState("domcontentloaded", { timeout: remaining });
+        await session.page.waitForFunction(expected => {
+          const content = document.querySelector("#b_content"), results = document.querySelector("#b_results");
+          const visible = (element: Element | null) => {
+            if (!element?.isConnected || !Array.from(element.getClientRects()).some(rect => rect.width > 0 && rect.height > 0)) return false;
+            for (let current: Element | null = element; current; current = current.parentElement) {
+              const style = getComputedStyle(current);
+              if (style.display === "none" || style.visibility === "hidden" || style.visibility === "collapse" || style.opacity === "0" || style.contentVisibility === "hidden") return false;
+            }
+            return true;
+          };
+          const input = document.querySelector<HTMLInputElement>("#sb_form_q");
+          if (input && input.value.trim().toLocaleLowerCase() !== expected.trim().toLocaleLowerCase()) return false;
+          return visible(content) && visible(results) && Array.from(results!.querySelectorAll(".b_algo,.b_ans,.b_no,.b_entityTP")).some(element => visible(element) && (element.textContent?.trim().length ?? 0) > 10);
+        }, session.query, { timeout: Math.max(1, deadline - Date.now()), polling: 150 });
+        // Install on the final document; an allowed startup redirect discards CSS
+        // from the previous page. Keep provider scripts/component trees intact.
+        await session.page.addStyleTag({ content: PRESENTATION_CSS });
+        title = (await session.page.title()).slice(0, 300);
+        const source = await session.page.content();
+        if (session.closed) return;
+        if (Buffer.byteLength(source, "utf8") > 4 * 1024 * 1024 || Date.now() > deadline) throw new Error("Unavailable result document");
+        if (version !== session.documentVersion || session.navigationPending) {
+          await new Promise(resolve => setTimeout(resolve, 20)); continue;
         }
-        return true;
-      };
-      const input = document.querySelector<HTMLInputElement>("#sb_form_q");
-      if (input && input.value.trim().toLocaleLowerCase() !== expected.trim().toLocaleLowerCase()) return false;
-      return visible(content) && visible(results) && Array.from(results!.querySelectorAll(".b_algo,.b_ans,.b_no,.b_entityTP")).some(element => visible(element) && (element.textContent?.trim().length ?? 0) > 10);
-    }, session.query, { timeout: Math.max(1, deadline - Date.now()), polling: 150 });
-    if (session.closed) return;
-    const title = (await session.page.title()).slice(0, 300);
-    const source = await session.page.content();
-    if (session.closed) return;
-    if (Buffer.byteLength(source, "utf8") > 4 * 1024 * 1024 || Date.now() > deadline) throw new Error("Unavailable result document");
-    // Echoed search text alone cannot legitimize unrelated cloud-IP results.
-    assertBingSerpQuery(source, session.query);
+        // Echoed search text alone cannot legitimize unrelated cloud-IP results.
+        assertBingSerpQuery(source, session.query);
+        break;
+      } catch (error) {
+        if (session.closed) return;
+        if (!navigationInterrupted(error) || !session.startupNavigations) throw error;
+      }
+    }
     session.ready = true;
     send(session, { type: "ready", width: session.width, height: session.height,
       sourceUrl: session.initialUrl, title,
@@ -432,7 +477,8 @@ export function attachLiveBrowserServer(server: Pick<EventEmitter, "on" | "off">
     const session: Session = {
       ws, closed: false, ready: false, paused: false, streaming: false, resizing: false,
       controller: new AbortController(), width: 402, height: 668,
-      query: "", initialUrl: "", initialRequestSeen: false, initialLoading: true, alive: true,
+      query: "", initialUrl: "", initialRequestSeen: false, startupNavigations: 0,
+      documentVersion: 0, navigationPending: false, alive: true,
       touched: false, inputEpoch: 0, queue: Promise.resolve(), queued: 0, frameSequence: 0, lastFrameAt: 0,
       bytes: 0, upstreamBytes: 0, upstreamRequests: 0, messageTokens: MAX_MESSAGE_BUCKET, messageRefillAt: Date.now(),
     };

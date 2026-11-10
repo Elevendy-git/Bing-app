@@ -108,9 +108,10 @@ async function sharedBrowser() {
 }
 
 /** Live sessions and snapshots share one browser/page budget on the free host. */
-export async function acquireBingBrowser(signal: AbortSignal): Promise<{ browser: Browser; release: () => void }> {
+export async function acquireBingBrowser(signal: AbortSignal, onSlotAcquired?: () => void): Promise<{ browser: Browser; release: () => void }> {
   const release = await acquireSlot(signal);
   try {
+    onSlotAcquired?.();
     signal.throwIfAborted();
     const instance = await abortable(sharedBrowser(), signal);
     signal.throwIfAborted();

@@ -9,19 +9,25 @@ export function webUrl(value: string, base?: string): string | null {
   } catch { return null; }
 }
 
-/** Bing result links commonly encode their real destination in a /ck/a redirect. */
+/** Decode the two known Bing result wrappers; unknown redirects stay resolvable URLs. */
 export function resultDestination(value: string): string | null {
   const valid = webUrl(value);
   if (!valid) return null;
   const url = new URL(valid);
-  if ((url.hostname === "www.bing.com" || url.hostname === "bing.com") && url.pathname === "/ck/a") {
-    const encoded = url.searchParams.get("u");
-    if (encoded?.startsWith("a1")) {
-      try {
-        const bytes = atob(encoded.slice(2).replace(/-/g, "+").replace(/_/g, "/"));
-        return webUrl(new TextDecoder().decode(Uint8Array.from(bytes, c => c.charCodeAt(0)))) ?? valid;
-      } catch { /* A nonstandard redirect can still be resolved by the server. */ }
+  if (url.hostname === "www.bing.com" || url.hostname === "bing.com") {
+    let payload: string | undefined;
+    if (url.pathname === "/ck/a") {
+      const encoded = url.searchParams.get("u");
+      if (encoded?.startsWith("a1")) payload = encoded.slice(2);
+    } else if (url.protocol === "https:" && url.pathname === "/fd/ls/GLinkPing.aspx") {
+      const encoded = url.searchParams.getAll("redir");
+      if (encoded.length === 1 && /^[A-Za-z0-9_-]+={0,2}$/.test(encoded[0])) payload = encoded[0];
     }
+    try {
+      if (payload === undefined) return valid;
+      const bytes = atob(payload.replace(/-/g, "+").replace(/_/g, "/"));
+      return webUrl(new TextDecoder("utf-8", { fatal: true }).decode(Uint8Array.from(bytes, c => c.charCodeAt(0)))) ?? valid;
+    } catch { /* An invalid wrapper can still be resolved by the existing server path. */ }
   }
   return valid;
 }
