@@ -18,7 +18,7 @@ services:
       - key: PLAYWRIGHT_BROWSERS_PATH
         value: "0"
       - key: BING_SERP_RENDERER
-        value: browser
+        value: http
       - key: API_ALLOWED_ORIGINS
         value: https://elevendy-git.github.io,http://localhost:5174,http://127.0.0.1:5174
       - key: API_RATE_LIMIT_REQUESTS

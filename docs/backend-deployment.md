@@ -18,6 +18,13 @@ service; target the existing replacement for future deploys. It was created
 directly in Render, so do not apply a new Blueprint or create a duplicate service
 as part of an ordinary code update.
 
+The live service currently sets `BING_SERP_RENDERER=http`, matching `render.yaml`.
+Browser rendering produced a complete weather card in local macOS verification,
+but anonymous Render verification did not reliably produce usable results within
+the 18-second budget. Rich-card rendering is not verified as reliable in the
+cloud. The browser remains installed by the build for optional testing; it is not
+the active production transport.
+
 ## Run locally
 
 ```sh
@@ -44,7 +51,7 @@ It does not load Vite middleware or the React workbench at runtime.
    `npm run start:server`, and health check `/health`. If the service-creation API
    cannot set an HTTP health check, configure `/health` in its Render settings.
    Choose automatic deployment explicitly for a directly created service if desired.
-3. Set `NODE_VERSION=24`, `PLAYWRIGHT_BROWSERS_PATH=0`, `BING_SERP_RENDERER=browser`
+3. Set `NODE_VERSION=24`, `PLAYWRIGHT_BROWSERS_PATH=0`, `BING_SERP_RENDERER=http`
    and the origins below. Render provides `PORT`.
 4. Once the service is healthy, set `VITE_API_BASE_URL` to its HTTPS origin when
    building the GitHub Pages workbench, currently `https://bing-app-backend.onrender.com`.
@@ -60,7 +67,7 @@ It does not load Vite middleware or the React workbench at runtime.
 | `API_RATE_LIMIT_REQUESTS` | `120` | Requests per minute per connection IP; accepted range 1–1000. |
 | `API_MAX_CONCURRENT` | `8` | Maximum active API requests per server process; accepted range 1–32. |
 | `PLAYWRIGHT_BROWSERS_PATH` | `0` in Render | Install and load Chromium from the application's Playwright package directory. Required at build and runtime. |
-| `BING_SERP_RENDERER` | `browser` | Render Bing in anonymous Chromium. Set `http` explicitly for the lower-resource HTML-fetch fallback. |
+| `BING_SERP_RENDERER` | `browser` in code; `http` in Render | The live override selects the lower-resource HTML-fetch adapter. Optional `browser` mode renders Bing in anonymous Chromium; cloud reliability remains unverified. |
 | `MSN_FEED_API_KEY` | Existing anonymous MSN public client identifier | Optional server-only override for the fixed MSN provider adapter. |
 
 CORS origins contain only scheme, host and optional port. The Pages origin is
@@ -83,7 +90,7 @@ and do not store queries, account identities, cookies or history.
 | `GET /health` | None | `{ "status": "ok" }` independent of upstream availability. |
 | `GET /api/search-suggestions` | `query` | Bing autocomplete's `[query, suggestions]` JSON. |
 | `GET /api/msn-feed` | Optional opaque `cursor` | Existing MSN public feed JSON and continuation cursor. |
-| `GET /api/bing-serp` | `query` | Sanitized browser-rendered Bing mobile results document and page metadata. |
+| `GET /api/bing-serp` | `query` | Sanitized Bing mobile results document and page metadata, using the configured renderer. |
 | `GET /api/web-page` | `url` | Sanitized public article/page document and page metadata. |
 
 The service does not expose `/api/rewards`, account tokens, Microsoft cookies,
@@ -94,16 +101,19 @@ and private addresses; every redirect is checked and DNS connections are pinned.
 Upstream body limits remain enforced, and scripts are removed from page previews.
 The app emits no request or query logs.
 
-SERP uses anonymous Chromium by default, capturing rendered Bing mobile markup,
-including available rich cards such as weather. Each search gets an isolated
-browser context: no user's Bing cookies, account tokens or browser profile are
-copied. One search page runs at a time per server process, and the browser is
-released after an idle period. `BING_SERP_RENDERER=http` explicitly selects the
-lower-resource fetch adapter; browser failures do not silently switch transports.
+The code defaults to anonymous Chromium when `BING_SERP_RENDERER` is unset, while
+the live Render service explicitly selects `http`. Optional browser mode captures
+rendered Bing mobile markup and has shown a complete weather card locally; that
+result has not been reproduced reliably in Render's anonymous environment. In
+browser mode, each search gets an isolated context: no user's Bing cookies,
+account tokens or browser profile are copied. One search page runs at a time per
+server process, and the browser is released after an idle period. Browser failures
+do not silently switch to HTTP; changing transports requires explicit configuration.
 
-The response is an HTML snapshot, not a fully interactive Bing browser. Remote
-scripts are removed, so captured weather and other rich cards can be displayed
-without preserving script-driven controls such as forecast switching. Ordinary
+Both transports return an HTML snapshot, not a fully interactive Bing browser.
+Remote scripts are removed; when a rich card is captured, script-driven controls
+such as forecast switching are not preserved. HTTP mode can omit cards that need
+browser execution, so the live service does not guarantee a weather card. Ordinary
 result links still navigate through the App's IAB flow. Content, ranking and
 location can differ from a user's signed-in Bing page; regional results reflect
 the anonymous backend network, not the user's device location.
