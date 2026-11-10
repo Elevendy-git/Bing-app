@@ -1,12 +1,15 @@
+# Mirrors the existing Bing app / Production service; do not create a duplicate.
+# Project membership is managed in Render. See docs/backend-deployment.md.
 services:
   - type: web
-    name: bing-app-api
+    name: bing-app-backend
     runtime: node
+    region: singapore
     plan: free
     buildCommand: npm ci --include=dev && npm run build:server
     startCommand: npm run start:server
     healthCheckPath: /health
-    autoDeployTrigger: "off"
+    autoDeployTrigger: commit
     envVars:
       - key: NODE_VERSION
         value: "24"

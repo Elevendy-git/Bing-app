@@ -3,10 +3,20 @@
 The workbench can remain on GitHub Pages while the anonymous data adapters run as
 a separate Node 24 service. The public `Elevendy-git/Bing-app` repository contains
 the source, while GitHub Pages serves only the workbench's built files.
-`render.yaml` defines a free Render web service. Its Blueprint configuration
-defaults to manual deployment; a service created directly in Render can deliberately
-enable automatic backend deployment. The frontend Pages workflow publishes after
-its CI checks pass.
+`render.yaml` mirrors the free Node 24 web service in Singapore, with automatic
+deployment on commits to its linked branch. The frontend Pages workflow publishes
+after its CI checks pass.
+
+## Current Render target
+
+Use workspace **Eleven**, project [Bing app](https://dashboard.render.com/project/prj-dbpco9m1egvs73bp0hog),
+environment **Production** (`evm-dbpco9m1egvs73bp0hp0`), and service
+[bing-app-backend](https://dashboard.render.com/web/srv-dbpcr2nf3r2c73fq49lg)
+(`srv-dbpcr2nf3r2c73fq49lg`). Its public origin is
+`https://bing-app-backend.onrender.com`. This replaces the previous `bing-app-api`
+service; target the existing replacement for future deploys. It was created
+directly in Render, so do not apply a new Blueprint or create a duplicate service
+as part of an ordinary code update.
 
 ## Run locally
 
@@ -32,7 +42,7 @@ Vite middleware or the React workbench at runtime.
    Choose automatic deployment explicitly for a directly created service if desired.
 3. Set `NODE_VERSION=24` and the origins below. Render provides `PORT`.
 4. Once the service is healthy, set `VITE_API_BASE_URL` to its HTTPS origin when
-   building the GitHub Pages workbench, for example `https://bing-app-api.onrender.com`.
+   building the GitHub Pages workbench, currently `https://bing-app-backend.onrender.com`.
    Use the actual service URL issued by Render, then rebuild and publish Pages.
 5. Check `/health`, then exercise suggestions, news, SERP and article navigation
    from the published workbench. The provider may reject a request or serve a
