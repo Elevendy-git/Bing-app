@@ -1,10 +1,16 @@
-import { Fragment, useCallback, useId, useRef, useState, type ReactNode } from "react";
+import { Fragment, useCallback, useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { ArrowCounterclockwise20Regular, Phone16Regular, Settings20Regular } from "@fluentui/react-icons";
 import { PhonePreview } from "./PhonePreview";
 import { PreviewActivityProvider } from "./PreviewActivity";
 import { PreviewKeyScreens } from "./PreviewKeyScreens";
 import { PreviewLibrary } from "./PreviewLibrary";
 import { PreviewSettings } from "./PreviewSettings";
-import { PreviewToolbar } from "./PreviewToolbar";
+import { PreviewWorkbenchBrand } from "./PreviewWorkbenchBrand";
+import { PREVIEW_DEVICE } from "./previewDevice";
+import {
+  PREVIEW_PROTOTYPE_PAGES, PreviewPrototypeNavigationProvider, PreviewPrototypeNavigationTarget,
+  usePreviewPrototypeNavigation,
+} from "./PreviewPrototypeNavigation";
 import type { PreviewAppearance, PreviewComponentGroup, PreviewScreen, PreviewView } from "./previewTypes";
 import { usePreviewTheme } from "./usePreviewTheme";
 import styles from "./PreviewWorkbench.module.css";
@@ -18,8 +24,14 @@ export interface PreviewWorkbenchProps {
   componentGroups?: readonly PreviewComponentGroup[];
 }
 
-/** Bing-styled workspace for Library, Key screens, and Prototype previews. */
+/** Shared workspace for the live Prototype, Key screens and component Library. */
 export function PreviewWorkbench({
+  ...props
+}: PreviewWorkbenchProps) {
+  return <PreviewPrototypeNavigationProvider><WorkbenchContent {...props} /></PreviewPrototypeNavigationProvider>;
+}
+
+function WorkbenchContent({
   children,
   title,
   defaultTheme = "system",
@@ -35,41 +47,67 @@ export function PreviewWorkbench({
   const settingsButtonRef = useRef<HTMLButtonElement>(null);
   const settingsId = useId();
   const theme = usePreviewTheme(appearance);
+  const { currentPage, requestNavigation, available } = usePreviewPrototypeNavigation();
+  const pageTitle = PREVIEW_PROTOTYPE_PAGES.find(item => item.id === currentPage)?.label
+    ?? (currentPage === "serp" ? "Search results" : currentPage === "settings" ? "Settings"
+      : currentPage === "voice" || currentPage === "voice-language" ? "Voice search" : title === "Homepage" ? "Home" : title);
+  const inspectorTitle = view === "prototype" ? pageTitle : view === "keyscreens" ? "Key screens" : "Library";
+  const resetPrototype = () => setPrototypeRevision(revision => revision + 1);
   const closeSettings = useCallback(() => {
     setSettingsOpen(false);
-    settingsButtonRef.current?.focus();
   }, []);
+  useEffect(() => {
+    if (!settingsOpen) settingsButtonRef.current?.focus();
+  }, [settingsOpen]);
 
   return (
-    <div className={styles.root} data-product="consumer" data-theme={theme}>
+    <div className={styles.root} data-product="consumer" data-theme={theme} data-view={view}>
+      {view === "prototype" && <aside className={styles.sidebar} aria-label="Prototype navigation">
+        <PreviewWorkbenchBrand />
+        <div className={styles.sidebarBody}>
+          <h2 className={styles.sidebarHeading}>Prototype</h2>
+          <nav className={styles.navigationTree} aria-label="Prototype pages">
+            {PREVIEW_PROTOTYPE_PAGES.map(item => <button key={item.id} type="button" className={styles.navigationItem}
+              aria-label={`Open ${item.label} page`}
+              aria-current={currentPage === item.id || (!currentPage && item.id === "home") ? "page" : undefined}
+              disabled={!available} onClick={() => requestNavigation(item.id)}>{item.label}</button>)}
+          </nav>
+        </div>
+      </aside>}
       <div className={styles.previewArea}>
-        <PreviewToolbar
-          view={view}
-          onResetPrototype={() => setPrototypeRevision(revision => revision + 1)}
-          settingsOpen={settingsOpen} settingsId={settingsId} settingsButtonRef={settingsButtonRef}
-          onSettingsToggle={() => {
-            if (settingsOpen) closeSettings();
-            else {
+        <div className={styles.collapsedToolbar} hidden={settingsOpen}>
+          {view === "prototype" && <button type="button" className={styles.iconButton} aria-label="Reset prototype"
+            title="Clear prototype activity and return to Homepage" onClick={resetPrototype}>
+            <ArrowCounterclockwise20Regular aria-hidden="true" />
+          </button>}
+          <button ref={settingsButtonRef} type="button" className={styles.iconButton} aria-label="Open settings"
+            aria-expanded={settingsOpen} aria-controls={settingsId} onClick={() => {
               setFocusSettings(true);
               setSettingsOpen(true);
-            }
-          }}
-        />
+            }}><Settings20Regular aria-hidden="true" /></button>
+        </div>
         <div className={styles.viewContent} hidden={view !== "prototype"}>
           <PhonePreview theme={theme}>
             <PreviewActivityProvider value={view === "prototype"}>
-              <Fragment key={prototypeRevision}>{children}</Fragment>
+              <PreviewPrototypeNavigationTarget>
+                <Fragment key={prototypeRevision}>{children}</Fragment>
+              </PreviewPrototypeNavigationTarget>
             </PreviewActivityProvider>
           </PhonePreview>
+          <div className={styles.deviceCaption}><Phone16Regular aria-hidden="true" />
+            <span>{PREVIEW_DEVICE.name}<span className={styles.captionDot}>·</span>{pageTitle}</span>
+          </div>
         </div>
         {view === "keyscreens" && (
-          <PreviewKeyScreens theme={theme} screens={screens ?? [{ id: "current", title, content: children }]} />
+          <PreviewKeyScreens theme={theme} screens={screens ?? [{ id: "current", title, content: children }]}
+            navigationHeader={<PreviewWorkbenchBrand />} />
         )}
-        {view === "library" && <PreviewLibrary theme={theme} groups={componentGroups} />}
+        {view === "library" && <PreviewLibrary theme={theme} groups={componentGroups} navigationHeader={<PreviewWorkbenchBrand />} />}
       </div>
       {settingsOpen && (
         <PreviewSettings
           id={settingsId} view={view} appearance={appearance}
+          title={inspectorTitle} onResetPrototype={resetPrototype}
           focusOnMount={focusSettings} onViewChange={setView} onAppearanceChange={setAppearance} onClose={closeSettings}
         />
       )}

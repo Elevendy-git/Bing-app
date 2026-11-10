@@ -14,6 +14,7 @@ import { VoiceLanguageSheet } from "./VoiceSearch/VoiceLanguageSheet";
 import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
 import { useVoiceAudioMeter } from "../hooks/useVoiceAudioMeter";
 import { usePreviewActivity } from "../components/PreviewWorkbench/PreviewActivity";
+import { usePublishPreviewPrototypeNavigation, type PreviewPrototypePage } from "../components/PreviewWorkbench/PreviewPrototypeNavigation";
 import { Profile, PROFILE_ACCOUNTS, profileAvatar, type ProfileAccount, type ProfileAuthentication } from "./Profile";
 import type { RewardsSnapshot } from "../auth/rewards";
 import { bookmarkSearchEntries, recentBookmarkPreview } from "./activity/bookmarks";
@@ -96,6 +97,7 @@ export function BingAppPrototype({ initialPage = "home", account = PROFILE_ACCOU
   const voiceSubmitted = useRef(false);
   const voiceOrigin = useRef<"home" | "serp">("home");
   const voiceTrigger = useRef<HTMLElement | null>(null);
+  const restoreVoiceFocus = useRef(true);
   const voiceFrame = useRef<{ state: VoiceSearchState; transcript: string }>({ state: "listening", transcript: "" });
   const searchRef = useRef<HTMLDivElement>(null);
   const speech = useSpeechRecognition({ enabled: previewActive, language: voiceLanguage, onComplete: text => {
@@ -108,7 +110,7 @@ export function BingAppPrototype({ initialPage = "home", account = PROFILE_ACCOU
     submitSearch(text, voiceOrigin.current === "serp" ? "voice-serp" : "voice");
   } });
   const voicePresence = useOverlayPresence(voiceOpen, () => {
-    if (!previewActive) return;
+    if (!previewActive || !restoreVoiceFocus.current) return;
     if (voiceSubmitted.current) serpRef.current?.querySelector<HTMLInputElement>('[aria-label="Edit search query"]')?.focus({ preventScroll: true });
     else {
       const fallback = (page === "search" ? searchRef : page === "serp" ? serpRef : homeRef).current
@@ -129,6 +131,7 @@ export function BingAppPrototype({ initialPage = "home", account = PROFILE_ACCOU
   };
   const openVoice = () => {
     if (!previewActive || voicePresence.presented) return;
+    restoreVoiceFocus.current = true;
     voiceOrigin.current = page === "serp" || (page === "search" && searchReturnPage === "serp") ? "serp" : "home";
     voiceTrigger.current = page === "search"
       ? searchRef.current?.querySelector<HTMLInputElement>('[aria-label="Search query"]') ?? null
@@ -230,6 +233,44 @@ export function BingAppPrototype({ initialPage = "home", account = PROFILE_ACCOU
     setDetailOrigin(origin);
     setPage(destination);
   };
+  const openProfile = () => { setDetailChromeRetained(true); setPage("profile"); };
+  const openTabs = () => { setDetailChromeRetained(true); setPage("tabs"); };
+  const navigateFromWorkbench = (destination: PreviewPrototypePage) => {
+    if (!previewActive) return;
+    // A workbench command replaces the pending task, without resetting activity
+    // or letting an outgoing voice callback refocus the previous screen.
+    restoreVoiceFocus.current = false;
+    voiceTrigger.current = null;
+    closeVoice();
+    cancelAnimationFrame(searchFocusFrame.current);
+    tabFocusRequested.current = false;
+    if (destination === page) return;
+    if (destination === "search") {
+      if (page === "serp") editSearch();
+      else if (page === "recent" || page === "tabs" || page === "history") openNewTab(page);
+      else openSearch();
+      return;
+    }
+    setSearchOrigin(null);
+    setSearchExitOrigin(null);
+    setSearchDraft("");
+    setSerpExitToRight(false);
+    const fromBrowser = page === "serp" || (page === "search" && searchReturnPage === "serp");
+    const fromRecent = page === "recent" || page === "tabs"
+      || ((page === "history" || page === "bookmark") && detailOrigin === "recent");
+    const parentOrigin = fromBrowser ? "serp" : fromRecent ? recentOrigin : "home";
+    if (destination === "home") navigate("home");
+    else if (destination === "profile") openProfile();
+    else if (destination === "recent" || privateMode) navigate("collections", parentOrigin);
+    else {
+      setRecentOrigin(parentOrigin);
+      if (destination === "tabs") openTabs();
+      else openDetail(destination, page === "profile" || page === "settings"
+        || ((page === "history" || page === "bookmark") && detailOrigin === "profile") ? "profile" : "recent");
+    }
+  };
+  usePublishPreviewPrototypeNavigation(voiceLanguageOpen ? "voice-language" : voiceOpen ? "voice" : page,
+    navigateFromWorkbench, previewActive);
   const homeInactive = !previewActive || page !== "home" || searchOrigin !== null || voicePresence.presented;
   const tabsVisible = page === "tabs" || (page === "search" && searchReturnPage === "tabs");
   const historyVisible = page === "history" || (page === "search" && searchReturnPage === "history");
@@ -267,7 +308,7 @@ export function BingAppPrototype({ initialPage = "home", account = PROFILE_ACCOU
         aria-hidden={homeInactive || undefined} {...(homeInactive ? { inert: "" } : {})}>
         <Homepage timeSource={timeSource} feedSource={feedSource} interactiveFeed initialState={initialHomeState} privateMode={privateMode} onNavigate={navigate}
           onOpenArticle={({ url, title }) => { if (page === "home" && webUrl(url)) submitSearch(url, "feed", title); }}
-          profileAvatar={profileAvatar(currentAccount)} onOpenProfile={() => { setDetailChromeRetained(true); setPage("profile"); }}
+          profileAvatar={profileAvatar(currentAccount)} onOpenProfile={openProfile}
           onOpenSearch={openSearch} onVoiceSearch={openVoice} searchConcealed={searchOrigin !== null} scrollSnapEnabled={!homeInactive} />
       </ScreenLayer>
       <AnimatePresence initial={initialPage !== "profile"} onExitComplete={() => {
@@ -316,7 +357,7 @@ export function BingAppPrototype({ initialPage = "home", account = PROFILE_ACCOU
           active={previewActive && page === "recent"} searchResetKey={recentSearchResetKey} onSearchSubmit={query => submitSearch(query, "recent")}
           onNavigate={(destination) => navigate(destination, recentOrigin)}
           tabs={tabs} selectedTabId={selectedTabId} onSelectTab={openTab} onCloseTab={closeTab}
-          onViewTabs={() => { setDetailChromeRetained(true); setPage("tabs"); }} onNewTab={() => openNewTab("recent")}
+          onViewTabs={openTabs} onNewTab={() => openNewTab("recent")}
           historyEntries={browsingHistory} onViewHistory={() => openDetail("history", "recent")}
           onOpenHistorySearch={openHistorySearch} onOpenHistoryPage={url => submitSearch(url, "history")} onDeleteHistory={deleteHistoryEntry}
           conversationEntries={conversations}

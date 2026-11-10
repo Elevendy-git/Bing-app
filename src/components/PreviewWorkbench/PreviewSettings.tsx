@@ -1,19 +1,14 @@
 import { useEffect, useRef } from "react";
 import {
-  Apps20Regular, Desktop20Regular, Dismiss20Regular, ImageMultiple20Regular,
-  Phone20Regular, WeatherMoon20Regular, WeatherSunny20Regular,
+  ArrowCounterclockwise20Regular, Desktop20Regular, Dismiss20Regular,
+  WeatherMoon20Regular, WeatherSunny20Regular,
 } from "@fluentui/react-icons";
 import {
   PREVIEW_APPEARANCES, PREVIEW_VIEWS,
   type PreviewAppearance, type PreviewView,
 } from "./previewTypes";
 import styles from "./PreviewWorkbench.module.css";
-
-const VIEW_ICONS = {
-  prototype: Phone20Regular,
-  keyscreens: ImageMultiple20Regular,
-  library: Apps20Regular,
-};
+import { PREVIEW_DEVICE } from "./previewDevice";
 
 const APPEARANCE_ICONS = {
   system: Desktop20Regular,
@@ -25,15 +20,17 @@ interface PreviewSettingsProps {
   id: string;
   view: PreviewView;
   appearance: PreviewAppearance;
+  title: string;
   focusOnMount: boolean;
   onViewChange: (view: PreviewView) => void;
   onAppearanceChange: (appearance: PreviewAppearance) => void;
   onClose: () => void;
+  onResetPrototype: () => void;
 }
 
 export function PreviewSettings({
-  id, view, appearance, focusOnMount,
-  onViewChange, onAppearanceChange, onClose,
+  id, view, appearance, title, focusOnMount,
+  onViewChange, onAppearanceChange, onClose, onResetPrototype,
 }: PreviewSettingsProps) {
   const closeRef = useRef<HTMLButtonElement>(null);
 
@@ -54,27 +51,36 @@ export function PreviewSettings({
   return (
     <aside id={id} className={styles.settings} aria-label="Settings">
       <header className={styles.settingsHeader}>
-        <h2>Settings</h2>
-        <button ref={closeRef} type="button" className={styles.iconButton} aria-label="Close settings" onClick={onClose}>
-          <Dismiss20Regular aria-hidden="true" />
-        </button>
+        <h2>Inspector</h2>
+        <div className={styles.headerActions}>
+          {view === "prototype" && <button type="button" className={styles.iconButton} aria-label="Reset prototype"
+            title="Clear prototype activity and return to Homepage" onClick={onResetPrototype}>
+            <ArrowCounterclockwise20Regular aria-hidden="true" />
+          </button>}
+          <button ref={closeRef} type="button" className={styles.iconButton} aria-label="Close settings" onClick={onClose}>
+            <Dismiss20Regular aria-hidden="true" />
+          </button>
+        </div>
       </header>
       <div className={styles.settingsBody}>
-        <div className={styles.settingsRow}>
-          <span>View</span>
-          <div className={styles.settingsOptions} role="group" aria-label="Preview view">
+          <div className={styles.viewOptions} role="group" aria-label="Preview view">
             {PREVIEW_VIEWS.map((option) => {
-              const Icon = VIEW_ICONS[option.value];
               return (
-                <button key={option.value} type="button" className={styles.settingsOption}
-                  aria-pressed={view === option.value} onClick={() => onViewChange(option.value)}>
-                  <Icon aria-hidden="true" />
-                  <span>{option.label}</span>
+                <button key={option.value} type="button" className={styles.viewOption}
+                  aria-label={option.label} aria-pressed={view === option.value} onClick={() => onViewChange(option.value)}>
+                  {option.value === "keyscreens" ? "Screens" : option.label}
                 </button>
               );
             })}
           </div>
-        </div>
+        <h3 className={styles.inspectorTitle}>{title}</h3>
+        {view !== "library" && <section className={styles.inspectorSection} aria-label="Preview device">
+          <h4>Device</h4>
+          <div className={styles.deviceField}><output>{PREVIEW_DEVICE.name}</output></div>
+          <dl className={styles.deviceDetails}>
+            <div><dt>Viewport</dt><dd>{PREVIEW_DEVICE.screenWidth} × {PREVIEW_DEVICE.screenHeight} px</dd></div>
+          </dl>
+        </section>}
         <div className={styles.settingsRow}>
           <span>Appearance</span>
           <div className={styles.settingsOptions} role="group" aria-label="Preview appearance">

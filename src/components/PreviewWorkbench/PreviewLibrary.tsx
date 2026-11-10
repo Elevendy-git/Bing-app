@@ -1,4 +1,4 @@
-import { useId, useRef, useState } from "react";
+import { useId, useRef, useState, type ReactNode } from "react";
 import type { PreviewTheme } from "./PhonePreview";
 import { PreviewLibraryNavigation } from "./PreviewLibraryNavigation";
 import { PreviewLibraryGroup } from "./PreviewLibraryGroup";
@@ -6,7 +6,11 @@ import { PREVIEW_LIBRARY_CATEGORIES, type PreviewComponentGroup, type PreviewLib
 import { filterLibraryGroups } from "./previewLibrarySearch";
 import styles from "./PreviewWorkbench.module.css";
 
-export function PreviewLibrary({ groups, theme }: { groups: readonly PreviewComponentGroup[]; theme: PreviewTheme }) {
+export function PreviewLibrary({ groups, theme, navigationHeader }: {
+  groups: readonly PreviewComponentGroup[];
+  theme: PreviewTheme;
+  navigationHeader?: ReactNode;
+}) {
   const [selection, setSelection] = useState<PreviewLibrarySelection>({ kind: "all" });
   const [query, setQuery] = useState("");
   const galleryRef = useRef<HTMLDivElement>(null);
@@ -44,7 +48,8 @@ export function PreviewLibrary({ groups, theme }: { groups: readonly PreviewComp
   return (
     <section className={styles.library} aria-label="Component library">
       <PreviewLibraryNavigation groups={matchedGroups} selection={selection} onSelect={select}
-        query={query} onSearch={search} onClearSearch={clearSearch} searchRef={searchRef} resultsId={resultsId} />
+        query={query} onSearch={search} onClearSearch={clearSearch} searchRef={searchRef} resultsId={resultsId}
+        navigationHeader={navigationHeader} />
       <div ref={galleryRef} id={resultsId} className={styles.gallery}>
         <div className={styles.libraryContent}>
           <header className={styles.libraryHeading}>

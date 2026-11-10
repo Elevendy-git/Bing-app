@@ -6,7 +6,7 @@
   overflow: auto;
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
-  background: var(--gnrc-color-preview-surface);
+  background: var(--gnrc-color-preview-canvas);
 }
 
 .group + .group { margin-top: 24px; }
@@ -68,7 +68,7 @@
 .viewport[data-theme="light"] { color-scheme: light; }
 .viewport[data-theme="dark"] { color-scheme: dark; }
 
-.screenContent { transform-origin: top left; }
+.screenContent { font-family: var(--gnrc-font-family-functional); transform-origin: top left; }
 
 .caption {
   margin-top: 12px;
