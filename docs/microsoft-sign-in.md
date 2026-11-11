@@ -80,7 +80,7 @@ Graph tokens.
 Rewards captures remain local: `.local/rewards.json` is excluded from Git and
 the public build, the deployed backend has no Rewards route, and the frontend
 does not request a capture or send its account email from a public host. Online
-Profile shows the Rewards introduction and can open the official Rewards site.
+Profile shows demo Rewards values while signed in and can open the official Rewards site.
 Real Microsoft sign-in still works independently of those local captures.
 
 After deployment, open the Pages URL, allow its login popup, complete personal
@@ -112,10 +112,10 @@ and reloading within this browser session retain the active identity; activity
 and identity do not overwrite each other. Only the cached active account is
 restored, not an arbitrary other cached account. Private-mode browsing remains
 separate. Microsoft login does not itself sync Bing history, bookmarks, tabs or Rewards.
-The real signed-in account shows the Rewards introduction unless the workbench
-is running on loopback and a matching [local Rewards capture](rewards.md) exists.
-A capture replaces it with real
-available/claimable points and streaks. The capture time is retained in metadata.
+The signed-in account shows the three-column Rewards card with user-approved
+demo values. On loopback, a matching [local Rewards capture](rewards.md) replaces
+those values with real available/claimable points and streaks. The capture time
+is retained in metadata. Signed-out Profile shows the introduction.
 Profile's **Explore now** and **Microsoft Rewards** entries open the official
 `https://rewards.bing.com/` site in a new tab (`noopener,noreferrer`). Its own
 browser session handles login and real points; it may require sign-in again.
@@ -160,7 +160,7 @@ network failure, missing photos, cancellation, blocked popups, app-only sign-out
 photo cleanup, stale Graph responses, token renewal completing before cache
 clearing, and explicit retry superseding an old login.
 Profile checks cover real identity propagation, private artwork, pending/error
-feedback, sign-out confirmation and omission of fixture Rewards points. Existing
+feedback, sign-out confirmation, demo Rewards fallback and matching-capture priority. Existing
 demo, Search history and Private-mode regression checks remain in place.
 Deployment checks cover the exact Pages callback, all four public API routes,
 query escaping, omitted credentials, and suppression of local Rewards requests
@@ -174,8 +174,8 @@ complete real login/consent with your own account to verify tenant configuration
 and actual Graph data. Test fixtures never establish a live identity.
 
 Rewards entry checks cover signed-in and signed-out Profile opening the same
-official URL without triggering app sign-in, changing navigation or showing
-fixture points. Light/dark Chrome checks intercept only the destination page to
+official URL without triggering app sign-in or changing navigation. Light/dark
+Chrome checks intercept only the destination page to
 verify a real new tab, a null opener, an empty referrer and retained Profile.
 They do not read a live Rewards account or verify its points.
 

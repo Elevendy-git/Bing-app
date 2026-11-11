@@ -1,4 +1,11 @@
-# Local Microsoft Rewards data
+# Prototype Microsoft Rewards data
+
+Signed-in Profile uses the existing three-column Rewards card. By user choice,
+accounts without a matching local capture display the design's demo values:
+2,456 total points, 30/270 daily points and a 3-day streak. These values are not
+returned by Microsoft and do not imply account synchronization. Signing out
+shows the Rewards introduction. A matching local capture takes priority over
+the demo values.
 
 Prototype Profile can display a read-only capture of the user's real Rewards
 dashboard. Microsoft Graph `User.Read` still supplies only identity; it is not a
@@ -23,14 +30,15 @@ not inferred from a display name.
 3. `useRewardsSnapshot` lives above workbench Reset alongside the account hook.
    It refreshes the saved capture on focus/visibility and every 30 seconds while
    visible. This checks for a new local capture; it does not scrape Microsoft.
-4. Only the matching signed-in Microsoft identity receives the stat card.
-   Switching identities or signing out hides it immediately; stale requests
-   cannot restore the old account's data. Key screens remain design fixtures.
+4. Only the matching signed-in Microsoft identity receives captured values.
+   Switching identities immediately falls back to demo values; signing out hides
+   the card. Stale requests cannot restore the old account's data. Key screens
+   remain design fixtures.
 
 The file's schema is `accountEmail`, nonnegative integer `availablePoints`,
 nullable nonnegative `readyToClaim` and `dailyStreakDays`, ISO `observedAt`, and
 `source: "microsoft-rewards-dashboard"`. No private example account/balance is
-checked in. Missing, invalid or mismatched captures show the introduction.
+checked in. Missing, invalid or mismatched captures use demo values while signed in.
 
 The existing three-stat layout and artwork are reused. The actual dashboard
 currently provides available points, ready-to-claim points and daily streaks;

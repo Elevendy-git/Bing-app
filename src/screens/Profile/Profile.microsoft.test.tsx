@@ -25,7 +25,7 @@ describe("Controlled Microsoft identity in the prototype", () => {
     expect(auth.onSignIn).not.toHaveBeenCalled();
   });
 
-  it("shows captured points and zero streaks only for the matching real account, clearing them on account switch and sign-out", () => {
+  it("prefers matching captured points, returns to demo values on account switch, and shows the promo after sign-out", () => {
     const auth = authentication();
     const account = { name: "Actual User", email: "actual@outlook.com" };
     const snapshot: RewardsSnapshot = { accountEmail: account.email, availablePoints: 731, readyToClaim: 30, dailyStreakDays: 0,
@@ -40,27 +40,37 @@ describe("Controlled Microsoft identity in the prototype", () => {
     expect(screen.queryByText(/Last synced/)).toBeNull();
     expect(screen.queryByRole("group", { name: "Microsoft Rewards introduction" })).toBeNull();
     rerender(<BingAppPrototype initialPage="profile" account={{ email: "other@outlook.com" }} authentication={auth} rewardsSnapshot={snapshot} />);
-    expect(screen.queryByRole("group", { name: "Microsoft Rewards summary" })).toBeNull();
+    const demoSummary = screen.getByRole("group", { name: "Microsoft Rewards summary" });
+    expect(demoSummary).toHaveTextContent("2,456Total points");
+    expect(demoSummary).toHaveTextContent("30/270Daily points");
+    expect(demoSummary).toHaveTextContent("3 daysDaily streaks");
+    expect(demoSummary).not.toHaveTextContent("731");
+    expect(demoSummary).not.toHaveTextContent("Ready to claim");
     rerender(<BingAppPrototype initialPage="profile" account={null} authentication={auth} rewardsSnapshot={snapshot} />);
     expect(screen.queryByRole("group", { name: "Microsoft Rewards summary" })).toBeNull();
+    expect(screen.getByRole("group", { name: "Microsoft Rewards introduction" })).toBeVisible();
   });
 
-  it.each([null, { name: "Actual User", email: "actual@outlook.com" }])("opens both Rewards entries on the official site without changing Profile or signing in: %j", account => {
+  it.each([null, { name: "Actual User", email: "actual@outlook.com" }])("opens the available Rewards entries on the official site without changing Profile or signing in: %j", account => {
     const open = vi.spyOn(window, "open").mockReturnValue(null);
     const auth = authentication();
     render(<BingAppPrototype initialPage="profile" account={account} authentication={auth} />);
     const profile = screen.getByRole("main", { name: "Profile page" });
     const content = screen.getByRole("region", { name: "Profile content" });
     fireEvent.scroll(content, { target: { scrollTop: 45 } });
-    for (const name of ["Explore now", "Microsoft Rewards"]) {
+    const entries = account ? ["Microsoft Rewards"] : ["Explore now", "Microsoft Rewards"];
+    for (const name of entries) {
       fireEvent.click(screen.getByRole("button", { name }));
       expect(open).toHaveBeenLastCalledWith("https://rewards.bing.com/", "_blank", "noopener,noreferrer");
       expect(screen.getByRole("main", { name: "Profile page" })).toBe(profile);
       expect(content.scrollTop).toBe(45);
     }
-    expect(open).toHaveBeenCalledTimes(2);
+    expect(open).toHaveBeenCalledTimes(entries.length);
     expect(auth.onSignIn).not.toHaveBeenCalled();
-    expect(screen.queryByRole("group", { name: "Microsoft Rewards summary" })).toBeNull();
+    if (account) {
+      expect(screen.getByRole("group", { name: "Microsoft Rewards summary" })).toHaveTextContent("2,456Total points");
+      expect(screen.queryByRole("button", { name: "Explore now" })).toBeNull();
+    } else expect(screen.queryByRole("group", { name: "Microsoft Rewards summary" })).toBeNull();
     expect(screen.queryByRole("main", { name: "Search results" })).toBeNull();
     expect(screen.queryByRole("main", { name: "In-app browser" })).toBeNull();
   });
@@ -74,8 +84,11 @@ describe("Controlled Microsoft identity in the prototype", () => {
     rerender(<BingAppPrototype initialPage="profile" account={{ name: "Actual User", email: "actual@outlook.com" }} authentication={auth} initialPrivateMode />);
     expect(screen.getByRole("heading", { name: "Actual User" })).toBeVisible();
     expect(screen.getByRole("button", { name: "Manage Microsoft account" })).toHaveTextContent("actual@outlook.com");
-    expect(screen.queryByRole("group", { name: "Microsoft Rewards summary" })).toBeNull();
-    expect(screen.getByRole("group", { name: "Microsoft Rewards introduction" })).toBeVisible();
+    const summary = screen.getByRole("group", { name: "Microsoft Rewards summary" });
+    expect(summary).toHaveTextContent("2,456Total points");
+    expect(summary).toHaveTextContent("30/270Daily points");
+    expect(summary).toHaveTextContent("3 daysDaily streaks");
+    expect(screen.queryByRole("group", { name: "Microsoft Rewards introduction" })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Back to Homepage" }));
     await waitFor(() => expect(screen.getByRole("button", { name: "Open Profile" })).toHaveFocus());
     expect(screen.getByRole("img", { name: "Private mode" })).toBeVisible();

@@ -13,7 +13,8 @@ import styles from "./Profile.module.css";
 
 const background = new URL("./assets/profile-background.svg", import.meta.url).href;
 const gifts = new URL("./assets/rewards-gift-cards.png", import.meta.url).href;
-const rewards = [
+// Approved prototype values when a signed-in account has no matching local capture.
+const demoRewards = [
   { label: "Total points", value: "2,456", icon: new URL("./assets/rewards-medallion.svg", import.meta.url).href },
   { label: "Daily points", value: "30/270", icon: new URL("./assets/rewards-coins.svg", import.meta.url).href },
   { label: "Daily streaks", value: "3 days", icon: new URL("./assets/rewards-streak.svg", import.meta.url).href },
@@ -66,10 +67,10 @@ export function Profile({ account = PROFILE_ACCOUNTS.image, timeSource = "fixed"
   const microsoft = authentication?.provider === "microsoft";
   const captured = microsoft && account?.email && rewardsSnapshot?.accountEmail === normalizeRewardsAccount(account.email) ? rewardsSnapshot : null;
   const rewardStats = captured ? [
-    { ...rewards[0], label: "Available points", value: captured.availablePoints.toLocaleString("en-US") },
-    ...(captured.readyToClaim === null ? [] : [{ ...rewards[1], label: "Ready to claim", value: captured.readyToClaim.toLocaleString("en-US") }]),
-    ...(captured.dailyStreakDays === null ? [] : [{ ...rewards[2], label: "Daily streaks", value: `${captured.dailyStreakDays} ${captured.dailyStreakDays === 1 ? "day" : "days"}` }]),
-  ] : rewards;
+    { ...demoRewards[0], label: "Available points", value: captured.availablePoints.toLocaleString("en-US") },
+    ...(captured.readyToClaim === null ? [] : [{ ...demoRewards[1], label: "Ready to claim", value: captured.readyToClaim.toLocaleString("en-US") }]),
+    ...(captured.dailyStreakDays === null ? [] : [{ ...demoRewards[2], label: "Daily streaks", value: `${captured.dailyStreakDays} ${captured.dailyStreakDays === 1 ? "day" : "days"}` }]),
+  ] : demoRewards;
   const pending = authentication?.pending;
   const feedback = authentication?.error || (pending === "initializing" ? "Preparing Microsoft sign-in…"
     : pending === "sign-in" ? "Complete sign-in in the Microsoft window."
@@ -115,7 +116,7 @@ export function Profile({ account = PROFILE_ACCOUNTS.image, timeSource = "fixed"
           className={`${styles.accountAction} ${styles.authRetry}`} onClick={authentication.onRetrySignIn}>Closed the window? Try again</button>}
       </div>
       <div className={styles.content}>
-        {(captured || account && !microsoft) ? <div className={`${styles.card} ${styles.rewards}`} role="group" aria-label="Microsoft Rewards summary">
+        {account ? <div className={`${styles.card} ${styles.rewards}`} role="group" aria-label="Microsoft Rewards summary">
           {rewardStats.map(item => <div key={item.label} className={styles.stat}>
             <img src={item.icon} alt="" draggable={false} />
             <strong>{item.value}</strong><span>{item.label}</span>
