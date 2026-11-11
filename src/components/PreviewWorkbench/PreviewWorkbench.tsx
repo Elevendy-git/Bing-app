@@ -1,12 +1,11 @@
 import { Fragment, useCallback, useEffect, useId, useRef, useState, type ReactNode } from "react";
-import { ArrowCounterclockwise20Regular, Phone16Regular, Settings20Regular } from "@fluentui/react-icons";
+import { ArrowCounterclockwise20Regular, Settings20Regular } from "@fluentui/react-icons";
 import { PhonePreview } from "./PhonePreview";
 import { PreviewActivityProvider } from "./PreviewActivity";
 import { PreviewKeyScreens } from "./PreviewKeyScreens";
 import { PreviewLibrary } from "./PreviewLibrary";
 import { PreviewSettings } from "./PreviewSettings";
 import { PreviewWorkbenchBrand } from "./PreviewWorkbenchBrand";
-import { PREVIEW_DEVICE } from "./previewDevice";
 import {
   PREVIEW_PROTOTYPE_PAGES, PreviewPrototypeNavigationProvider, PreviewPrototypeNavigationTarget,
   usePreviewPrototypeNavigation,
@@ -65,7 +64,6 @@ function WorkbenchContent({
       {view === "prototype" && <aside className={styles.sidebar} aria-label="Prototype navigation">
         <PreviewWorkbenchBrand />
         <div className={styles.sidebarBody}>
-          <h2 className={styles.sidebarHeading}>Prototype</h2>
           <nav className={styles.navigationTree} aria-label="Prototype pages">
             {PREVIEW_PROTOTYPE_PAGES.map(item => <button key={item.id} type="button" className={styles.navigationItem}
               aria-label={`Open ${item.label} page`}
@@ -94,9 +92,6 @@ function WorkbenchContent({
               </PreviewPrototypeNavigationTarget>
             </PreviewActivityProvider>
           </PhonePreview>
-          <div className={styles.deviceCaption}><Phone16Regular aria-hidden="true" />
-            <span>{PREVIEW_DEVICE.name}<span className={styles.captionDot}>·</span>{pageTitle}</span>
-          </div>
         </div>
         {view === "keyscreens" && (
           <PreviewKeyScreens theme={theme} screens={screens ?? [{ id: "current", title, content: children }]}
