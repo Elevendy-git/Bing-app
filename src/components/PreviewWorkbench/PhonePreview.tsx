@@ -1,13 +1,11 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import { PREVIEW_DEVICE, PREVIEW_SCREEN_MASK_STYLE } from "./previewDevice";
-import { IOSStatusBarOverlayContext } from "../IOSStatusBar/IOSStatusBarOverlayContext";
+import { PREVIEW_DEVICE } from "./previewDevice";
+import { PhoneFrame, type PreviewTheme } from "./PhoneFrame";
 import styles from "./PreviewWorkbench.module.css";
 
-export type PreviewTheme = "light" | "dark";
+export type { PreviewTheme } from "./PhoneFrame";
 
-const { screenWidth, screenHeight, shellWidth, shellHeight } = PREVIEW_DEVICE;
-const SCREEN_INSET_X = (shellWidth - screenWidth) / 2;
-const SCREEN_INSET_Y = (shellHeight - screenHeight) / 2;
+const { shellWidth, shellHeight } = PREVIEW_DEVICE;
 // Match One Copilot's IPhoneFrame: reserve 4% of the available width.
 const DESKTOP_WIDTH_FRACTION = 0.96;
 
@@ -21,7 +19,6 @@ interface PhonePreviewProps {
 export function PhonePreview({ children, theme, label = "Bing app preview" }: PhonePreviewProps) {
   const stageRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
-  const [statusOverlay, setStatusOverlay] = useState<HTMLDivElement | null>(null);
 
   useLayoutEffect(() => {
     const stage = stageRef.current;
@@ -54,49 +51,7 @@ export function PhonePreview({ children, theme, label = "Bing app preview" }: Ph
 
   return (
     <div ref={stageRef} className={styles.stage}>
-      <div
-        className={styles.deviceBounds}
-        style={{ width: shellWidth * scale, height: shellHeight * scale }}
-      >
-        <div
-          className={styles.device}
-          style={{
-            width: shellWidth,
-            height: shellHeight,
-            transform: `scale(${scale})`,
-          }}
-        >
-          <img
-            className={styles.deviceShell}
-            src={PREVIEW_DEVICE.shellSrc}
-            width={shellWidth}
-            height={shellHeight}
-            alt=""
-            aria-hidden="true"
-            draggable={false}
-          />
-          <div ref={setStatusOverlay} className={styles.statusOverlay} data-product="consumer" data-theme={theme}
-            style={{ width: screenWidth, height: screenHeight, left: SCREEN_INSET_X, top: SCREEN_INSET_Y }} />
-          <IOSStatusBarOverlayContext.Provider value={statusOverlay}>
-            <section
-              className={styles.screen}
-              aria-label={label}
-              data-preview-device={PREVIEW_DEVICE.name}
-              data-product="consumer"
-              data-theme={theme}
-              style={{
-                width: screenWidth,
-                height: screenHeight,
-                left: SCREEN_INSET_X,
-                top: SCREEN_INSET_Y,
-                ...PREVIEW_SCREEN_MASK_STYLE,
-              }}
-            >
-              {children}
-            </section>
-          </IOSStatusBarOverlayContext.Provider>
-        </div>
-      </div>
+      <PhoneFrame theme={theme} scale={scale} label={label}>{children}</PhoneFrame>
     </div>
   );
 }

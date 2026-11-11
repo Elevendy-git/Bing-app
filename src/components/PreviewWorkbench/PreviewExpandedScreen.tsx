@@ -43,7 +43,7 @@ export function PreviewExpandedScreen({ screen, theme, returnFocusTo, onClose }:
       const style = getComputedStyle(stage);
       const width = stage.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
       const height = stage.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
-      if (width > 0 && height > 0) setScale(Math.min(1, width / PREVIEW_DEVICE.screenWidth, height / PREVIEW_DEVICE.screenHeight));
+      if (width > 0 && height > 0) setScale(Math.min(1, width / PREVIEW_DEVICE.shellWidth, height / PREVIEW_DEVICE.shellHeight));
     };
     measure();
     const observer = typeof ResizeObserver === "undefined" ? undefined : new ResizeObserver(measure);

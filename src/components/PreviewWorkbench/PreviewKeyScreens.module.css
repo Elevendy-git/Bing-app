@@ -55,21 +55,6 @@
   flex: none;
 }
 
-.viewport {
-  position: relative;
-  width: 100%;
-  overflow: hidden;
-  isolation: isolate;
-  background: var(--gnrc-color-surface-neutral-nearer);
-  color: var(--gnrc-color-foreground-neutral-primary);
-  box-shadow: 0 0 0 1px var(--gnrc-color-preview-stroke);
-}
-
-.viewport[data-theme="light"] { color-scheme: light; }
-.viewport[data-theme="dark"] { color-scheme: dark; }
-
-.screenContent { font-family: var(--gnrc-font-family-functional); transform-origin: top left; }
-
 .caption {
   margin-top: 12px;
   color: var(--gnrc-color-preview-muted);

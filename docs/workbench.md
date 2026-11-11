@@ -47,11 +47,15 @@ visual evidence, not runtime settings or duplicate application entry points.
   Do not disable reusable product components; Prototype retains their behavior.
 - `PreviewKeyScreens` groups screen thumbnails; `PreviewExpandedScreen` owns the
   enlarged modal and restores focus to the triggering thumbnail or title.
-- `PhonePreview` owns the decorative shell, overlay context, and automatic fit.
+- `PhoneFrame` shares the decorative shell, screen mask and per-device status-bar
+  overlay context across Prototype and every Key screen. `PhonePreview` owns the
+  live prototype's automatic fit. Gallery thumbnails keep a 0.5 scale; enlarged
+  previews fit the full shell into the available canvas.
   `previewDevice.ts` defines the iPhone 18 Pro 402 × 874 screen and Figma's original
   450 × 920 Black/Portrait frame. Key screens and OS Native previews use this device width.
-  PhonePreview and Key screens share the device's screen-opening mask. Product
-  screens stay rectangular; do not copy decorative Figma frame radii into them.
+  Gallery artwork and its portaled status-bar content are inert; only the outer
+  enlarge control is interactive. Product screens stay rectangular; do not copy
+  decorative Figma frame radii into them.
   Standalone Library components do not inherit phone corner clipping.
 - `BingAppPrototype` connects Homepage and Recent through the footer and opens
   the Query entry flow from Homepage search focus. Home and Recent stay mounted

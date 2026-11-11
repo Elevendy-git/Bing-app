@@ -6,7 +6,7 @@ import styles from "./PreviewKeyScreens.module.css";
 
 // Match Copilot's gallery scale while retaining the full mobile layout internally.
 const SCREEN_SCALE = 0.5;
-const { screenWidth } = PREVIEW_DEVICE;
+const { shellWidth } = PREVIEW_DEVICE;
 
 export function PreviewScreenTile({ screen, theme, onOpen }: {
   screen: PreviewScreen;
@@ -14,7 +14,7 @@ export function PreviewScreenTile({ screen, theme, onOpen }: {
   onOpen: (trigger: HTMLButtonElement) => void;
 }) {
   return (
-    <figure className={styles.screenTile} style={{ width: screenWidth * SCREEN_SCALE }}>
+    <figure className={styles.screenTile} style={{ width: shellWidth * SCREEN_SCALE }}>
       <PreviewScreenViewport screen={screen} theme={theme} scale={SCREEN_SCALE} interactive={false}>
         <button type="button" className={styles.enlargeScreen} aria-label={`Enlarge ${screen.title}`}
           onClick={(event) => onOpen(event.currentTarget)} />
