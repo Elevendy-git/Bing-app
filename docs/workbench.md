@@ -47,6 +47,8 @@ visual evidence, not runtime settings or duplicate application entry points.
   Do not disable reusable product components; Prototype retains their behavior.
 - `PreviewKeyScreens` groups screen thumbnails; `PreviewExpandedScreen` owns the
   enlarged modal and restores focus to the triggering thumbnail or title.
+  The sidebar follows gallery scrolling when a section heading crosses the
+  upper 30% of the scrollport, including layout changes and the final short section.
 - `PhoneFrame` shares the decorative shell, screen mask and per-device status-bar
   overlay context across Prototype and every Key screen. `PhonePreview` owns the
   live prototype's automatic fit. Gallery thumbnails keep a 0.5 scale; enlarged
