@@ -101,10 +101,15 @@ describe("IOSStatusBar", () => {
       </PhonePreview></section>
       <section aria-label="Standalone preview"><IOSStatusBar dynamicIsland={{ presentation: "minimal", ariaLabel: "Standalone activity", minimal: "C" }} /></section>
     </>);
-    expect(within(screen.getByRole("region", { name: "First preview" })).getByRole("group", { name: "First activity" })).toBeInTheDocument();
-    expect(within(screen.getByRole("region", { name: "Second preview" })).getByRole("group", { name: "Second activity" })).toBeInTheDocument();
-    expect(within(screen.getByRole("region", { name: "First screen" })).queryByRole("group")).not.toBeInTheDocument();
-    expect(within(screen.getByRole("region", { name: "Second screen" })).queryByRole("group")).not.toBeInTheDocument();
+    const firstFrame = screen.getByRole("region", { name: "First screen" });
+    const secondFrame = screen.getByRole("region", { name: "Second screen" });
+    const firstActivity = within(firstFrame).getByRole("group", { name: "First activity" });
+    const secondActivity = within(secondFrame).getByRole("group", { name: "Second activity" });
+    // The accessible frame includes the overlay, outside its clipped logical screen.
+    expect(firstFrame.querySelector("[data-preview-device]")).not.toContainElement(firstActivity);
+    expect(secondFrame.querySelector("[data-preview-device]")).not.toContainElement(secondActivity);
+    expect(within(firstFrame).queryByRole("group", { name: "Second activity" })).not.toBeInTheDocument();
+    expect(within(secondFrame).queryByRole("group", { name: "First activity" })).not.toBeInTheDocument();
     expect(within(screen.getByRole("region", { name: "Standalone preview" })).getByRole("group", { name: "Standalone activity" })).toBeInTheDocument();
   });
 
