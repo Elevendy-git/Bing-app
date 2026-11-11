@@ -160,7 +160,8 @@ describe("Query to Bing results flow", () => {
     { entry: "View all bookmark", page: "Bookmark page" },
   ])("restores Recent's browser footer and $entry focus after $page", async ({ entry, page }) => {
     const browserFooter = await openRecentFromSERP();
-    fireEvent.click(screen.getByRole("button", { name: entry }));
+    const recentEntry = screen.getByRole("button", { name: entry });
+    fireEvent.click(recentEntry);
     expect(screen.getByRole("main", { name: page })).toBeVisible();
     await waitFor(() => expect(screen.queryByRole("navigation", { name: "Bing app navigation" })).not.toBeInTheDocument());
     expect(screen.queryByRole("navigation", { name: "Recent browser navigation" })).not.toBeInTheDocument();
@@ -170,7 +171,10 @@ describe("Query to Bing results flow", () => {
       await waitFor(() => expect(screen.getByRole("button", { name: "Open Travel to Paris folder" })).toHaveFocus());
     }
     fireEvent.click(screen.getByRole("button", { name: "Back to Recent" }));
-    await waitFor(() => expect(screen.getByRole("button", { name: entry })).toHaveFocus());
+    // The departing page becomes aria-hidden before its real exit finishes.
+    // Wait for removal without repeated accessibility-tree walks delaying RAF on CI.
+    await waitFor(() => expect(document.querySelector(`[aria-label="${page}"]`)).not.toBeInTheDocument(), { timeout: 3000 });
+    expect(recentEntry).toHaveFocus();
     expect(screen.getByRole("navigation", { name: "Recent browser navigation" })).toBe(browserFooter);
     fireEvent.click(within(browserFooter).getByRole("button", { name: "Back to search results" }));
     expect(screen.getByRole("searchbox", { name: "Edit search query" })).toHaveValue("Weather");
