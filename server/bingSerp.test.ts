@@ -129,7 +129,7 @@ describe("Bing result endpoint", () => {
     expect(result.body.html).toBeUndefined();
   });
 
-  it("moves on after the primary four-second budget while preserving the fallback's remaining request budget", async () => {
+  it("moves on after the primary eight-second budget while preserving the fallback's remaining request budget", async () => {
     vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
     let started!: () => void;
     const primaryStarted = new Promise<void>(resolve => { started = resolve; });
@@ -139,14 +139,14 @@ describe("Bing result endpoint", () => {
     })).mockResolvedValueOnce(htmlResponse(fallbackHtml));
     const request = call("/api/bing-serp?query=weather");
     await primaryStarted;
-    await vi.advanceTimersByTimeAsync(4000);
+    await vi.advanceTimersByTimeAsync(8000);
     const result = await request;
     expect(result.status).toBe(200);
     expect(result.body.provider).toBe("duckduckgo");
     expect(fetch).toHaveBeenCalledTimes(2);
   });
 
-  it("aborts a stalled fallback at the total twelve-second deadline", async () => {
+  it("aborts a stalled fallback at the total twenty-second deadline", async () => {
     vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
     let started!: () => void;
     const fallbackStarted = new Promise<void>(resolve => { started = resolve; });
@@ -157,7 +157,7 @@ describe("Bing result endpoint", () => {
       }));
     const request = call("/api/bing-serp?query=weather");
     await fallbackStarted;
-    await vi.advanceTimersByTimeAsync(12000);
+    await vi.advanceTimersByTimeAsync(20000);
     const result = await request;
     expect(result.status).toBe(504);
     expect(result.body.html).toBeUndefined();

@@ -87,8 +87,8 @@ Presentation references and web timing distinctions are recorded in
 
 The search endpoint calls fixed Bing and fallback DuckDuckGo endpoints, uses a mobile user agent,
 does not forward browser credentials, and follows no redirects. Queries are
-limited to 256 characters; documents to 4 MiB; Bing gets four seconds within a
-twelve-second total provider deadline. Browser transfer gets twenty seconds,
+limited to 256 characters; documents to 4 MiB; Bing gets eight seconds within a
+twenty-second total provider deadline. Browser transfer gets thirty seconds,
 after the separate service readiness wait.
 Responses use `no-store` and the application adds no query log or persistence.
 The server requests English through `Accept-Language`, without forcing market

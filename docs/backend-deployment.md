@@ -75,14 +75,14 @@ the existing four-second deadline and receive only the query and language, never
 the user's account, cookies or search history. The response retains at most five
 actual provider suggestions; no suggestions are invented.
 
-Search first requests Bing's mobile document with a four-second primary budget.
+Search first requests Bing's mobile document with an eight-second primary budget.
 If the document fails, requires verification or contains clearly unrelated
 results, it tries DuckDuckGo's fixed public HTML endpoint within a shared
-twelve-second deadline. The fallback excludes advertisements, accepts only safe
+twenty-second deadline. The fallback excludes advertisements, accepts only safe
 HTTP(S) result destinations, and runs the same relevance check. Its document
 visibly names DuckDuckGo and preserves that provider's canonical URL in History
 and Tabs. If neither source is usable, the request fails rather than inventing
-results. The browser allows twenty seconds for the provider request and transfer;
+results. The browser allows thirty seconds for the provider request and transfer;
 service startup readiness remains a separate wait.
 
 The service does not expose `/api/rewards`, account tokens, Microsoft cookies,

@@ -81,9 +81,9 @@ export function LiveBingResults({ query, url, active = true, onNavigate, onLoadS
     const load = async () => {
       if (import.meta.env.VITE_API_BASE_URL?.trim()) await awaitPublicApiReady(controller.signal);
       if (!active || controller.signal.aborted) return;
-      // Search can try a second real provider within the backend's 12s budget;
+      // Search can try a second real provider within the backend's 20s budget;
       // leave transport time for visitors on slower networks as well.
-      timeout = setTimeout(() => { controller.abort(); fail(); }, url ? 10000 : 20000);
+      timeout = setTimeout(() => { controller.abort(); fail(); }, url ? 10000 : 30000);
       return fetch(publicApiUrl(url ? `/api/web-page?${new URLSearchParams({ url })}` : `/api/bing-serp?${new URLSearchParams({ query })}`), {
         signal: controller.signal, credentials: "omit", cache: "no-store", referrerPolicy: "no-referrer", headers: { Accept: "application/json" },
       });

@@ -7,15 +7,22 @@ import { bingSearchUrl } from "../src/services/bingPage";
 import { fallbackSearchRequestUrl, fallbackSearchUrl, prepareSearchFallbackDocument } from "./searchFallbackHtml";
 
 const MAX_HTML_BYTES = 4 * 1024 * 1024;
-const PRIMARY_TIMEOUT_MS = 4000;
-const REQUEST_TIMEOUT_MS = 12000;
+const PRIMARY_TIMEOUT_MS = 8000;
+const REQUEST_TIMEOUT_MS = 20000;
+
+class SearchUpstreamError extends Error {
+  constructor(readonly code: string) { super("Search upstream unavailable"); }
+}
 
 async function fetchHtml(url: string, signal: AbortSignal): Promise<string> {
-  const response = await fetch(url, { signal, redirect: "error", credentials: "omit",
-    headers: { "User-Agent": MOBILE_USER_AGENT, Accept: "text/html", "Accept-Language": "en-US,en;q=0.9" } });
+  let response: Response;
+  try {
+    response = await fetch(url, { signal, redirect: "error", credentials: "omit",
+      headers: { "User-Agent": MOBILE_USER_AGENT, Accept: "text/html", "Accept-Language": "en-US,en;q=0.9" } });
+  } catch { throw new SearchUpstreamError(signal.aborted ? "timeout" : "connection"); }
   if (!response.ok || !response.headers.get("content-type")?.includes("text/html") || !response.body) {
     await response.body?.cancel();
-    throw new Error("Unavailable");
+    throw new SearchUpstreamError(!response.ok ? `http-${response.status}` : "content-type");
   }
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
@@ -24,7 +31,7 @@ async function fetchHtml(url: string, signal: AbortSignal): Promise<string> {
     const { done, value } = await reader.read();
     if (done) break;
     bytes += value.byteLength;
-    if (bytes > MAX_HTML_BYTES) { await reader.cancel(); throw new Error("Document too large"); }
+    if (bytes > MAX_HTML_BYTES) { await reader.cancel(); throw new SearchUpstreamError("body-limit"); }
     source += decoder.decode(value, { stream: true });
   }
   return source + decoder.decode();
@@ -40,6 +47,7 @@ export async function handleBingSerp(req: IncomingMessage, res: ServerResponse, 
   const abort = () => controller.abort();
   const timeout = setTimeout(abort, REQUEST_TIMEOUT_MS);
   res.on("close", abort);
+  let provider = "bing";
   try {
     const primary = new AbortController();
     const cancelPrimary = () => primary.abort();
@@ -59,11 +67,15 @@ export async function handleBingSerp(req: IncomingMessage, res: ServerResponse, 
       clearTimeout(primaryTimeout);
       controller.signal.removeEventListener("abort", cancelPrimary);
     }
+    provider = "duckduckgo";
     const source = await fetchHtml(fallbackSearchRequestUrl(query), controller.signal);
     if (controller.signal.aborted) throw new Error("Cancelled");
     const document = prepareSearchFallbackDocument(source, query);
     sendJson(res, 200, { query, ...document, provider: "duckduckgo", sourceUrl: fallbackSearchUrl(query), fetchedAt: new Date().toISOString() });
-  } catch {
+  } catch (error) {
+    // These fixed diagnostic labels contain no queries, destinations or cookies.
+    res.setHeader("X-Search-Provider", provider);
+    res.setHeader("X-Search-Failure", controller.signal.aborted ? "timeout" : error instanceof SearchUpstreamError ? error.code : "document");
     sendJson(res, controller.signal.aborted ? 504 : 502, { error: "Bing results are unavailable" });
   } finally { clearTimeout(timeout); res.off("close", abort); }
 }

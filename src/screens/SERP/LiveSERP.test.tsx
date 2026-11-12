@@ -64,7 +64,7 @@ describe("IAB loading feedback", () => {
     const fetcher = vi.fn(() => new Promise(() => {}));
     vi.stubGlobal("fetch", fetcher);
     render(<LiveSERP query="Weather" />);
-    await act(async () => vi.advanceTimersByTime(20000));
+    await act(async () => vi.advanceTimersByTime(30000));
     expect(screen.getByRole("alert")).toHaveTextContent("Couldn’t load results");
     expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
   });
