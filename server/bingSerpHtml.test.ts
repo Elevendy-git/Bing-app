@@ -67,6 +67,16 @@ describe("Bing mobile HTML preparation", () => {
     expect(() => prepareBingSerpHtml(organic(`<h2><a href="${url}">${title}</a></h2><p>${summary}</p>`), query)).not.toThrow();
   });
 
+  it("rejects unrelated questions on a matching publisher's domain", () => {
+    const source = organic('<div class="b_attribution"><cite>baidu.com</cite></div><h2><a href="https://zhidao.baidu.com/question/123">What is electrical power?</a></h2><p>P equals voltage times current.</p>');
+    expect(() => prepareBingSerpHtml(source, "baidu")).toThrow("unrelated results");
+  });
+
+  it("rejects a page belonging to a different query even when a result domain happens to match", () => {
+    const source = '<input id="sb_form_q" value="p">' + organic('<h2><a href="https://www.baidu.com/">Official site</a></h2>');
+    expect(() => prepareBingSerpHtml(source, "baidu")).toThrow("different query");
+  });
+
   it.each(["AI", "C++", "123", "how is it", "天气", "東京の博物館", "café"])(
     "does not guess relevance for short, stopword-only or non-ASCII queries: %s", query => {
       expect(() => prepareBingSerpHtml(organic('<h2><a href="https://example.com">Original Bing answer</a></h2>'), query)).not.toThrow();

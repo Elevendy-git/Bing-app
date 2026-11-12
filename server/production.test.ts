@@ -1,6 +1,6 @@
 // @vitest-environment node
-import { request, type IncomingHttpHeaders, type Server } from "node:http";
-import type { AddressInfo } from "node:net";
+import { request, Server, type IncomingHttpHeaders } from "node:http";
+import type { AddressInfo, Socket } from "node:net";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createProductionServer, productionConfig, type ProductionConfig } from "./production";
 import { fetchWebPage } from "./webPageFetch";
@@ -105,6 +105,27 @@ describe("standalone public API boundary", () => {
       expect(upstreamHeaders.has("cookie")).toBe(false);
       expect(upstreamHeaders.has("authorization")).toBe(false);
     }
+  });
+
+  it("keeps a slow fallback response connected beyond the previous socket cutoff", async () => {
+    // Exercise an actual HTTP socket with scaled host deadlines rather than
+    // making the regression test wait 18 seconds. The old 15-second cutoff
+    // destroys this connection at 150ms; the 25-second budget allows 180ms.
+    const setSocketTimeout = Server.prototype.setTimeout;
+    vi.spyOn(Server.prototype, "setTimeout").mockImplementation(function (this: Server, msecs: number | ((socket: Socket) => void), callback?: (socket: Socket) => void) {
+      return Reflect.apply(setSocketTimeout, this, typeof msecs === "number" ? [msecs / 100, callback] : [msecs]);
+    });
+    await start();
+    vi.mocked(fetch).mockRejectedValueOnce(new TypeError("Primary unavailable"))
+      .mockRejectedValueOnce(new TypeError("RSS unavailable"))
+      .mockImplementationOnce(() => new Promise(resolve => {
+      setTimeout(() => resolve(new Response('<div class="result"><a class="result__a" href="https://example.com/weather">Weather forecast</a><div class="result__snippet">Current weather conditions</div></div>',
+        { headers: { "Content-Type": "text/html" } })), 180);
+    }));
+    const result = await call("/api/bing-serp?query=weather", { headers: { Origin: allowed } });
+    expect(result).toMatchObject({ status: 200, body: { query: "weather", provider: "duckduckgo" } });
+    expect((result.body as { html: string }).html).toContain("Weather forecast");
+    expect(fetch).toHaveBeenCalledTimes(3);
   });
 
   it("rejects unexpected browser origins before contacting providers", async () => {

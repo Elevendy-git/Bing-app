@@ -22,12 +22,12 @@ afterEach(async () => {
   vi.unstubAllGlobals();
 });
 function call(path: string, method = "GET") {
-  return new Promise<{ status: number; body: Record<string, string>; cache?: string }>((resolve, reject) => {
+  return new Promise<{ status: number; body: Record<string, string>; cache?: string; failure?: string | string[]; primaryFailure?: string | string[] }>((resolve, reject) => {
     const req = request(`${origin}${path}`, { method, headers: { Cookie: "private=example", Authorization: "Bearer example" } }, (res) => {
       let text = "";
       res.setEncoding("utf8");
       res.on("data", (chunk) => { text += chunk; });
-      res.on("end", () => resolve({ status: res.statusCode ?? 0, body: JSON.parse(text), cache: res.headers["cache-control"] }));
+      res.on("end", () => resolve({ status: res.statusCode ?? 0, body: JSON.parse(text), cache: res.headers["cache-control"], failure: res.headers["x-search-failure"], primaryFailure: res.headers["x-search-primary-failure"] }));
     });
     req.on("error", reject); req.end();
   });
@@ -107,14 +107,15 @@ describe("Bing result endpoint", () => {
     if (failure === "network") vi.mocked(fetch).mockRejectedValueOnce(new Error("offline"));
     if (failure === "challenge") vi.mocked(fetch).mockResolvedValueOnce(htmlResponse("Verify you are human"));
     if (failure === "unrelated") vi.mocked(fetch).mockResolvedValueOnce(htmlResponse('<main id="b_content"><ol id="b_results"><li class="b_algo"><h2><a href="https://unrelated.example">Unrelated community</a></h2></li></ol></main>'));
-    vi.mocked(fetch).mockResolvedValueOnce(htmlResponse(fallbackHtml));
+    vi.mocked(fetch).mockRejectedValueOnce(new TypeError("RSS unavailable"))
+      .mockResolvedValueOnce(htmlResponse(fallbackHtml));
     const result = await call("/api/bing-serp?query=weather");
     expect(result.status).toBe(200);
     expect(result.body.provider).toBe("duckduckgo");
     expect(result.body.sourceUrl).toBe("https://duckduckgo.com/?q=weather&kl=us-en");
     expect(result.body.html).toContain("Results from DuckDuckGo");
     expect(result.body.html).toContain('data-iab-href="https://weather.example/today"');
-    const [url, options] = vi.mocked(fetch).mock.calls[1];
+    const [url, options] = vi.mocked(fetch).mock.calls[2];
     expect(String(url)).toBe("https://html.duckduckgo.com/html/?q=weather&kl=us-en");
     expect(options?.redirect).toBe("error");
     expect(new Headers(options?.headers).has("cookie")).toBe(false);
@@ -123,10 +124,36 @@ describe("Bing result endpoint", () => {
 
   it("limits both providers' documents instead of publishing an oversized fallback", async () => {
     vi.mocked(fetch).mockRejectedValueOnce(new Error("offline"))
+      .mockRejectedValueOnce(new TypeError("RSS unavailable"))
       .mockResolvedValueOnce(htmlResponse("x".repeat(4 * 1024 * 1024 + 1)));
     const result = await call("/api/bing-serp?query=weather");
     expect(result.status).toBe(502);
     expect(result.body.html).toBeUndefined();
+  });
+
+  it("recovers with related Bing RSS data while preserving Bing page identity", async () => {
+    vi.mocked(fetch).mockRejectedValueOnce(new TypeError("Primary unavailable"))
+      .mockResolvedValueOnce(new Response('<rss><channel><item><title>Baidu search</title><link>https://www.baidu.com/</link><description>Baidu official search engine</description></item></channel></rss>', { headers: { "Content-Type": "text/xml; charset=utf-8" } }));
+    const result = await call("/api/bing-serp?query=baidu");
+    expect(result).toMatchObject({ status: 200, body: { provider: "bing", sourceUrl: "https://www.bing.com/search?q=baidu" } });
+    expect(result.body.html).toContain("Results from Bing");
+    expect(result.body.html).toContain('data-iab-href="https://www.baidu.com/"');
+    expect(fetch).toHaveBeenCalledTimes(2);
+    const [url, options] = vi.mocked(fetch).mock.calls[1];
+    expect(String(url)).toBe("https://www.bing.com/search?format=rss&q=baidu");
+    expect(new Headers(options?.headers).get("accept")).toContain("application/rss+xml");
+    expect(new Headers(options?.headers).has("cookie")).toBe(false);
+  });
+
+  it.each([
+    ["UND_ERR_CONNECT_TIMEOUT", "connect-timeout"], ["EAI_AGAIN", "dns"], ["ECONNRESET", "connection-reset"],
+    ["ECONNREFUSED", "connection-refused"], ["CERT_HAS_EXPIRED", "tls"], ["not-allowlisted", "connection"],
+  ])("exposes only a fixed failure label for upstream code %s", async (code, expected) => {
+    vi.mocked(fetch).mockRejectedValueOnce(new TypeError("Primary unavailable"))
+      .mockRejectedValueOnce(new TypeError("RSS unavailable"))
+      .mockRejectedValueOnce(new TypeError("Never expose upstream URL or query", { cause: { code } }));
+    const result = await call("/api/bing-serp?query=baidu");
+    expect(result).toMatchObject({ status: 502, failure: expected, primaryFailure: "connection", body: { error: "Bing results are unavailable" } });
   });
 
   it("moves on after the primary eight-second budget while preserving the fallback's remaining request budget", async () => {
@@ -136,14 +163,15 @@ describe("Bing result endpoint", () => {
     vi.mocked(fetch).mockImplementationOnce((_url, options) => new Promise((_resolve, reject) => {
       options?.signal?.addEventListener("abort", () => reject(new Error("aborted")), { once: true });
       started();
-    })).mockResolvedValueOnce(htmlResponse(fallbackHtml));
+    })).mockRejectedValueOnce(new TypeError("RSS unavailable"))
+      .mockResolvedValueOnce(htmlResponse(fallbackHtml));
     const request = call("/api/bing-serp?query=weather");
     await primaryStarted;
     await vi.advanceTimersByTimeAsync(8000);
     const result = await request;
     expect(result.status).toBe(200);
     expect(result.body.provider).toBe("duckduckgo");
-    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(fetch).toHaveBeenCalledTimes(3);
   });
 
   it("aborts a stalled fallback at the total twenty-second deadline", async () => {
@@ -151,6 +179,7 @@ describe("Bing result endpoint", () => {
     let started!: () => void;
     const fallbackStarted = new Promise<void>(resolve => { started = resolve; });
     vi.mocked(fetch).mockRejectedValueOnce(new Error("offline"))
+      .mockRejectedValueOnce(new TypeError("RSS unavailable"))
       .mockImplementationOnce((_url, options) => new Promise((_resolve, reject) => {
         options?.signal?.addEventListener("abort", () => reject(new Error("aborted")), { once: true });
         started();
@@ -161,7 +190,7 @@ describe("Bing result endpoint", () => {
     const result = await request;
     expect(result.status).toBe(504);
     expect(result.body.html).toBeUndefined();
-    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(fetch).toHaveBeenCalledTimes(3);
   });
 
   it("cancels the upstream without starting a fallback when the caller disconnects", async () => {

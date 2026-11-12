@@ -85,10 +85,11 @@ origin, per-document channel and latest request, without same-origin access.
 Presentation references and web timing distinctions are recorded in
 [motion.md](../../../docs/motion.md#iab-browser-actions-and-find-on-page--9-november-2026).
 
-The search endpoint calls fixed Bing and fallback DuckDuckGo endpoints, uses a mobile user agent,
+The search endpoint calls fixed Bing HTML/RSS and fallback DuckDuckGo endpoints, uses a mobile user agent,
 does not forward browser credentials, and follows no redirects. Queries are
 limited to 256 characters; documents to 4 MiB; Bing gets eight seconds within a
-twenty-second total provider deadline. Browser transfer gets thirty seconds,
+twenty-second total provider deadline. RSS has a four-second recovery budget.
+The host response socket allows twenty-five seconds; browser transfer gets thirty seconds,
 after the separate service readiness wait.
 Responses use `no-store` and the application adds no query log or persistence.
 The server requests English through `Accept-Language`, without forcing market

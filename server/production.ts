@@ -10,6 +10,8 @@ const DEFAULT_ORIGINS = ["https://elevendy-git.github.io", "http://localhost:517
 const RATE_WINDOW_MS = 60_000;
 const MAX_RATE_BUCKETS = 5000;
 const MAX_REQUEST_URL_LENGTH = 16_384;
+// Keep the socket open through the search adapter's 20-second provider budget.
+const RESPONSE_IDLE_TIMEOUT_MS = 25_000;
 
 export interface ProductionConfig {
   port: number;
@@ -132,7 +134,7 @@ export function createProductionServer(config = productionConfig()) {
   server.requestTimeout = 15_000;
   server.headersTimeout = 10_000;
   server.keepAliveTimeout = 5000;
-  server.setTimeout(15_000, socket => socket.destroy());
+  server.setTimeout(RESPONSE_IDLE_TIMEOUT_MS, socket => socket.destroy());
   return server;
 }
 

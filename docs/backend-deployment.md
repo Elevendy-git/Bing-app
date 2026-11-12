@@ -77,13 +77,16 @@ actual provider suggestions; no suggestions are invented.
 
 Search first requests Bing's mobile document with an eight-second primary budget.
 If the document fails, requires verification or contains clearly unrelated
-results, it tries DuckDuckGo's fixed public HTML endpoint within a shared
-twenty-second deadline. The fallback excludes advertisements, accepts only safe
+results, it tries Bing's RSS format with a four-second recovery budget, then
+DuckDuckGo's fixed public HTML endpoint within the shared twenty-second deadline.
+RSS items must also pass the relevance check; matching only a publisher's hostname
+does not make an unrelated article relevant. The fallback excludes advertisements, accepts only safe
 HTTP(S) result destinations, and runs the same relevance check. Its document
 visibly names DuckDuckGo and preserves that provider's canonical URL in History
-and Tabs. If neither source is usable, the request fails rather than inventing
+and Tabs. If no source is usable, the request fails rather than inventing
 results. The browser allows thirty seconds for the provider request and transfer;
-service startup readiness remains a separate wait.
+service startup readiness remains a separate wait. The host's response socket
+deadline is twenty-five seconds, so it does not interrupt the adapter's deadline.
 
 The service does not expose `/api/rewards`, account tokens, Microsoft cookies,
 `.local/` snapshots, source files, or arbitrary static files. Upstream requests

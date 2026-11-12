@@ -12,6 +12,8 @@ const escape = (value: string) => value.replace(/[&"<>']/g, character => ({ "&":
 export const fallbackSearchUrl = duckDuckGoSearchUrl;
 export const fallbackSearchRequestUrl = (query: string) => `https://html.duckduckgo.com/html/?${new URLSearchParams({ q: query, kl: "us-en" })}`;
 
+export type SearchResultRow = { url: string; title: string; summary: string };
+
 function visibleText(node: PreviewNode): string {
   if (node.nodeName === "#text" && "value" in node) return node.value;
   if (isElement(node) && (["script", "style", "template", "noscript"].includes(node.tagName)
@@ -42,7 +44,7 @@ export function prepareSearchFallbackDocument(source: string, query: string): { 
     throw new Error("Search provider requires verification");
   }
   const seen = new Set<string>();
-  const rows: string[] = [];
+  const rows: SearchResultRow[] = [];
   for (const result of elements.filter(node => hasClass(node, "result") && !hasClass(node, "result--ad"))) {
     const children = walk(result).filter(isElement);
     const link = children.find(node => node.tagName === "a" && hasClass(node, "result__a"));
@@ -52,12 +54,28 @@ export function prepareSearchFallbackDocument(source: string, query: string): { 
     seen.add(href);
     const snippet = children.find(node => hasClass(node, "result__snippet"));
     const summary = snippet ? visibleText(snippet).replace(/\s+/g, " ").trim().slice(0, 2000) : "";
+    rows.push({ url: href, title, summary });
+    if (rows.length === 10) break;
+  }
+  return renderSearchResultsDocument(rows, query, "DuckDuckGo");
+}
+
+/** A shared script-free document for actual results extracted from a provider. */
+export function renderSearchResultsDocument(results: SearchResultRow[], query: string, provider: "Bing" | "DuckDuckGo"): { html: string; faviconUrl: null; title: string } {
+  const seen = new Set<string>();
+  const rows: string[] = [];
+  for (const result of results) {
+    const href = webUrl(result.url);
+    const title = result.title.trim().slice(0, 512);
+    const summary = result.summary.trim().slice(0, 2000);
+    if (!href || !title || seen.has(href)) continue;
+    seen.add(href);
     const hostname = new URL(href).hostname.replace(/^www\./, "");
     rows.push(`<li class="b_algo"><div class="site">${escape(hostname)}</div><h2><a href="${escape(href)}">${escape(title)}</a></h2>${summary ? `<p>${escape(summary)}</p>` : ""}</li>`);
     if (rows.length === 10) break;
   }
   if (!rows.length) throw new Error("Search provider returned no usable results");
-  const content = `<main id="b_content"><div class="attribution">Results from DuckDuckGo</div><ol id="b_results">${rows.join("")}</ol></main>`;
+  const content = `<main id="b_content"><div class="attribution">Results from ${provider}</div><ol id="b_results">${rows.join("")}</ol></main>`;
   // Share the primary provider's conservative relevance check. The generated
   // markup contains only plain extracted text and concrete result destinations.
   prepareBingSerpDocument(content, query);
