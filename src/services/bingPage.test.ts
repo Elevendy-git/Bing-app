@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 import { bingPageIdentity, bingSearchQuery, bingSearchUrl } from "./bingPage";
 
 describe("Bing search page identity", () => {
+  it("encodes the query without forcing market parameters on anonymous upstream requests", () => {
+    expect(bingSearchUrl("weather & C++")).toBe("https://www.bing.com/search?q=weather+%26+C%2B%2B");
+  });
   it("normalizes only the decoded query and preserves valid recorded URLs", () => {
     const sourceUrl = "https://www.bing.com/search?q=++Weather+++forecast%09&form=related";
     expect(bingSearchQuery(sourceUrl)).toBe("Weather forecast");

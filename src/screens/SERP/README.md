@@ -87,7 +87,8 @@ The search endpoint calls only `https://www.bing.com/search`, uses a mobile user
 does not forward browser credentials, and follows no redirects. Queries are
 limited to 256 characters; documents to 4 MiB; upstream calls to 8 seconds.
 Responses use `no-store` and the application adds no query log or persistence.
-English/Chinese input selects the corresponding language. Location-sensitive
+The server requests English through `Accept-Language`, without forcing market
+parameters on Bing's anonymous query URL. Location-sensitive
 results can reflect the server's network location; no device location is sent.
 Result assets load from their original HTTPS sources in an isolated, credentialless
 iframe (where supported). The only executable script is the App-owned, nonce-authorized

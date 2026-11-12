@@ -4,8 +4,31 @@ import { normalizeSearchQuery, parseBingSuggestions, SEARCH_QUERY_MAX_LENGTH, SE
 import { sendJson } from "./http";
 
 const UPSTREAM_TIMEOUT_MS = 4000;
+const BING_TIMEOUT_MS = 2000;
 
-/** A fixed upstream, with no browser cookies, credentials, query logs or persisted history. */
+async function fetchSuggestions(url: URL, signal: AbortSignal) {
+  const response = await fetch(url, {
+    signal, redirect: "error", credentials: "omit", headers: { Accept: "application/json" },
+  });
+  if (!response.ok) throw new Error("Suggestions are unavailable");
+  return parseBingSuggestions(await response.json());
+}
+
+async function bingSuggestions(query: string, market: string, signal: AbortSignal) {
+  const upstream = new URL("https://api.bing.com/osjson.aspx");
+  upstream.searchParams.set("query", query);
+  upstream.searchParams.set("market", market);
+  // Leave part of the shared request deadline for a second real provider.
+  const controller = new AbortController();
+  const abort = () => controller.abort();
+  signal.addEventListener("abort", abort, { once: true });
+  const timeout = setTimeout(abort, BING_TIMEOUT_MS);
+  if (signal.aborted) abort();
+  try { return await fetchSuggestions(upstream, controller.signal); }
+  finally { clearTimeout(timeout); signal.removeEventListener("abort", abort); }
+}
+
+/** Fixed providers, with no browser cookies, credentials, query logs or persisted history. */
 export async function handleSearchSuggestions(req: IncomingMessage, res: ServerResponse, next: () => void) {
   const url = new URL(req.url ?? "/", "http://localhost");
   if (url.pathname !== SEARCH_SUGGESTIONS_PATH) return next();
@@ -23,16 +46,18 @@ export async function handleSearchSuggestions(req: IncomingMessage, res: ServerR
   res.on("close", abort);
   const timeout = setTimeout(abort, UPSTREAM_TIMEOUT_MS);
   try {
-    const upstreamUrl = new URL("https://api.bing.com/osjson.aspx");
-    upstreamUrl.searchParams.set("query", query);
-    upstreamUrl.searchParams.set("market", /\p{Script=Han}/u.test(query) ? "zh-CN" : "en-US");
-    const upstream = await fetch(upstreamUrl, {
-      signal: controller.signal,
-      redirect: "error",
-      headers: { Accept: "application/json" },
-    });
-    if (!upstream.ok) throw new Error("Bing suggestions are unavailable");
-    const items = parseBingSuggestions(await upstream.json());
+    const chinese = /\p{Script=Han}/u.test(query);
+    let items;
+    try { items = await bingSuggestions(query, chinese ? "zh-CN" : "en-US", controller.signal); }
+    catch {
+      if (controller.signal.aborted) throw new Error("Request cancelled");
+      const upstream = new URL("https://suggestqueries.google.com/complete/search");
+      upstream.searchParams.set("client", "firefox");
+      upstream.searchParams.set("hl", chinese ? "zh-CN" : "en");
+      upstream.searchParams.set("q", query);
+      items = await fetchSuggestions(upstream, controller.signal);
+    }
+    if (controller.signal.aborted) throw new Error("Request cancelled");
     sendJson(res, 200, [query, items.map((item) => item.query)]);
   } catch {
     sendJson(res, controller.signal.aborted ? 504 : 502, { error: "Search suggestions are unavailable" });

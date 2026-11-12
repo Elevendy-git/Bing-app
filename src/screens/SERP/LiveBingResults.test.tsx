@@ -69,7 +69,7 @@ describe("Live Bing result viewport", () => {
     expect(screen.queryByTitle("Bing results for Weather")).not.toBeInTheDocument();
     fireEvent.load(frame);
     expect(onPageReady).toHaveBeenCalledOnce();
-    expect(onPageReady).toHaveBeenCalledWith(expect.objectContaining({ html: "<p>News result</p>", sourceUrl: "https://www.bing.com/search?q=News&setlang=en-US&mkt=en-US&cc=US", faviconUrl: null }));
+    expect(onPageReady).toHaveBeenCalledWith(expect.objectContaining({ html: "<p>News result</p>", sourceUrl: "https://www.bing.com/search?q=News", faviconUrl: null }));
   });
 
   it("queues find until the document loads, searches without refetching, and clears covered or closed tasks", async () => {

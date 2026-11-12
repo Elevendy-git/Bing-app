@@ -11,8 +11,10 @@ export interface BingPageSnapshot {
   viewportHeight: number;
 }
 
-/** Global interface language stays English, including for non-English queries. */
-export const bingSearchUrl = (query: string) => `https://www.bing.com/search?${new URLSearchParams({ q: query, setlang: "en-US", mkt: "en-US", cc: "US" })}`;
+/** Use Bing's canonical query URL. The server requests English through its
+ * Accept-Language header: forced market parameters can return unrelated results
+ * for anonymous requests from the hosted backend. */
+export const bingSearchUrl = (query: string) => `https://www.bing.com/search?${new URLSearchParams({ q: query })}`;
 
 /** Reopen the recorded query, rather than searching for a display title or URL. */
 export function bingSearchQuery(sourceUrl: string): string | null {

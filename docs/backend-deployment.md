@@ -64,10 +64,16 @@ and do not store queries, account identities, cookies or history.
 | Route | Query | Response |
 | --- | --- | --- |
 | `GET /health` | None | `{ "status": "ok" }` independent of upstream availability. |
-| `GET /api/search-suggestions` | `query` | Bing autocomplete's `[query, suggestions]` JSON. |
+| `GET /api/search-suggestions` | `query` | Live autocomplete's `[query, suggestions]` JSON; Bing first, Google if Bing is unavailable. |
 | `GET /api/msn-feed` | Optional opaque `cursor` | Existing MSN public feed JSON and continuation cursor. |
 | `GET /api/bing-serp` | `query` | Sanitized Bing mobile results document and page metadata. |
 | `GET /api/web-page` | `url` | Sanitized public article/page document and page metadata. |
+
+Autocomplete uses Bing's fixed public endpoint first, then Google's fixed public
+autocomplete endpoint if Bing fails or returns an unusable response. Both share
+the existing four-second deadline and receive only the query and language, never
+the user's account, cookies or search history. The response retains at most five
+actual provider suggestions; no suggestions are invented.
 
 The service does not expose `/api/rewards`, account tokens, Microsoft cookies,
 `.local/` snapshots, source files, or arbitrary static files. Upstream requests
