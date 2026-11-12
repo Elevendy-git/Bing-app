@@ -33,7 +33,8 @@ export function PhonePreview({ children, theme, label = "Bing app preview" }: Ph
       const availableWidth = (stage.clientWidth - horizontalPadding) * DESKTOP_WIDTH_FRACTION;
       const availableHeight = stage.clientHeight - verticalPadding;
       if (availableWidth <= 0 || availableHeight <= 0) return;
-      setScale(Math.min(1, availableWidth / shellWidth, availableHeight / shellHeight));
+      const widthFit = stageStyle.getPropertyValue("--gnrc-preview-width-fit").trim() === "1";
+      setScale(Math.min(1, availableWidth / shellWidth, ...(widthFit ? [] : [availableHeight / shellHeight])));
     };
 
     updateScale();

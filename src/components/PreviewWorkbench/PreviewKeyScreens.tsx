@@ -3,6 +3,7 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNod
 import type { PreviewTheme } from "./PhonePreview";
 import { PreviewExpandedScreen } from "./PreviewExpandedScreen";
 import { PreviewScreenTile } from "./PreviewScreenTile";
+import { ResponsiveSidebar, useResponsiveNavigation } from "./ResponsiveNavigation";
 import type { PreviewScreen } from "./previewTypes";
 import styles from "./PreviewKeyScreens.module.css";
 import workbenchStyles from "./PreviewWorkbench.module.css";
@@ -20,6 +21,7 @@ export function PreviewKeyScreens({ screens, theme, navigationHeader }: {
   const updateFrameRef = useRef<number | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const closeExpandedScreen = useCallback(() => setExpandedId(null), []);
+  const { compact, onClose: closeNavigation } = useResponsiveNavigation();
   const expandedScreen = screens.find((screen) => screen.id === expandedId);
   const groups = useMemo(() => {
     const result = new Map<string, PreviewScreen[]>();
@@ -85,20 +87,15 @@ export function PreviewKeyScreens({ screens, theme, navigationHeader }: {
     if (!group) return;
     group.open = true;
     group.scrollIntoView?.({ behavior: "auto", block: "start", inline: "nearest" });
+    if (compact) closeNavigation();
   };
 
   return (
     <section className={workbenchStyles.library} aria-label="Key screens">
-      <nav className={workbenchStyles.libraryNavigation} aria-label="Key screen groups">
+      <ResponsiveSidebar variant="library" label="Key screen groups">
         {navigationHeader}
         <div className={workbenchStyles.sidebarBody}>
           <h2 className={workbenchStyles.sidebarHeading}>Key screens</h2>
-          <label className={workbenchStyles.keyScreenCompactNavigation}>
-            <span>Section</span>
-            <select aria-label="Key screen section" value={currentGroup ?? ""} onChange={event => selectGroup(event.target.value)}>
-              {groupEntries.map(([title]) => <option key={title} value={title}>{title}</option>)}
-            </select>
-          </label>
           <div className={workbenchStyles.navigationTree}>
             {groupEntries.map(([title], index) => <button key={title} type="button"
               className={workbenchStyles.navigationItem} aria-label={`Show ${title} group`}
@@ -108,7 +105,7 @@ export function PreviewKeyScreens({ screens, theme, navigationHeader }: {
             </button>)}
           </div>
         </div>
-      </nav>
+      </ResponsiveSidebar>
       <div ref={galleryRef} className={styles.gallery} role="region" aria-label="Key screens gallery">
         {groupEntries.map(([title, items], index) => (
           <details className={styles.group} key={title} id={`${navigationId}-${index}`}

@@ -234,7 +234,8 @@ export function Recent({ active = true, initialQuery = "", searchResetKey = 0, i
         </div>}
         </AnimatePresence>
       </motion.div>}
-      <div aria-hidden={keyboardVisible || undefined} {...(keyboardVisible || historyOverlay.presented ? { inert: "" } : {})}>
+      <div className={styles.navigationSurface} data-native-keyboard-hidden={nativeKeyboard && keyboardVisible || undefined}
+        aria-hidden={keyboardVisible || undefined} {...(keyboardVisible || historyOverlay.presented ? { inert: "" } : {})}>
       {!privateMode && <NewTabButton onClick={onNewTab} />}
       {footerVariant === "browser" ? <div className={styles.browserFooter}>
         <IABFooter recentSelected backLabel="Back to search results" navigationLabel="Recent browser navigation"

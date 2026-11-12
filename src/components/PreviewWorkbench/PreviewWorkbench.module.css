@@ -17,7 +17,6 @@
   --gnrc-preview-navigation-width: 232px;
   --gnrc-workbench-height: 100dvh;
   --gnrc-workbench-top: 0px;
-  --gnrc-workbench-resting-height: 100dvh;
 
   position: relative;
   display: flex;
@@ -62,8 +61,7 @@
 .viewContent[hidden],
 .collapsedToolbar[hidden] { display: none; }
 .viewContent { background: var(--gnrc-color-preview-stage); }
-.compactToolbar,
-.keyScreenCompactNavigation { display: none; }
+.compactToolbar { display: none; }
 
 .sidebar,
 .libraryNavigation {
@@ -157,7 +155,6 @@
 .navigationItem:focus-visible,
 .categoryToggle:focus-visible,
 .searchClear:focus-visible,
-.libraryCompactNavigation select:focus-visible,
 .textButton:focus-visible {
   outline: 2px solid var(--gnrc-color-preview-focus);
   outline-offset: 3px;
@@ -498,35 +495,6 @@
   padding-block: 7px;
 }
 
-.libraryCompactNavigation {
-  display: none;
-  min-width: 0;
-  width: 100%;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.libraryCompactNavigation label {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  gap: 4px;
-  color: var(--gnrc-color-preview-muted);
-  font-size: var(--gnrc-font-size-functional-caption);
-}
-
-.libraryCompactNavigation select {
-  width: 100%;
-  min-width: 0;
-  height: 40px;
-  padding: 0 8px;
-  border: 1px solid var(--gnrc-color-preview-stroke);
-  border-radius: var(--gnrc-border-radius-list-thumbnail);
-  background: var(--gnrc-color-preview-surface);
-  color: var(--gnrc-color-preview-foreground);
-  font: inherit;
-}
-
 .libraryHeading {
   margin-bottom: 24px;
 }
@@ -655,71 +623,109 @@
 }
 
 @media (max-width: 1024px) {
-  .root { --gnrc-preview-canvas-height: calc(var(--gnrc-workbench-resting-height, 100dvh) - 56px - env(safe-area-inset-top, 0px)); position: fixed; top: var(--gnrc-workbench-top, 0px); left: 0; display: flex; height: var(--gnrc-workbench-height, 100dvh); flex-direction: column; }
+  .root {
+    position: fixed;
+    top: var(--gnrc-workbench-top, 0px);
+    left: 0;
+    height: var(--gnrc-workbench-height, 100dvh);
+    flex-direction: column;
+  }
   .compactToolbar {
     display: flex;
     min-width: 0;
-    min-height: calc(56px + env(safe-area-inset-top, 0px));
-    padding: calc(5px + env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px)) 6px max(12px, env(safe-area-inset-left, 0px));
+    padding: env(safe-area-inset-top, 0px) max(12px, env(safe-area-inset-right, 0px)) 10px max(12px, env(safe-area-inset-left, 0px));
     flex: none;
-    align-items: center;
-    gap: 8px;
+    flex-direction: column;
     border-bottom: 1px solid var(--gnrc-color-preview-stroke);
     background: var(--gnrc-color-preview-inspector);
   }
-  .compactLogo { width: 28px; height: 28px; flex: none; }
-  .compactSelect { position: relative; display: flex; min-width: 0; max-width: 200px; flex: 1; }
-  .compactSelect select {
-    width: 100%; min-width: 0; height: 44px; padding: 0 26px 0 10px;
-    border: 0; border-radius: 9px; appearance: none;
-    background: var(--gnrc-color-preview-gallery); color: var(--gnrc-color-preview-foreground);
-    font: inherit; font-size: 16px; font-weight: 500; line-height: 22px;
-    text-overflow: ellipsis;
+  .compactToolbarRow {
+    display: flex;
+    min-width: 0;
+    height: 56px;
+    align-items: center;
+    gap: 8px;
   }
-  .compactSelect > svg { position: absolute; top: 12px; right: 6px; pointer-events: none; }
-  .compactPageSelect { max-width: none; }
-  .compactPageSelect select { background: transparent; }
-  .compactInspectorButton { display: grid; width: 44px; height: 44px; margin-left: auto; padding: 0; flex: none; place-items: center; border: 0; border-radius: 10px; background: transparent; color: var(--gnrc-color-preview-foreground); }
-  .compactInspectorButton:active { background: var(--gnrc-color-preview-selected); }
-  .compactSelect select:focus-visible, .compactInspectorButton:focus-visible, .compactReset:focus-visible,
-  .keyScreenCompactNavigation select:focus-visible { outline: 2px solid var(--gnrc-color-preview-focus); outline-offset: -2px; }
-  .stage { padding: 0; }
-  /* Only the retained live app fills a real mobile viewport. Gallery models stay intact. */
-  .stage > [data-live-preview] { width: 100% !important; height: 100% !important; margin: 0; }
-  [data-live-preview] > .device { width: 100% !important; height: 100% !important; transform: none !important; }
-  [data-live-preview] > .device > .deviceShell { display: none; }
-  [data-live-preview] .screen, [data-live-preview] .statusOverlay { width: 100% !important; height: 100% !important; left: 0 !important; top: 0 !important; }
-  [data-live-preview] .screen { mask-image: none !important; -webkit-mask-image: none !important; }
-  [data-live-preview] { --gnrc-ios-safe-bottom: max(16px, env(safe-area-inset-bottom, 0px)); }
+  .compactToolbar .brand { min-width: 0; min-height: 0; padding: 0; flex: 1; }
+  .compactToolbar .brandIcon { width: 28px; height: 28px; border-radius: 8px; }
+  .compactToolbar .brandIcon img { width: 22px; height: 22px; }
+  .compactToolbar .viewOptions { min-height: 44px; }
+  .compactToolbar .viewOption { min-height: 38px; font-size: 13px; }
+  .compactIconButton {
+    display: grid;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    flex: none;
+    place-items: center;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--gnrc-color-preview-foreground);
+    cursor: pointer;
+  }
+  .compactIconButton:hover { background: var(--gnrc-color-preview-hover); }
+  .compactIconButton:active { background: var(--gnrc-color-preview-selected); }
+  .compactIconButton[aria-expanded="true"] { background: var(--gnrc-color-preview-gallery); }
+  .compactIconButton:focus-visible, .compactReset:focus-visible {
+    outline: 2px solid var(--gnrc-color-preview-focus);
+    outline-offset: -2px;
+  }
+  /* Keep the same phone artwork and logical canvas as the desktop workspace. */
+  .stage {
+    --gnrc-preview-width-fit: 1;
+    padding: 16px;
+    overflow: hidden auto;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+  }
+  .stage::-webkit-scrollbar { display: none; }
   [data-live-preview] input:not([readonly]) { font-size: 16px; }
-  .settings[data-embedded] { width: 100%; min-height: 0; flex: none; border: 0; background: transparent; }
-  .settings[data-embedded] .settingsBody { padding: 0 0 20px; overflow: visible; }
-  .settings[data-embedded] .inspectorTitle { margin-top: 0; padding: 0 0 16px; font-size: 17px; }
-  .settings[data-embedded] .inspectorSection { padding: 20px 0; }
-  .settings[data-embedded] .inspectorSection h4, .settings[data-embedded] .settingsRow > span { font-size: 14px; }
-  .settings[data-embedded] .deviceField output { padding: 12px; font-size: 16px; }
-  .settings[data-embedded] .deviceDetails dd { font-size: 14px; }
-  .settings[data-embedded] .settingsOption { min-height: 60px; font-size: 14px; }
-  .compactReset { display: flex; min-height: 48px; margin-top: 20px; padding: 10px 12px; align-items: center; justify-content: center; gap: 10px; border: 0; border-radius: 10px; background: var(--gnrc-color-preview-gallery); color: var(--gnrc-color-preview-foreground); font: inherit; font-size: 16px; }
   .library { flex-direction: column; }
-  .libraryNavigation { width: 100%; max-height: none; flex: none; border-right: 0; border-bottom: 1px solid var(--gnrc-color-preview-stroke); background: var(--gnrc-color-preview-inspector); }
-  .libraryNavigation .brand, .libraryNavigation .sidebarHeading, .libraryNavigation .navigationTree { display: none; }
-  .libraryNavigation .sidebarBody { padding: 10px 16px 12px; gap: 10px; overflow: visible; }
-  .keyScreenCompactNavigation { display: flex; min-width: 0; align-items: center; gap: 12px; color: var(--gnrc-color-preview-muted); font-size: 14px; }
-  .keyScreenCompactNavigation select { min-width: 0; height: 44px; padding: 0 12px; flex: 1; border: 1px solid var(--gnrc-color-preview-stroke); border-radius: 10px; background: var(--gnrc-color-preview-surface); color: var(--gnrc-color-preview-foreground); font: inherit; font-size: 16px; }
-  .libraryCompactNavigation { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-  .libraryNavigation:has(.libraryCompactNavigation) .libraryCompactNavigation { display: grid; }
+  .compactNavigationPanel {
+    display: flex;
+    width: 100%;
+    min-height: 0;
+    max-height: min(360px, calc(var(--gnrc-workbench-height, 100dvh) * 0.45));
+    flex: none;
+    overflow: hidden;
+    border-bottom: 1px solid var(--gnrc-color-preview-stroke);
+    background: var(--gnrc-color-preview-sidebar);
+  }
+  .compactNavigationPanel[hidden] { display: none; }
+  [data-responsive-sidebar] {
+    width: 100%;
+    flex: 1 1 auto;
+    border: 0;
+  }
+  [data-responsive-sidebar] .brand { display: none; }
+  [data-responsive-sidebar] .sidebarBody { padding: 8px 12px 12px; }
+  [data-responsive-sidebar] .navigationItem { min-height: 44px; }
+  [data-responsive-sidebar] .categoryToggle { width: 32px; height: 44px; flex-basis: 32px; }
+  .settings[data-embedded] { width: 100%; min-height: 0; flex: none; border: 0; }
+  .settings[data-embedded] .settingsBody { padding: 16px 20px max(24px, env(safe-area-inset-bottom, 0px)); overflow: visible; }
+  .settings[data-embedded] .inspectorTitle { margin-top: 0; }
+  .settings[data-embedded] .settingsOption { min-height: 60px; }
+  .compactReset {
+    display: flex;
+    min-height: 44px;
+    margin-top: 20px;
+    padding: 10px 12px;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 0;
+    border-radius: 8px;
+    background: var(--gnrc-color-preview-gallery);
+    color: var(--gnrc-color-preview-foreground);
+    font: inherit;
+    cursor: pointer;
+  }
   .librarySearch { height: 44px; }
-  .librarySearch input, .libraryCompactNavigation select { font-size: 16px; }
-  .libraryCompactNavigation select { height: 44px; }
-  .libraryCompactNavigation label { gap: 2px; font-size: 12px; }
+  .librarySearch input { font-size: 16px; }
   .searchClear { width: 40px; height: 40px; }
   .gallery { padding: 20px 16px max(24px, env(safe-area-inset-bottom, 0px)); }
   .componentPreview { padding: 16px 12px; }
   .componentGrid { gap: 20px; }
-}
-
-@media (max-width: 360px) {
-  .compactToolbar { gap: 4px; padding-inline: 8px; }
-  .compactLogo { width: 24px; height: 24px; }
 }

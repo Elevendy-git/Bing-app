@@ -54,19 +54,33 @@ function mockWorkbenchMedia(compact = false) {
   };
 }
 
-function NavigablePrototype() {
+function NavigablePrototype({ onNavigate }: { onNavigate?: (page: PreviewPrototypePage) => void }) {
   const [page, setPage] = useState<PreviewPrototypePage>("home");
-  usePublishPreviewPrototypeNavigation(page, setPage);
+  usePublishPreviewPrototypeNavigation(page, page => { onNavigate?.(page); setPage(page); });
   return <>
     <output aria-label="Current prototype page">{page}</output>
     <input aria-label="Prototype draft" />
+    {page === "search" && <input autoFocus aria-label="Destination search" />}
   </>;
 }
 
-function renderCompactWorkbench() {
+function renderCompactWorkbench(onNavigate?: (page: PreviewPrototypePage) => void) {
   return render(<PreviewWorkbench title="Homepage" componentGroups={previewComponentGroups}>
-    <NavigablePrototype />
+    <NavigablePrototype onNavigate={onNavigate} />
   </PreviewWorkbench>);
+}
+
+function selectCompactView(name: "Prototype" | "Key screens" | "Library") {
+  // JSDOM cannot evaluate viewport CSS. matchMedia drives the React branch;
+  // labels let us exercise the compact toolbar's shared view switcher.
+  fireEvent.click(within(screen.getByLabelText("Workbench controls")).getByLabelText(name));
+}
+
+function openNavigation() {
+  const toggle = screen.getByLabelText("Open navigation");
+  act(() => toggle.focus());
+  fireEvent.click(toggle);
+  return screen.getByRole("region", { name: "Workbench navigation" });
 }
 
 describe("PreviewWorkbench", () => {
@@ -177,21 +191,35 @@ describe("PreviewWorkbench", () => {
     expect(searchPreview.closest("[data-theme]")).toHaveAttribute("data-theme", "dark");
   });
 
-  it("shares selection with compact controls and resets the item when changing category", () => {
-    renderWorkbench();
-    fireEvent.click(screen.getByRole("button", { name: "Library" }));
+  it("retains the original library tree, search and disclosure state across navigation visits", () => {
+    mockWorkbenchMedia(true);
+    renderCompactWorkbench();
+    selectCompactView("Library");
     const library = screen.getByRole("region", { name: "Component library" });
-    // JSDOM does not evaluate viewport media queries; test the compact controls' state wiring by label.
-    const categorySelect = within(library).getByLabelText("Library category");
-    const itemSelect = within(library).getByLabelText("Library item");
-    fireEvent.change(categorySelect, { target: { value: "navigation" } });
-    fireEvent.change(itemSelect, { target: { value: "footer" } });
-    expect(within(library).getByRole("heading", { name: "Footer", level: 1 })).toBeVisible();
-    expect(within(library).getByRole("button", { name: /^Footer/ })).toHaveAttribute("aria-current", "page");
-    expect(within(library).getByRole("heading", { name: "App Footer" })).toBeVisible();
-    fireEvent.change(categorySelect, { target: { value: "content" } });
-    expect(within(library).getByRole("heading", { name: "Content", level: 1 })).toBeVisible();
-    expect(itemSelect).toHaveValue("all");
+    const panel = openNavigation();
+    const navigation = within(panel).getByRole("navigation", { name: "Component categories" });
+    fireEvent.click(within(navigation).getByRole("button", { name: "Collapse Content" }));
+    expect(panel).toBeVisible();
+    expect(within(navigation).getByRole("button", { name: "Expand Content" })).toBeVisible();
+    fireEvent.click(screen.getByLabelText("Close navigation"));
+    expect(panel).not.toBeVisible();
+
+    openNavigation();
+    expect(within(navigation).getByRole("button", { name: "Expand Content" })).toBeVisible();
+    const search = within(navigation).getByRole("searchbox", { name: "Search library" });
+    fireEvent.change(search, { target: { value: "avatar private" } });
+    expect(panel).toBeVisible();
+    fireEvent.click(within(navigation).getByRole("button", { name: "Avatar" }));
+    expect(panel).not.toBeVisible();
+    expect(within(library).getByRole("heading", { name: "Avatar", level: 1 })).toBeVisible();
+
+    openNavigation();
+    expect(within(navigation).getByRole("searchbox", { name: "Search library" })).toBe(search);
+    expect(search).toHaveValue("avatar private");
+    expect(within(navigation).getByRole("button", { name: "Avatar" })).toHaveAttribute("aria-current", "page");
+    fireEvent.click(within(navigation).getByRole("button", { name: "Clear library search" }));
+    expect(panel).toBeVisible();
+    expect(search).toHaveValue("");
   });
 
   it("searches the whole library from a selected component and narrows previews using multiple words", () => {
@@ -207,7 +235,7 @@ describe("PreviewWorkbench", () => {
     expect(within(library).queryByRole("heading", { name: "Overview" })).not.toBeInTheDocument();
     expect(within(library).queryByRole("heading", { name: "Money" })).not.toBeInTheDocument();
     expect(within(library).queryByRole("button", { name: /^Footer/ })).not.toBeInTheDocument();
-    expect(within(library).getByLabelText("Library category")).toHaveValue("all");
+    expect(within(library).getByRole("button", { name: /^All results/ })).toHaveAttribute("aria-current", "page");
   });
 
   it("finds states inside combined previews, expands their category, and clears back to all items", () => {
@@ -219,7 +247,7 @@ describe("PreviewWorkbench", () => {
     fireEvent.change(within(library).getByRole("searchbox", { name: "Search library" }), { target: { value: "final" } });
     expect(within(navigation).getByRole("button", { name: /^Glance Card/ })).toBeVisible();
     expect(within(library).getByRole("status")).toHaveTextContent("1 component · 1 preview");
-    fireEvent.change(within(library).getByLabelText("Library item"), { target: { value: "glance-card" } });
+    fireEvent.click(within(navigation).getByRole("button", { name: "Glance Card" }));
     expect(within(library).getByRole("heading", { name: "Glance Card", level: 1 })).toBeVisible();
     expect(within(library).getByRole("heading", { name: "Sports" })).toBeVisible();
     fireEvent.click(within(library).getByRole("button", { name: "Clear library search" }));
@@ -254,7 +282,8 @@ describe("PreviewWorkbench", () => {
     renderWorkbench();
     fireEvent.click(screen.getByRole("button", { name: "Library" }));
     const library = screen.getByRole("region", { name: "Component library" });
-    fireEvent.change(within(library).getByLabelText("Library item"), { target: { value: "list" } });
+    fireEvent.click(within(within(library).getByRole("navigation", { name: "Component categories" }))
+      .getByRole("button", { name: "List" }));
     const list = within(library).getByRole("region", { name: "List" });
     const previews = within(list).getAllByRole("article");
     expect(previews).toHaveLength(8);
@@ -312,27 +341,40 @@ describe("PreviewWorkbench", () => {
     expect(screen.getByRole("button", { name: "Close settings" })).toHaveFocus();
   });
 
-  it("uses compact view and page controls without losing the live prototype between views", () => {
+  it("keeps the web workbench view switcher and original navigation tree without losing the live draft", () => {
     mockWorkbenchMedia(true);
     renderCompactWorkbench();
     expect(screen.queryByRole("complementary", { name: "Prototype navigation" })).not.toBeInTheDocument();
     expect(screen.queryByRole("dialog", { name: "Inspector" })).not.toBeInTheDocument();
     expect(screen.getByLabelText("Open inspector")).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getByLabelText("Open navigation")).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByRole("combobox", { name: "Prototype page" })).not.toBeInTheDocument();
     const draft = screen.getByRole("textbox", { name: "Prototype draft" });
     fireEvent.change(draft, { target: { value: "weekend trip" } });
-    fireEvent.change(screen.getByLabelText("Prototype page"), { target: { value: "recent" } });
+    const navigation = openNavigation();
+    expect(navigation).toBeVisible();
+    fireEvent.click(within(navigation).getByRole("button", { name: "Open Recent page" }));
+    expect(screen.getByLabelText("Open navigation")).toHaveAttribute("aria-expanded", "false");
+    expect(navigation).not.toBeVisible();
     expect(screen.getByLabelText("Current prototype page")).toHaveTextContent("recent");
-    expect(screen.getByLabelText("Prototype page")).toHaveValue("recent");
 
-    fireEvent.change(screen.getByLabelText("Workbench view"), { target: { value: "keyscreens" } });
+    openNavigation();
+    selectCompactView("Key screens");
+    expect(screen.queryByRole("region", { name: "Workbench navigation" })).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Open navigation")).toHaveAttribute("aria-expanded", "false");
     expect(screen.getByRole("region", { name: "Key screens" })).toBeVisible();
-    expect(screen.queryByLabelText("Prototype page")).not.toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText("Workbench view"), { target: { value: "library" } });
+    const groups = openNavigation();
+    expect(within(groups).getByRole("navigation", { name: "Key screen groups" })).toBeVisible();
+    fireEvent.click(within(groups).getByRole("button", { name: "Show Key screens group" }));
+    expect(groups).not.toBeVisible();
+    selectCompactView("Library");
     expect(screen.getByRole("region", { name: "Component library" })).toBeVisible();
-    fireEvent.change(screen.getByLabelText("Workbench view"), { target: { value: "prototype" } });
+    selectCompactView("Prototype");
     expect(screen.getByRole("textbox", { name: "Prototype draft" })).toBe(draft);
     expect(draft).toHaveValue("weekend trip");
-    expect(screen.getByLabelText("Prototype page")).toHaveValue("recent");
+    expect(screen.getByLabelText("Current prototype page")).toHaveTextContent("recent");
+    const reopened = openNavigation();
+    expect(within(reopened).getByRole("button", { name: "Open Recent page" })).toHaveAttribute("aria-current", "page");
   });
 
   it("shares appearance and reset through the mobile Inspector", async () => {
@@ -341,7 +383,10 @@ describe("PreviewWorkbench", () => {
     fireEvent.change(screen.getByRole("textbox", { name: "Prototype draft" }), { target: { value: "clear me" } });
     fireEvent.click(screen.getByLabelText("Open inspector"));
     const inspector = screen.getByRole("dialog", { name: "Inspector" });
-    expect(within(inspector).getByText("Fits your screen")).toBeVisible();
+    expect(inspector).not.toHaveAttribute("data-side");
+    expect(within(inspector).getByText("iPhone 18 Pro")).toBeVisible();
+    expect(within(inspector).getByText("402 × 874 px")).toBeVisible();
+    expect(within(inspector).queryByText("This device")).not.toBeInTheDocument();
     expect(within(inspector).queryByRole("group", { name: "Preview view" })).not.toBeInTheDocument();
     fireEvent.click(within(inspector).getByRole("button", { name: "Dark" }));
     expect(screen.getByRole("region", { name: "Bing app preview" })).toHaveAttribute("data-theme", "dark");
@@ -351,12 +396,91 @@ describe("PreviewWorkbench", () => {
     await waitFor(() => expect(screen.queryByRole("dialog", { name: "Inspector" })).not.toBeInTheDocument());
   });
 
-  it("dismisses the mobile Inspector on desktop resize while retaining the same live app", () => {
+  it("expands navigation inline without a modal or background inertness and allows the same toggle to close it", () => {
+    mockWorkbenchMedia(true);
+    renderCompactWorkbench();
+    const toggle = screen.getByLabelText("Open navigation");
+    expect(toggle).not.toHaveAttribute("aria-haspopup");
+    const navigation = openNavigation();
+    expect(toggle).toHaveAccessibleName("Close navigation");
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    expect(toggle).toHaveAttribute("aria-controls", navigation.id);
+    expect(toggle).toHaveFocus();
+    expect(navigation.closest("dialog")).toBeNull();
+    expect(document.querySelector("dialog[open]")).toBeNull();
+    expect(document.querySelector("[inert]")).toBeNull();
+    const draft = screen.getByRole("textbox", { name: "Prototype draft" });
+    act(() => draft.focus());
+    expect(draft).toHaveFocus();
+    act(() => toggle.focus());
+    fireEvent.click(toggle);
+    expect(navigation).toHaveAttribute("hidden");
+    expect(toggle).toHaveAccessibleName("Open navigation");
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(toggle).toHaveFocus();
+
+    selectCompactView("Library");
+    const libraryNavigation = openNavigation();
+    const search = within(libraryNavigation).getByRole("searchbox", { name: "Search library" });
+    act(() => search.focus());
+    // Safari can dispatch a button tap without moving focus out of the input.
+    fireEvent.click(screen.getByLabelText("Close navigation"));
+    expect(libraryNavigation).not.toBeVisible();
+    expect(screen.getByLabelText("Open navigation")).toHaveFocus();
+  });
+
+  it("clears a library query on the first Escape and closes inline navigation on the second", () => {
+    mockWorkbenchMedia(true);
+    renderCompactWorkbench();
+    selectCompactView("Library");
+    const navigation = openNavigation();
+    const search = within(navigation).getByRole("searchbox", { name: "Search library" });
+    act(() => search.focus());
+    fireEvent.change(search, { target: { value: "avatar private" } });
+    fireEvent.keyDown(search, { key: "Escape" });
+    expect(search).toHaveValue("");
+    expect(search).toHaveFocus();
+    expect(navigation).toBeVisible();
+    fireEvent.keyDown(search, { key: "Escape" });
+    expect(navigation).not.toBeVisible();
+    expect(screen.getByLabelText("Open navigation")).toHaveFocus();
+  });
+
+  it("immediately opens Search without taking focus away from its input or replacing the live draft", () => {
+    mockWorkbenchMedia(true);
+    const onNavigate = vi.fn(() => expect(document.querySelector("dialog[open]")).toBeNull());
+    renderCompactWorkbench(onNavigate);
+    const draft = screen.getByRole("textbox", { name: "Prototype draft" });
+    fireEvent.change(draft, { target: { value: "retained search draft" } });
+    const navigation = openNavigation();
+    const pageButton = within(navigation).getByRole("button", { name: "Open Search page" });
+    act(() => pageButton.focus());
+    fireEvent.click(pageButton);
+    expect(navigation).not.toBeVisible();
+    expect(onNavigate).toHaveBeenCalledExactlyOnceWith("search");
+    expect(screen.getByLabelText("Current prototype page")).toHaveTextContent("search");
+    expect(screen.getByRole("textbox", { name: "Prototype draft" })).toBe(draft);
+    expect(draft).toHaveValue("retained search draft");
+    expect(screen.getByRole("textbox", { name: "Destination search" })).toHaveFocus();
+  });
+
+  it("closes inline navigation before opening the Inspector", () => {
+    mockWorkbenchMedia(true);
+    renderCompactWorkbench();
+    const navigation = openNavigation();
+    fireEvent.click(screen.getByLabelText("Open inspector"));
+    expect(navigation).not.toBeVisible();
+    expect(screen.getByRole("dialog", { name: "Inspector" })).toBeVisible();
+  });
+
+  it("dismisses compact panels on desktop resize while retaining the same live app and route", () => {
     const { setCompact } = mockWorkbenchMedia(true);
     renderCompactWorkbench();
     const draft = screen.getByRole("textbox", { name: "Prototype draft" });
     fireEvent.change(draft, { target: { value: "keep across resize" } });
-    fireEvent.change(screen.getByLabelText("Prototype page"), { target: { value: "history" } });
+    const navigation = openNavigation();
+    fireEvent.click(within(navigation).getByRole("button", { name: "Open History page" }));
+    expect(navigation).not.toBeVisible();
     fireEvent.click(screen.getByLabelText("Open inspector"));
     expect(screen.getByRole("dialog", { name: "Inspector" })).toBeVisible();
     setCompact(false);
@@ -368,7 +492,13 @@ describe("PreviewWorkbench", () => {
     setCompact(true);
     expect(screen.queryByRole("dialog", { name: "Inspector" })).not.toBeInTheDocument();
     expect(screen.getByLabelText("Open inspector")).toHaveAttribute("aria-expanded", "false");
-    expect(screen.getByLabelText("Prototype page")).toHaveValue("history");
+    expect(screen.getByLabelText("Current prototype page")).toHaveTextContent("history");
     expect(screen.getByRole("textbox", { name: "Prototype draft" })).toBe(draft);
+    openNavigation();
+    setCompact(false);
+    setCompact(true);
+    expect(screen.queryByRole("region", { name: "Workbench navigation" })).not.toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Prototype draft" })).toBe(draft);
+    expect(draft).toHaveValue("keep across resize");
   });
 });

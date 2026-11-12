@@ -20,7 +20,7 @@ export function WorkbenchSheet({ id, title, open, onClose, children }: Workbench
   latestOpen.current = open;
   const headingId = useId();
   const reducedMotion = useReducedMotion();
-  const y = useMotionValue("100%");
+  const offset = useMotionValue("100%");
   const backdropOpacity = useMotionValue(0);
 
   const releaseModal = useCallback((dialog: HTMLDialogElement) => {
@@ -48,17 +48,19 @@ export function WorkbenchSheet({ id, title, open, onClose, children }: Workbench
 
     let cancelled = false;
     // Retarget the same values so opening during dismissal continues from the drawn pose.
-    const sheet = animate(y, reducedMotion ? "0%" : open ? "0%" : "100%", reducedMotion ? iosMotion.instant : iosMotion.sheet);
+    const sheet = animate(offset, reducedMotion || open ? "0%" : "100%", reducedMotion ? iosMotion.instant : iosMotion.sheet);
     const backdrop = animate(backdropOpacity, open ? 1 : 0, reducedMotion ? iosMotion.instant : iosMotion.fade);
     void Promise.all([sheet, backdrop]).then(() => {
-      if (!cancelled && !open && !latestOpen.current) releaseModal(dialog);
+      if (!cancelled && !open && !latestOpen.current && dialog.open) {
+        releaseModal(dialog);
+      }
     });
     return () => {
       cancelled = true;
       sheet.stop();
       backdrop.stop();
     };
-  }, [open, reducedMotion, y, backdropOpacity, releaseModal]);
+  }, [open, reducedMotion, offset, backdropOpacity, releaseModal]);
 
   const requestClose = () => { if (latestOpen.current) onClose(); };
 
@@ -67,7 +69,7 @@ export function WorkbenchSheet({ id, title, open, onClose, children }: Workbench
       onCancel={(event) => { event.preventDefault(); requestClose(); }}
       onClick={(event) => { if (event.target === event.currentTarget) requestClose(); }}>
       <motion.div className={styles.backdrop} style={{ opacity: backdropOpacity }} aria-hidden="true" onClick={requestClose} />
-      <motion.div className={styles.sheet} style={{ y }}>
+      <motion.div className={styles.sheet} style={{ y: offset }}>
         <header className={styles.header}>
           <h2 id={headingId}>{title}</h2>
           <button type="button" className={styles.closeButton} aria-label={`Close ${title.toLowerCase()}`} onClick={requestClose}>

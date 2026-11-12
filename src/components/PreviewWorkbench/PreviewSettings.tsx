@@ -4,11 +4,12 @@ import {
   WeatherMoon20Regular, WeatherSunny20Regular,
 } from "@fluentui/react-icons";
 import {
-  PREVIEW_APPEARANCES, PREVIEW_VIEWS,
+  PREVIEW_APPEARANCES,
   type PreviewAppearance, type PreviewView,
 } from "./previewTypes";
 import styles from "./PreviewWorkbench.module.css";
 import { PREVIEW_DEVICE } from "./previewDevice";
+import { PreviewViewSwitcher } from "./PreviewViewSwitcher";
 
 const APPEARANCE_ICONS = {
   system: Desktop20Regular,
@@ -27,12 +28,11 @@ interface PreviewSettingsProps {
   onClose: () => void;
   onResetPrototype: () => void;
   embedded?: boolean;
-  responsiveDevice?: boolean;
 }
 
 export function PreviewSettings({
   id, view, appearance, title, focusOnMount,
-  onViewChange, onAppearanceChange, onClose, onResetPrototype, embedded = false, responsiveDevice = false,
+  onViewChange, onAppearanceChange, onClose, onResetPrototype, embedded = false,
 }: PreviewSettingsProps) {
   const closeRef = useRef<HTMLButtonElement>(null);
 
@@ -67,22 +67,13 @@ export function PreviewSettings({
         </div>
       </header>}
       <div className={styles.settingsBody}>
-          {!embedded && <div className={styles.viewOptions} role="group" aria-label="Preview view">
-            {PREVIEW_VIEWS.map((option) => {
-              return (
-                <button key={option.value} type="button" className={styles.viewOption}
-                  aria-label={option.label} aria-pressed={view === option.value} onClick={() => onViewChange(option.value)}>
-                  {option.value === "keyscreens" ? "Screens" : option.label}
-                </button>
-              );
-            })}
-          </div>}
+        {!embedded && <PreviewViewSwitcher view={view} onChange={onViewChange} />}
         <h3 className={styles.inspectorTitle}>{title}</h3>
         {view !== "library" && <section className={styles.inspectorSection} aria-label="Preview device">
           <h4>Device</h4>
-          <div className={styles.deviceField}><output>{responsiveDevice ? "This device" : PREVIEW_DEVICE.name}</output></div>
+          <div className={styles.deviceField}><output>{PREVIEW_DEVICE.name}</output></div>
           <dl className={styles.deviceDetails}>
-            <div><dt>Viewport</dt><dd>{responsiveDevice ? "Fits your screen" : `${PREVIEW_DEVICE.screenWidth} × ${PREVIEW_DEVICE.screenHeight} px`}</dd></div>
+            <div><dt>Viewport</dt><dd>{`${PREVIEW_DEVICE.screenWidth} × ${PREVIEW_DEVICE.screenHeight} px`}</dd></div>
           </dl>
         </section>}
         <div className={styles.settingsRow}>

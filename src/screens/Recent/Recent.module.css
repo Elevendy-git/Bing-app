@@ -14,6 +14,8 @@
 .root, .root * { box-sizing: border-box; }
 .browserFooter { position: absolute; inset: auto 0 0; z-index: 3; background: var(--gnrc-color-app-footer-surface); }
 .footerSafeArea { height: var(--gnrc-ios-safe-bottom); }
+/* A device keyboard has no simulated surface to cover the retained navigation. */
+.navigationSurface[data-native-keyboard-hidden] { visibility: hidden; }
 .keyboardSurface { position: absolute; inset: auto 0 0; z-index: 4; height: var(--gnrc-ios-keyboard-height); }
 .root .homeIndicator { z-index: 5; }
 .header { flex: none; background: inherit; }
@@ -50,6 +52,3 @@ button.viewAllTabs:focus-visible { outline: 2px solid var(--gnrc-color-app-list-
 /* Figma's card stroke is inset, so its 198 px height excludes stroke width. */
 .listCard { width: 100%; border: 0; box-shadow: inset 0 0 0 var(--gnrc-border-width-card) var(--gnrc-color-app-list-card-stroke); }
 .emptyContent { padding-bottom: 0; overflow: hidden; }
-/* A native keyboard can shorten the visible app viewport. Keep the illustration
-   anchored to the resting canvas rather than recentering it above the keyboard. */
-.emptyContent > div { height: var(--gnrc-preview-canvas-height, 100%); bottom: auto; }

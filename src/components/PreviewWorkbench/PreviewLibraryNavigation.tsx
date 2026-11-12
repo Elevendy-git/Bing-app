@@ -1,5 +1,6 @@
 import { useId, useState, type ReactNode, type RefObject } from "react";
 import { ChevronRight20Regular, Dismiss16Regular, Search20Regular } from "@fluentui/react-icons";
+import { ResponsiveSidebar, useResponsiveNavigation } from "./ResponsiveNavigation";
 import {
   PREVIEW_LIBRARY_CATEGORIES,
   type PreviewComponentGroup,
@@ -22,6 +23,7 @@ interface PreviewLibraryNavigationProps {
 
 export function PreviewLibraryNavigation({ groups, selection, onSelect, query, onSearch, onClearSearch, searchRef, resultsId, navigationHeader }: PreviewLibraryNavigationProps) {
   const navigationId = useId();
+  const { compact, onClose: closeNavigation } = useResponsiveNavigation();
   const [collapsed, setCollapsed] = useState<ReadonlySet<PreviewLibraryCategory>>(new Set());
   const allLabel = query.trim() ? "All results" : "All library items";
   const selectedGroup = selection.kind === "group" ? groups.find((group) => group.id === selection.id) : undefined;
@@ -30,7 +32,6 @@ export function PreviewLibraryNavigation({ groups, selection, onSelect, query, o
     ...category,
     groups: groups.filter((group) => group.category === category.id),
   })).filter((category) => category.groups.length > 0);
-  const compactGroups = selectedCategory ? groups.filter((group) => group.category === selectedCategory) : groups;
 
   const select = (next: PreviewLibrarySelection) => {
     const category = next.kind === "category" ? next.id
@@ -41,6 +42,7 @@ export function PreviewLibraryNavigation({ groups, selection, onSelect, query, o
       return expanded;
     });
     onSelect(next);
+    if (compact) closeNavigation();
   };
 
   const toggleCategory = (id: PreviewLibraryCategory) => {
@@ -53,7 +55,7 @@ export function PreviewLibraryNavigation({ groups, selection, onSelect, query, o
   };
 
   return (
-    <nav className={styles.libraryNavigation} aria-label="Component categories">
+    <ResponsiveSidebar variant="library" label="Component categories">
       {navigationHeader}
       <div className={styles.sidebarBody}>
         <h2 className={styles.sidebarHeading}>Library</h2>
@@ -113,29 +115,7 @@ export function PreviewLibraryNavigation({ groups, selection, onSelect, query, o
             );
           })}
         </div>
-        <div className={styles.libraryCompactNavigation}>
-          <label>
-            Category
-            <select aria-label="Library category" value={selectedCategory ?? "all"} onChange={(event) => {
-              const category = PREVIEW_LIBRARY_CATEGORIES.find((item) => item.id === event.target.value);
-              select(category ? { kind: "category", id: category.id } : { kind: "all" });
-            }}>
-              <option value="all">{query.trim() ? "All results" : "All items"} ({groups.length})</option>
-              {sections.map((category) => <option value={category.id} key={category.id}>{category.label} ({category.groups.length})</option>)}
-            </select>
-          </label>
-          <label>
-            Item
-            <select aria-label="Library item" value={selectedGroup?.id ?? "all"} onChange={(event) => {
-              const group = groups.find((item) => item.id === event.target.value);
-              select(group ? { kind: "group", id: group.id } : selectedCategory ? { kind: "category", id: selectedCategory } : { kind: "all" });
-            }}>
-              <option value="all">{selectedCategory ? "All in category" : "All items"}</option>
-              {compactGroups.map((group) => <option value={group.id} key={group.id}>{group.title}</option>)}
-            </select>
-          </label>
-        </div>
       </div>
-    </nav>
+    </ResponsiveSidebar>
   );
 }

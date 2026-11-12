@@ -10,9 +10,10 @@ import { CompactWorkbenchToolbar } from "./CompactWorkbenchToolbar";
 import { WorkbenchSheet } from "./WorkbenchSheet";
 import { useCompactWorkbench } from "./useCompactWorkbench";
 import { useWorkbenchViewport } from "./useWorkbenchViewport";
+import { ResponsiveNavigationProvider, ResponsiveSidebar } from "./ResponsiveNavigation";
 import {
   PREVIEW_PROTOTYPE_PAGES, PreviewPrototypeNavigationProvider, PreviewPrototypeNavigationTarget,
-  usePreviewPrototypeNavigation,
+  usePreviewPrototypeNavigation, type PreviewPrototypePage,
 } from "./PreviewPrototypeNavigation";
 import type { PreviewAppearance, PreviewComponentGroup, PreviewScreen, PreviewView } from "./previewTypes";
 import { usePreviewTheme } from "./usePreviewTheme";
@@ -48,10 +49,13 @@ function WorkbenchContent({
   const [settingsOpen, setSettingsOpen] = useState(true);
   const [focusSettings, setFocusSettings] = useState(false);
   const [mobileSettingsOpen, setMobileSettingsOpen] = useState(false);
+  const [navigationOpen, setNavigationOpen] = useState(false);
   const compact = useCompactWorkbench();
   const viewportStyle = useWorkbenchViewport(compact);
   const settingsButtonRef = useRef<HTMLButtonElement>(null);
+  const navigationButtonRef = useRef<HTMLButtonElement>(null);
   const settingsId = useId();
+  const navigationId = useId();
   const theme = usePreviewTheme(appearance);
   const { currentPage, requestNavigation, available } = usePreviewPrototypeNavigation();
   const pageTitle = PREVIEW_PROTOTYPE_PAGES.find(item => item.id === currentPage)?.label
@@ -63,27 +67,48 @@ function WorkbenchContent({
     setSettingsOpen(false);
   }, []);
   const closeMobileSettings = useCallback(() => setMobileSettingsOpen(false), []);
+  const closeNavigation = useCallback(() => {
+    // Move focus out before hiding the disclosure. A newly opened Search can
+    // then take focus normally without a modal or delayed restoration.
+    if (document.getElementById(navigationId)?.contains(document.activeElement)) {
+      navigationButtonRef.current?.focus({ preventScroll: true });
+    }
+    setNavigationOpen(false);
+  }, [navigationId]);
+  const selectPage = (page: PreviewPrototypePage) => {
+    closeNavigation();
+    requestNavigation(page);
+  };
+  const changeView = (next: PreviewView) => {
+    closeNavigation();
+    setView(next);
+  };
   useEffect(() => { if (!compact) setMobileSettingsOpen(false); }, [compact]);
+  useEffect(() => {
+    setNavigationOpen(false);
+  }, [compact, view]);
   useEffect(() => {
     if (!compact && !settingsOpen) settingsButtonRef.current?.focus();
   }, [compact, settingsOpen]);
 
   return (
+    <ResponsiveNavigationProvider compact={compact} open={navigationOpen} id={navigationId} onClose={closeNavigation}>
     <div className={styles.root} data-product="consumer" data-theme={theme} data-view={view} style={viewportStyle}>
-      {compact && <CompactWorkbenchToolbar view={view} onViewChange={setView}
-        page={currentPage} pageTitle={currentPage === "serp" ? "IAB" : pageTitle} navigationAvailable={available} onNavigate={requestNavigation}
-        settingsId={settingsId} settingsOpen={mobileSettingsOpen} onOpenSettings={() => setMobileSettingsOpen(true)} />}
-      {!compact && view === "prototype" && <aside className={styles.sidebar} aria-label="Prototype navigation">
+      {compact && <CompactWorkbenchToolbar view={view} onViewChange={changeView}
+        navigationId={navigationId} navigationOpen={navigationOpen} navigationButtonRef={navigationButtonRef}
+        onToggleNavigation={() => navigationOpen ? closeNavigation() : setNavigationOpen(true)}
+        settingsId={settingsId} settingsOpen={mobileSettingsOpen} onOpenSettings={() => { closeNavigation(); setMobileSettingsOpen(true); }} />}
+      {view === "prototype" && <ResponsiveSidebar label="Prototype navigation">
         <PreviewWorkbenchBrand />
         <div className={styles.sidebarBody}>
           <nav className={styles.navigationTree} aria-label="Prototype pages">
             {PREVIEW_PROTOTYPE_PAGES.map(item => <button key={item.id} type="button" className={styles.navigationItem}
               aria-label={`Open ${item.label} page`}
               aria-current={currentPage === item.id || (!currentPage && item.id === "home") ? "page" : undefined}
-              disabled={!available} onClick={() => requestNavigation(item.id)}>{item.label}</button>)}
+              disabled={!available} onClick={() => selectPage(item.id)}>{item.label}</button>)}
           </nav>
         </div>
-      </aside>}
+      </ResponsiveSidebar>}
       <div className={styles.previewArea}>
         <div className={styles.collapsedToolbar} hidden={compact || settingsOpen}>
           {view === "prototype" && <button type="button" className={styles.iconButton} aria-label="Reset prototype"
@@ -115,15 +140,16 @@ function WorkbenchContent({
         <PreviewSettings
           id={settingsId} view={view} appearance={appearance}
           title={inspectorTitle} onResetPrototype={resetPrototype}
-          focusOnMount={focusSettings} onViewChange={setView} onAppearanceChange={setAppearance} onClose={closeSettings}
+          focusOnMount={focusSettings} onViewChange={changeView} onAppearanceChange={setAppearance} onClose={closeSettings}
         />
       )}
       {compact && <WorkbenchSheet id={settingsId} title="Inspector" open={mobileSettingsOpen} onClose={closeMobileSettings}>
         <PreviewSettings id={`${settingsId}-content`} view={view} appearance={appearance}
           title={inspectorTitle} onResetPrototype={() => { resetPrototype(); closeMobileSettings(); }}
-          focusOnMount={false} onViewChange={setView} onAppearanceChange={setAppearance} onClose={closeMobileSettings}
-          embedded responsiveDevice={view === "prototype"} />
+          focusOnMount={false} onViewChange={changeView} onAppearanceChange={setAppearance} onClose={closeMobileSettings}
+          embedded />
       </WorkbenchSheet>}
     </div>
+    </ResponsiveNavigationProvider>
   );
 }

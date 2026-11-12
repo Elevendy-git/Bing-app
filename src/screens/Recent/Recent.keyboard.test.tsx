@@ -1,6 +1,7 @@
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Recent } from "./Recent";
+import { COMPACT_INPUT_QUERY, NativeKeyboardProvider } from "../../components/IOSNative/KeyboardEnvironment";
 
 const emptyActivity = { tabs: [], historyEntries: [], conversationEntries: [], bookmarkEntries: [] };
 const getInput = () => screen.getByRole("searchbox", { name: "Search tabs, recents and bookmarks" }) as HTMLInputElement;
@@ -11,6 +12,27 @@ beforeEach(() => vi.stubGlobal("fetch", vi.fn(async () => ({ ok: true, json: asy
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 
 describe("Recent keyboard", () => {
+  it.each(["app", "browser"] as const)("visually hides the retained %s navigation during native input, then restores it on blur", footerVariant => {
+    vi.stubGlobal("matchMedia", vi.fn((query: string) => ({
+      matches: query === COMPACT_INPUT_QUERY, media: query, onchange: null,
+      addEventListener: vi.fn(), removeEventListener: vi.fn(),
+    })));
+    render(<NativeKeyboardProvider enabled><Recent {...emptyActivity} footerVariant={footerVariant}
+      onSearchSubmit={vi.fn()} onNavigate={vi.fn()} onNewTab={vi.fn()} /></NativeKeyboardProvider>);
+    const newTab = screen.getByRole("button", { name: "New tab" });
+    const navigation = newTab.parentElement!;
+    expect(newTab).toBeVisible();
+    focusInput();
+    expect(getInput()).toHaveAttribute("inputmode", "search");
+    expect(screen.queryByRole("group", { name: "iOS keyboard" })).not.toBeInTheDocument();
+    expect(navigation).toHaveAttribute("data-native-keyboard-hidden", "true");
+    expect(newTab).not.toBeVisible();
+    act(() => getInput().blur());
+    expect(navigation).not.toHaveAttribute("data-native-keyboard-hidden");
+    expect(screen.getByRole("button", { name: "New tab" })).toBe(newTab);
+    expect(newTab).toBeVisible();
+  });
+
   it.each(["👍🏽", "🇨🇳", "👩‍👩‍👧‍👦", "e\u0301"])("deletes the complete %s grapheme while filtering", character => {
     render(<Recent {...emptyActivity} onSearchSubmit={vi.fn()} />);
     focusInput();

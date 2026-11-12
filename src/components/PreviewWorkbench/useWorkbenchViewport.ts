@@ -2,7 +2,7 @@ import { useLayoutEffect, useState, type CSSProperties } from "react";
 
 /** Follow the visible browser canvas when a mobile keyboard or browser bar resizes it. */
 export function useWorkbenchViewport(compact: boolean): CSSProperties | undefined {
-  const [viewport, setViewport] = useState<{ height: number; top: number; width: number; restingHeight: number }>();
+  const [viewport, setViewport] = useState<{ height: number; top: number }>();
   useLayoutEffect(() => {
     if (!compact || !window.visualViewport) {
       setViewport(undefined);
@@ -14,12 +14,8 @@ export function useWorkbenchViewport(compact: boolean): CSSProperties | undefine
       if (Math.abs(visual.scale - 1) > 0.01 || visual.height <= 0) return;
       const height = Math.round(visual.height);
       const top = Math.max(0, Math.round(visual.offsetTop));
-      const width = Math.round(visual.width);
-      setViewport(previous => {
-        const restingHeight = previous?.width === width ? Math.max(previous.restingHeight, height) : height;
-        return previous?.height === height && previous.top === top && previous.width === width
-          ? previous : { height, top, width, restingHeight };
-      });
+      setViewport(previous => previous?.height === height && previous.top === top
+        ? previous : { height, top });
     };
     update();
     visual.addEventListener("resize", update);
@@ -32,6 +28,5 @@ export function useWorkbenchViewport(compact: boolean): CSSProperties | undefine
   return compact && viewport ? {
     "--gnrc-workbench-height": `${viewport.height}px`,
     "--gnrc-workbench-top": `${viewport.top}px`,
-    "--gnrc-workbench-resting-height": `${viewport.restingHeight}px`,
   } as CSSProperties : undefined;
 }

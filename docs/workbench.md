@@ -87,26 +87,40 @@ controls in the Inspector; Reset and Close sit in its header. The fixed iPhone
 18 Pro geometry is shown as read-only device information. The phone fits the
 available canvas automatically and keeps the product's typography separate from
 the workbench font. Below 1100 px the side columns narrow; at 1024 px and below
-a compact 56 px toolbar replaces the sidebar and persistent Inspector. The toolbar
-uses native view/page selectors; Inspector opens as a modal bottom sheet. It shares
-the desktop settings, starts closed, and dismisses before returning focus to its
-launcher. Reset remains inside Inspector. Library content remains capped at 1120 px
-and scrolls independently.
+the same view switcher moves into a compact workbench header.
 
-At 1024 px and below, the live Prototype fills the available browser canvas without
-phone artwork or scale. The same PhoneFrame/status-overlay host and app subtree
-remain mounted across viewport and view changes. Passive Screens retain their phone
-models, native section selection follows gallery scroll, and Library offers compact
-search/category/item controls. Touch controls are at least 44 px; editable fields
-and native selectors use at least 16 px text to avoid input zoom.
+The Navigation button expands the original sidebar tree directly below that
+header, in the page layout. It has no scrim, lateral slide, focus trap or modal
+ownership. The button toggles it closed; choosing a destination closes it and
+navigates immediately. Escape inside navigation closes it and returns focus to
+the button; Library's first Escape still clears a nonempty query. Search and
+category disclosure state remain mounted when navigation is hidden.
+Inspector opens from the bottom as a scoped modal sheet, sharing the desktop
+settings and fixed device information. Opening it first closes inline navigation.
+Reset stays inside Inspector. Library content remains capped at 1120 px and scrolls
+independently. The behavior references responsive navbar/disclosure patterns from
+[Bootstrap](https://getbootstrap.com/docs/5.3/components/navbar/) and
+[WAI APG](https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/examples/disclosure-navigation/);
+no additional UI framework or dependency is used.
+
+Every viewport retains the same phone artwork and 402 × 874 logical app canvas.
+The live app subtree stays mounted across breakpoint and view changes. Desktop
+fits the phone to both width and height; compact layouts fit its width and allow
+vertical canvas scrolling. Expanding navigation or opening a device keyboard
+therefore does not repeatedly shrink the phone. Key screen galleries wrap into
+fewer columns. The inline navigation is capped at 45% of the visible workbench
+height (at most 360 px) and scrolls independently so it leaves room for the preview.
+Touch targets in workbench controls are at least 44 px, and editable fields use
+at least 16 px text.
 
 Compact live input uses the device/browser keyboard through `KeyboardEnvironment`;
 Search, Recent, language selection and Find no longer mount or reserve a simulated
 keyboard there. Desktop and passive examples retain the supplied iOS keyboard.
 `useWorkbenchViewport` follows VisualViewport resize/pan while ignoring pinch zoom,
-with a `100dvh` fallback. Recent empty artwork keeps its resting canvas position
-while the keyboard covers the lower part. Hardware-keyboard users in a narrow window
-can type normally without an onscreen simulation.
+with a `100dvh` fallback. It resizes the workbench and Inspector; the app's logical
+canvas stays fixed, so Recent's illustration does not recenter when the keyboard
+appears. Hardware-keyboard users in a narrow window can type normally without an
+onscreen simulation.
 
 Search spans the entire Library even when an individual component was selected.
 Selecting a result narrows the query. Clear or Escape restores all items and
@@ -128,7 +142,7 @@ group, such as App Footer and IAB Footer under Footer.
 `PREVIEW_LIBRARY_CATEGORIES` in `previewTypes.ts` defines category order.
 `src/previewCatalog.tsx` defines component order within each category; register
 new components alongside related entries rather than prepending them. Sidebar,
-compact selectors, full gallery and search results consume this same order.
+compact navigation, full gallery and search results consume this same order.
 Show counts only on categories and All library items, not individual components.
 
 Glance Card's Overview hugs its full group instead of clipping to a device width.

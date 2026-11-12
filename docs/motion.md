@@ -622,18 +622,26 @@ Browser API behavior is governed by the web platform, not an iOS timing constant
 
 ## Compact workbench and native input — 12 November 2026
 
-Rechecked [Apple HIG: Sheets](https://developer.apple.com/design/human-interface-guidelines/sheets)
+Rechecked [Apple HIG: Disclosure controls](https://developer.apple.com/design/human-interface-guidelines/disclosure-controls),
+[Sheets](https://developer.apple.com/design/human-interface-guidelines/sheets)
 and [UISheetPresentationController](https://developer.apple.com/documentation/uikit/uisheetpresentationcontroller).
-The analogy for the mobile Inspector is a scoped modal task over the retained
-workspace, with a dimmed background and an explicit close action. Apple documents
-sheet anatomy, modal ownership, detents and dismissal; these sources do not publish
-an exact iOS 27 presentation duration or easing curve. The web sheet reuses
-`iosMotion.sheet` (420 ms) for translation and `iosMotion.fade` (200 ms) for the
-independent scrim. These are existing web tuning, not Apple system constants.
-There is no grabber because this version does not implement a drag gesture/detents.
-Retarget the same MotionValues on reversal, retain native dialog inertness through
-exit, cancel stale exit callbacks, and restore launcher focus after release.
-Reduce Motion uses `iosMotion.instant` with no translation.
+The workbench's responsive navigation follows the in-flow collapse behavior of
+[Bootstrap's responsive navbar](https://getbootstrap.com/docs/5.3/components/navbar/)
+and [WAI's disclosure navigation](https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/examples/disclosure-navigation/).
+It reveals the same navigation tree below the header without a modal, scrim or
+lateral translation. Expansion/collapse updates layout directly; there is no new
+animation duration. Preserve phone scale and the live app while the available
+canvas height changes. Navigation is immediate, so Search can acquire focus
+without waiting for a modal exit or a delayed focus restoration.
+
+Inspector is a scoped task presented from the bottom. Apple documents sheet
+anatomy and modal ownership, not an exact iOS 27 duration or easing curve. Reuse
+`iosMotion.sheet` (420 ms) for vertical translation and `iosMotion.fade` (200 ms)
+for the independent scrim. These are existing web tuning, not Apple system
+constants. Retarget the same MotionValues on reversal, retain native dialog
+inertness through exit, cancel stale exit callbacks, and restore launcher focus
+after release. Reduce Motion uses `iosMotion.instant` with no translation. There
+is no grabber because this version does not implement a drag gesture/detents.
 
 Compact live inputs use the browser/device keyboard, referencing
 [Apple HIG: Keyboards](https://developer.apple.com/design/human-interface-guidelines/keyboards)

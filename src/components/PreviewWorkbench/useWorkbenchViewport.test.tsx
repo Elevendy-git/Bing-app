@@ -22,50 +22,45 @@ function mockVisualViewport() {
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 
 describe("useWorkbenchViewport", () => {
-  it("keeps controls inside the visible keyboard canvas while anchoring content to its resting height", () => {
+  it("keeps workbench controls inside the visible canvas during keyboard resize and pan", () => {
     const { change } = mockVisualViewport();
     const { result } = renderHook(() => useWorkbenchViewport(true));
     expect(result.current).toMatchObject({
       "--gnrc-workbench-height": "844px",
       "--gnrc-workbench-top": "0px",
-      "--gnrc-workbench-resting-height": "844px",
     });
 
-    // The device keyboard reduces and pans the visible area. The empty-state anchor stays put.
+    // The device keyboard reduces and pans the visible workbench area.
     change({ height: 504, offsetTop: 36 });
     expect(result.current).toMatchObject({
       "--gnrc-workbench-height": "504px",
       "--gnrc-workbench-top": "36px",
-      "--gnrc-workbench-resting-height": "844px",
     });
     change({ offsetTop: 12 }, "scroll");
     expect(result.current).toHaveProperty("--gnrc-workbench-top", "12px");
-    // Closing the keyboard may leave browser chrome visible; it must not shift the illustration.
+    // Closing the keyboard may leave browser chrome visible.
     change({ height: 800, offsetTop: 0 });
     expect(result.current).toMatchObject({
       "--gnrc-workbench-height": "800px",
       "--gnrc-workbench-top": "0px",
-      "--gnrc-workbench-resting-height": "844px",
     });
     change({ height: 900 });
-    expect(result.current).toHaveProperty("--gnrc-workbench-resting-height", "900px");
+    expect(result.current).toHaveProperty("--gnrc-workbench-height", "900px");
   });
 
-  it("reestablishes the resting canvas when orientation changes instead of retaining a portrait anchor", () => {
+  it("uses the visible height after orientation changes", () => {
     const { change } = mockVisualViewport();
     const { result } = renderHook(() => useWorkbenchViewport(true));
     change({ height: 504 });
     change({ width: 844, height: 390 });
     expect(result.current).toMatchObject({
       "--gnrc-workbench-height": "390px",
-      "--gnrc-workbench-resting-height": "390px",
     });
     change({ height: 220 });
-    expect(result.current).toHaveProperty("--gnrc-workbench-resting-height", "390px");
+    expect(result.current).toHaveProperty("--gnrc-workbench-height", "220px");
     change({ width: 390, height: 780 });
     expect(result.current).toMatchObject({
       "--gnrc-workbench-height": "780px",
-      "--gnrc-workbench-resting-height": "780px",
     });
   });
 
@@ -83,7 +78,6 @@ describe("useWorkbenchViewport", () => {
     expect(result.current).toMatchObject({
       "--gnrc-workbench-height": "504px",
       "--gnrc-workbench-top": "0px",
-      "--gnrc-workbench-resting-height": "844px",
     });
   });
 
@@ -103,7 +97,6 @@ describe("useWorkbenchViewport", () => {
     rerender({ compact: true });
     expect(result.current).toMatchObject({
       "--gnrc-workbench-height": "600px",
-      "--gnrc-workbench-resting-height": "600px",
     });
     const resumedListeners = add.mock.calls.slice(initialListeners.length);
     unmount();
