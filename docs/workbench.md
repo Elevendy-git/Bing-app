@@ -86,14 +86,14 @@ same sidebar styling. View selection and Appearance use compact segmented
 controls in the Inspector; Reset and Close sit in its header. The fixed iPhone
 18 Pro geometry is shown as read-only device information. The phone fits the
 available canvas automatically and keeps the product's typography separate from
-the workbench font. Below 1100 px the side columns narrow; at 900 px and below
+the workbench font. Below 1100 px the side columns narrow; at 1024 px and below
 a compact 56 px toolbar replaces the sidebar and persistent Inspector. The toolbar
 uses native view/page selectors; Inspector opens as a modal bottom sheet. It shares
 the desktop settings, starts closed, and dismisses before returning focus to its
 launcher. Reset remains inside Inspector. Library content remains capped at 1120 px
 and scrolls independently.
 
-At 900 px and below, the live Prototype fills the available browser canvas without
+At 1024 px and below, the live Prototype fills the available browser canvas without
 phone artwork or scale. The same PhoneFrame/status-overlay host and app subtree
 remain mounted across viewport and view changes. Passive Screens retain their phone
 models, native section selection follows gallery scroll, and Library offers compact

@@ -41,7 +41,7 @@ function mockWorkbenchMedia(compact = false) {
     addListener: vi.fn(),
     removeListener: vi.fn(),
   });
-  vi.stubGlobal("matchMedia", vi.fn((query: string) => query === "(max-width: 900px)" ? compactMedia
+  vi.stubGlobal("matchMedia", vi.fn((query: string) => query === "(max-width: 1024px)" ? compactMedia
     : query === "(prefers-color-scheme: dark)" ? darkMedia : otherMedia));
   const update = (media: typeof compactMedia, matches: boolean) => act(() => {
     media.matches = matches;

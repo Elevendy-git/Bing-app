@@ -156,7 +156,7 @@
   place-items: center;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .gallery { scrollbar-gutter: auto; }
   .screenGrid { justify-content: center; }
   .groupHeading, .caption button { min-height: 44px; }

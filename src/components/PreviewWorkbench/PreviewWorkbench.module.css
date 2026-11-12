@@ -654,7 +654,7 @@
   .brand { padding-inline: 18px; }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .root { --gnrc-preview-canvas-height: calc(var(--gnrc-workbench-resting-height, 100dvh) - 56px - env(safe-area-inset-top, 0px)); position: fixed; top: var(--gnrc-workbench-top, 0px); left: 0; display: flex; height: var(--gnrc-workbench-height, 100dvh); flex-direction: column; }
   .compactToolbar {
     display: flex;

@@ -2,7 +2,7 @@ import { createContext, useContext, useSyncExternalStore, type ReactNode } from 
 import { getIOSKeyboardHeight } from "./iosMetrics";
 
 /** A compact live preview uses the browser/device input system. Passive canvases do not. */
-export const COMPACT_INPUT_QUERY = "(max-width: 900px)";
+export const COMPACT_INPUT_QUERY = "(max-width: 1024px)";
 const NativeKeyboardContext = createContext(false);
 
 function subscribe(callback: () => void) {
