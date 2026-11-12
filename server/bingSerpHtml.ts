@@ -5,6 +5,44 @@ import {
 } from "./previewHtml";
 
 const BING_ORIGIN = "https://www.bing.com";
+const queryStopwords = new Set("a an and are as at be best by can could do does for free from has have how i in into is it its me my near of on or our should that the their there these this to top us was we were what when where which who why will with would you your com www".split(" "));
+const singularTerm = (word: string) => word.length > 4 && word.endsWith("ies") ? `${word.slice(0, -3)}y`
+  : word.length > 4 && /(?:ches|shes|xes|zes|sses)$/.test(word) ? word.slice(0, -2)
+  : word.length > 4 && word.endsWith("s") && !/(ss|us|is)$/.test(word) ? word.slice(0, -1) : word;
+const terms = (text: string) => (text.toLowerCase().match(/[a-z][a-z0-9]*/g) ?? []).map(singularTerm);
+
+/** A conservative lexical check catches obviously unrelated anonymous upstream pages.
+ * It is not a relevance ranking: one informative term is enough, unknown scripts/
+ * short queries and unrecognized result layouts are left to Bing. Never inspect
+ * the search field/chrome, whose query echo can coexist with unrelated results.
+ */
+function assertRelatedResults(results: PreviewNode, query?: string) {
+  if (!query || /[^\u0000-\u007f]/.test(query)) return;
+  const significant = terms(query).filter(term => term.length >= 3 && !queryStopwords.has(term));
+  if (significant.length === 0) return;
+  const rows = walk(results).filter(node => isElement(node) && attr(node, "class")?.split(/\s+/).includes("b_algo"));
+  if (rows.length === 0) return;
+  const visibleText = (node: PreviewNode): string => {
+    if (node.nodeName === "#text" && "value" in node) return node.value;
+    if (isElement(node)) {
+      if (["script", "style", "template", "noscript", "input", "textarea", "select"].includes(node.tagName)
+        || attr(node, "hidden") !== undefined || attr(node, "aria-hidden") === "true"
+        || /(?:display\s*:\s*none|visibility\s*:\s*hidden)/i.test(attr(node, "style") ?? "")) return "";
+      if (node.tagName === "a") {
+        try {
+          const target = new URL(attr(node, "href") ?? "", BING_ORIGIN);
+          // Result destination identity is useful; query/tracking parameters are not.
+          if (/^https?:$/.test(target.protocol) && target.origin !== BING_ORIGIN) {
+            return `${target.hostname} ${decodeURIComponent(target.pathname)} ${node.childNodes.map(visibleText).join(" ")}`;
+          }
+        } catch { /* Continue with the visible label when the destination is malformed. */ }
+      }
+    }
+    return "childNodes" in node ? node.childNodes.map(visibleText).join(" ") : "";
+  };
+  const received = new Set(terms(rows.map(visibleText).join(" ")));
+  if (!significant.some(term => received.has(term))) throw new Error("Bing returned unrelated results");
+}
 
 // Preserve the existing exports and their Bing default while sharing generic cleaning logic.
 export function resourceUrl(value: string, image = false, base = BING_ORIGIN): string | undefined {
@@ -20,7 +58,7 @@ export function cleanPreviewNode(node: PreviewNode, base = BING_ORIGIN) {
 }
 
 /** Preserve Bing's mobile HTML/CSS, excluding its site search chrome and executable code. */
-export function prepareBingSerpDocument(source: string): { html: string; faviconUrl: string | null } {
+export function prepareBingSerpDocument(source: string, query?: string): { html: string; faviconUrl: string | null } {
   const document = parse(source);
   const elements = walk(document).filter(isElement);
   const icon = elements.find(node => node.tagName === "link" && attr(node, "rel")?.toLowerCase().split(/\s+/).includes("icon"));
@@ -32,6 +70,7 @@ export function prepareBingSerpDocument(source: string): { html: string; favicon
   const scope = elements.find((node) => attr(node, "id") === "ScopeRow");
   const body = elements.find((node) => node.tagName === "body");
   if (!content || !results || !results.childNodes.some(isElement)) throw new Error("Bing did not return a usable result document");
+  assertRelatedResults(results, query);
 
   const sheets = elements.filter((node) => node.tagName === "style" || (node.tagName === "link" && attr(node, "rel") === "stylesheet"));
   for (const sheet of sheets) {
@@ -53,4 +92,4 @@ ${sheets.map((sheet) => serializeOuter(sheet)).join("\n")}
   return { html, faviconUrl };
 }
 
-export const prepareBingSerpHtml = (source: string) => prepareBingSerpDocument(source).html;
+export const prepareBingSerpHtml = (source: string, query?: string) => prepareBingSerpDocument(source, query).html;

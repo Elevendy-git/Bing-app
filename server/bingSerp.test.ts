@@ -79,6 +79,17 @@ describe("Bing result endpoint", () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
+  it("reports an unrelated upstream results page as unavailable instead of publishing it under the requested query", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(new Response(`<input id="sb_form_q" value="best museums in London">
+      <main id="b_content"><ol id="b_results"><li class="b_algo">
+      <h2><a href="https://unrelated.example">Unrelated online community</a></h2><p>Videos and discussion.</p>
+      </li></ol></main>`, { headers: { "Content-Type": "text/html" } }));
+    const result = await call(`/api/bing-serp?${new URLSearchParams({ query: "best museums in London" })}`);
+    expect(result.status).toBe(502);
+    expect(result.body).toEqual({ error: "Bing results are unavailable" });
+    expect(result.body.html).toBeUndefined();
+  });
+
   it.each(["network", "challenge", "content-type", "oversized"])("reports %s failures without fake results", async (failure) => {
     if (failure === "network") vi.mocked(fetch).mockRejectedValueOnce(new Error("offline"));
     if (failure === "challenge") vi.mocked(fetch).mockResolvedValueOnce(new Response("Verify you are human", { headers: { "Content-Type": "text/html" } }));

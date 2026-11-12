@@ -45,4 +45,30 @@ describe("Bing mobile HTML preparation", () => {
   it.each(['<h1>Verify you are human</h1>', '<main id="b_content"><ol id="b_results"></ol></main>'])("rejects an unusable document", (html) => {
     expect(() => prepareBingSerpHtml(html)).toThrow("usable result document");
   });
+
+  const organic = (content: string) => document(content).replace('class="result"', 'class="b_algo"');
+
+  it("rejects unrelated result text even when the requested query is echoed in chrome, links and hidden content", () => {
+    const source = organic(`<h2><a href="https://unrelated.example/community">Online video community</a></h2>
+      <p>Unrelated discussion and account updates.</p>
+      <script>best museums in London</script><style>.London{color:red}</style>
+      <span hidden>London museum</span><span aria-hidden="true">London museum</span>
+      <span style="display: none">London museum</span>`)
+      .replaceAll("Weather", "best museums in London");
+    expect(() => prepareBingSerpHtml(source, "best museums in London")).toThrow("unrelated results");
+  });
+
+  it.each([
+    { query: "weather", title: "Local forecast", summary: "Today's weather forecast and radar.", url: "https://forecast.example" },
+    { query: "best museums in London", title: "Visit the museum", summary: "Opening hours and tickets.", url: "https://visit.example" },
+    { query: "London weather forecast", title: "Weather report", summary: "Hourly forecasts.", url: "https://forecast.example" },
+    { query: "accuweather", title: "Local forecast", summary: "Hourly forecasts.", url: "https://www.accuweather.com" },
+  ])("retains a result when one informative query term matches its text or destination: $query", ({ query, title, summary, url }) => {
+    expect(() => prepareBingSerpHtml(organic(`<h2><a href="${url}">${title}</a></h2><p>${summary}</p>`), query)).not.toThrow();
+  });
+
+  it.each(["AI", "C++", "123", "how is it", "天气", "東京の博物館", "café"])(
+    "does not guess relevance for short, stopword-only or non-ASCII queries: %s", query => {
+      expect(() => prepareBingSerpHtml(organic('<h2><a href="https://example.com">Original Bing answer</a></h2>'), query)).not.toThrow();
+    });
 });

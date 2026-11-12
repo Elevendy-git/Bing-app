@@ -33,7 +33,7 @@ export async function handleBingSerp(req: IncomingMessage, res: ServerResponse, 
       source += decoder.decode(value, { stream: true });
     }
     source += decoder.decode();
-    const document = prepareBingSerpDocument(source);
+    const document = prepareBingSerpDocument(source, query);
     sendJson(res, 200, { query, ...document, sourceUrl: upstream.href, fetchedAt: new Date().toISOString() });
   } catch {
     sendJson(res, controller.signal.aborted ? 504 : 502, { error: "Bing results are unavailable" });
