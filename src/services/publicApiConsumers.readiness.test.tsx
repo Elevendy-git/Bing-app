@@ -42,7 +42,7 @@ describe("Public backend readiness at consumer boundaries", () => {
     expect(onLoadStateChange).toHaveBeenLastCalledWith("loading", 0);
     await settle(wake.resolve);
     expect(fetch).toHaveBeenCalledOnce();
-    await advance(9_999);
+    await advance((url ? 10_000 : 20_000) - 1);
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     await advance(1);
     expect(screen.getByRole("alert")).toHaveTextContent(url ? "This page can’t be previewed" : "Couldn’t load results");
@@ -89,7 +89,7 @@ describe("Public backend readiness at consumer boundaries", () => {
     expect(vi.mocked(fetch).mock.calls[0][0]).toBe("/api/bing-serp?query=weather");
   });
 
-  it("keeps AS pending beyond its old deadline and starts the five-second deadline after wake", async () => {
+  it("keeps AS pending beyond its old deadline and starts the ten-second deadline after wake", async () => {
     const wake = deferred();
     vi.mocked(awaitPublicApiReady).mockReturnValue(wake.promise);
     const { result } = renderHook(() => useSearchSuggestions("weather", true));
@@ -98,7 +98,7 @@ describe("Public backend readiness at consumer boundaries", () => {
     expect(fetch).not.toHaveBeenCalled();
     await settle(wake.resolve);
     expect(fetch).toHaveBeenCalledOnce();
-    await advance(4_999);
+    await advance(9_999);
     expect(result.current.source).toBe("loading");
     await advance(1);
     expect(result.current).toMatchObject({ source: "fallback", items: [] });

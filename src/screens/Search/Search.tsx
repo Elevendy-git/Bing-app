@@ -199,6 +199,7 @@ export function Search({ initialState = "zero-input", initialHistoryState = "def
       <CrossfadeContent key={query.trim() ? "suggestions" : privateMode ? "private" : "history"} className={styles.contentMode}
         enabled={animate} enter={animate && contentMounted.current}>
       {query.trim() ? <SearchSuggestions query={query} items={suggestionItems} source={suggestions.source}
+        onRetry={interactive && screenActive ? suggestions.retry : undefined}
         onSelect={interactive && screenActive && onSubmit ? submit : undefined} /> : privateMode
         ? <PrivateSearchIntro keyboardVisible={keyboardVisible} transition={keyboardMotion} />
         : <SearchHistory items={history} interactive={interactive && screenActive} onItemsChange={updateHistory}

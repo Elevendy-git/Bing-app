@@ -21,7 +21,9 @@ the origin's private palette without changing its geometry or motion parameters.
   suggestion. `LiveBingResults` requests `/api/bing-serp?query=…` through the shared
   API URL resolver. The adapter runs in Vite locally and in the standalone Node
   backend online; it fetches Bing's mobile HTML and retains its result markup
-  and CSS. The viewport scrolls independently beneath fixed App chrome.
+  and CSS. If Bing fails or returns clearly unrelated content, a fixed
+  DuckDuckGo endpoint supplies actual organic results in a compact document
+  visibly labelled with its source. The viewport scrolls independently beneath fixed App chrome.
   Result links navigate inside the App; Back/Forward traverse the current tab's
   visited pages. At the first
   entry Back slides the result screen out to the right, revealing Homepage.
@@ -83,9 +85,11 @@ origin, per-document channel and latest request, without same-origin access.
 Presentation references and web timing distinctions are recorded in
 [motion.md](../../../docs/motion.md#iab-browser-actions-and-find-on-page--9-november-2026).
 
-The search endpoint calls only `https://www.bing.com/search`, uses a mobile user agent,
+The search endpoint calls fixed Bing and fallback DuckDuckGo endpoints, uses a mobile user agent,
 does not forward browser credentials, and follows no redirects. Queries are
-limited to 256 characters; documents to 4 MiB; upstream calls to 8 seconds.
+limited to 256 characters; documents to 4 MiB; Bing gets four seconds within a
+twelve-second total provider deadline. Browser transfer gets twenty seconds,
+after the separate service readiness wait.
 Responses use `no-store` and the application adds no query log or persistence.
 The server requests English through `Accept-Language`, without forcing market
 parameters on Bing's anonymous query URL. Location-sensitive

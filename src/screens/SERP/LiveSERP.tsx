@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { LiveBingResults, type BingLoadState } from "./LiveBingResults";
 import { SERP, type SERPProps } from "./SERP";
-import { bingSearchQuery, bingSearchUrl, type BingPageSnapshot } from "../../services/bingPage";
+import { searchPageQuery, bingSearchUrl, type BingPageSnapshot } from "../../services/bingPage";
 import { resultDestination, type IABFindRequest, type IABFindResult } from "../../services/webNavigation";
 import type { BookmarkPageMetadata } from "../activity/bookmarks";
 import styles from "./LiveBingResults.module.css";
@@ -52,7 +52,7 @@ function LiveSERPSession({ query, initialUrl, onPageReady, onEditLocation, activ
     const url = resultDestination(value);
     if (!url || !active) return;
     closeFind();
-    const search = bingSearchQuery(url);
+    const search = searchPageQuery(url);
     const id = ++sequence.current;
     setPages(items => [...items.slice(0, index + 1), entry(id, search ?? query, search ? undefined : url)]);
     setIndex(index + 1);

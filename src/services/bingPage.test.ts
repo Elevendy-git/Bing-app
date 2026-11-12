@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bingPageIdentity, bingSearchQuery, bingSearchUrl } from "./bingPage";
+import { bingPageIdentity, bingSearchQuery, bingSearchUrl, duckDuckGoSearchUrl, searchPageIdentity, searchPageQuery } from "./bingPage";
 
 describe("Bing search page identity", () => {
   it("encodes the query without forcing market parameters on anonymous upstream requests", () => {
@@ -24,4 +24,17 @@ describe("Bing search page identity", () => {
     expect(bingPageIdentity("Weather forecast", "https://www.bing.com/search?q=Weather+news", null).sourceUrl)
       .toBe(bingSearchUrl("Weather forecast"));
   });
+
+  it("preserves the fallback provider and decoded query without accepting unrelated metadata", () => {
+    const url = duckDuckGoSearchUrl("cats & dogs");
+    expect(searchPageQuery(url)).toBe("cats & dogs");
+    expect(bingSearchQuery(url)).toBeNull();
+    expect(searchPageIdentity("cats & dogs", url, "https://duckduckgo.com/favicon.ico", "duckduckgo"))
+      .toEqual({ sourceUrl: url, faviconUrl: "https://duckduckgo.com/favicon.ico" });
+    expect(searchPageIdentity("cats & dogs", "https://duckduckgo.com/?q=unrelated", "https://evil.example/favicon.ico", "duckduckgo"))
+      .toEqual({ sourceUrl: url, faviconUrl: null });
+  });
+
+  it.each(["https://duckduckgo.com.evil.example/?q=baidu", "https://user@duckduckgo.com/?q=baidu", "https://duckduckgo.com/article?q=baidu", "http://duckduckgo.com/?q=baidu"])(
+    "does not turn unsupported provider routes into queries: %s", url => expect(searchPageQuery(url)).toBeNull());
 });

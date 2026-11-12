@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from "react";
-import { bingSearchQuery, bingSearchUrl, type BingPageSnapshot } from "../../services/bingPage";
+import { searchPageQuery, bingSearchUrl, type BingPageSnapshot } from "../../services/bingPage";
 import { normalizeSearchQuery } from "../../services/searchSuggestions";
 import { webUrl } from "../../services/webNavigation";
 import { RECENT_CONVERSATIONS } from "../Recent/Recent.data";
@@ -26,12 +26,12 @@ export function usePrototypeActivity(initialRecentState: "default" | "empty" = "
   const activitySequence = useRef(0);
   const recordedPages = useRef(new Set<string>());
   const deleteHistoryEntry = (id: string) => {
-    const deletedQuery = bingSearchQuery(browsingHistory.find(entry => entry.id === id)?.subtitle ?? "");
+    const deletedQuery = searchPageQuery(browsingHistory.find(entry => entry.id === id)?.subtitle ?? "");
     const remaining = browsingHistory.filter(entry => entry.id !== id);
     setBrowsingHistory(remaining);
     // Search lists unique queries, while History lists individual visits. Keep
     // the query until its last visit is removed; webpage deletion is unrelated.
-    if (deletedQuery && !remaining.some(entry => searchQueryKey(bingSearchQuery(entry.subtitle ?? "") ?? "") === searchQueryKey(deletedQuery))) {
+    if (deletedQuery && !remaining.some(entry => searchQueryKey(searchPageQuery(entry.subtitle ?? "") ?? "") === searchQueryKey(deletedQuery))) {
       setSearchHistory(items => items.filter(item => searchQueryKey(item.query) !== searchQueryKey(deletedQuery)));
     }
   };
@@ -43,7 +43,7 @@ export function usePrototypeActivity(initialRecentState: "default" | "empty" = "
     // Search history is a deduplicated view of the same queries shown in Recent.
     // Clear/remove all visits for those queries, preserving ordinary webpage visits.
     setBrowsingHistory(entries => entries.filter(entry => {
-      const query = bingSearchQuery(entry.subtitle ?? "");
+      const query = searchPageQuery(entry.subtitle ?? "");
       return !query || (items.length > 0 && !removed.has(searchQueryKey(query)));
     }));
   };
@@ -51,19 +51,19 @@ export function usePrototypeActivity(initialRecentState: "default" | "empty" = "
   const saveResultPage = useCallback((owner: ResultSession, snapshot: BingPageSnapshot, navigationId = 0) => {
     if (owner.privateMode || !owner.tabId) return;
     setTabs(items => items.map(tab => tab.id === owner.tabId && tab.query === owner.query
-      ? { ...tab, title: snapshot.title || bingSearchQuery(snapshot.sourceUrl) || owner.query, pageSnapshot: snapshot, faviconSrc: snapshot.faviconUrl } : tab));
+      ? { ...tab, title: snapshot.title || searchPageQuery(snapshot.sourceUrl) || owner.query, pageSnapshot: snapshot, faviconSrc: snapshot.faviconUrl } : tab));
     const id = navigationId === 0 ? owner.historyId : `${owner.id}-page-${navigationId}`;
     if (!id) return;
     const firstVisit = !recordedPages.current.has(id);
     recordedPages.current.add(id);
-    const query = bingSearchQuery(snapshot.sourceUrl);
+    const query = searchPageQuery(snapshot.sourceUrl);
     // Related searches inside Bing are real queries too. A retained page being
     // revisited with Back/Forward must not restore a query the user deleted.
     if (navigationId > 0 && firstVisit && query) {
       setSearchHistory(items => [{ id, query }, ...items.filter(item => searchQueryKey(item.query) !== searchQueryKey(query))]);
     }
     setBrowsingHistory(items => {
-      const metadata = { title: snapshot.title || bingSearchQuery(snapshot.sourceUrl) || owner.query,
+      const metadata = { title: snapshot.title || searchPageQuery(snapshot.sourceUrl) || owner.query,
         subtitle: snapshot.sourceUrl, logoSrc: snapshot.faviconUrl ?? undefined };
       if (items.some(item => item.id === id)) return items.map(item => item.id === id ? { ...item, ...metadata } : item);
       return navigationId > 0 && firstVisit ? [{ id, ...metadata, visitedAt: Date.now(), groupId: "today", groupLabel: "Today" }, ...items] : items;
@@ -85,7 +85,7 @@ export function usePrototypeActivity(initialRecentState: "default" | "empty" = "
     if (!tab?.query) return;
     const session = resultSessions.find(item => item.tabId === id)
       ?? { id: `tab-${id}`, query: tab.query, privateMode: false, tabId: id, historyId: null,
-        initialUrl: tab.pageSnapshot && !bingSearchQuery(tab.pageSnapshot.sourceUrl) ? tab.pageSnapshot.sourceUrl : undefined };
+        initialUrl: tab.pageSnapshot && !searchPageQuery(tab.pageSnapshot.sourceUrl) ? tab.pageSnapshot.sourceUrl : undefined };
     // Tab switching restores its existing document; only a new submission records a visit.
     setResultSessions(sessions => sessions.some(item => item.id === session.id) ? sessions : [...sessions, session]);
     setActiveResultId(session.id);
@@ -99,8 +99,8 @@ export function usePrototypeActivity(initialRecentState: "default" | "empty" = "
   }) => {
     const input = normalizeSearchQuery(value);
     const destination = webUrl(input);
-    const query = destination ? bingSearchQuery(destination) ?? input : input;
-    const initialUrl = destination && !bingSearchQuery(destination) ? destination : undefined;
+    const query = destination ? searchPageQuery(destination) ?? input : input;
+    const initialUrl = destination && !searchPageQuery(destination) ? destination : undefined;
     const title = initialUrl ? articleTitle?.trim() || query : query;
     if (!query) return;
     const id = `search-${++activitySequence.current}`;

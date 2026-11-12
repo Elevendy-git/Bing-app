@@ -6,6 +6,17 @@ afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
 const response = (query: string) => ({ ok: true, json: async () => ({ query, html: `<p>${query} result</p>`, fetchedAt: "2026-10-15T06:00:00Z" }) });
 
 describe("Live Bing result viewport", () => {
+  it("keeps fallback attribution and history metadata with the actual search provider", async () => {
+    const onPageReady = vi.fn();
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => ({ query: "baidu", provider: "duckduckgo",
+      sourceUrl: "https://duckduckgo.com/?q=baidu&kl=us-en", faviconUrl: null, html: "<p>Results from DuckDuckGo</p>", fetchedAt: "2026-11-12T10:00:00Z" }) }));
+    render(<LiveBingResults query="baidu" onPageReady={onPageReady} />);
+    const frame = await screen.findByTitle("DuckDuckGo results for baidu");
+    expect(frame).toHaveAttribute("data-results-source", "duckduckgo-html");
+    expect(screen.queryByTitle("Bing results for baidu")).not.toBeInTheDocument();
+    fireEvent.load(frame);
+    expect(onPageReady).toHaveBeenCalledWith(expect.objectContaining({ sourceUrl: "https://duckduckgo.com/?q=baidu&kl=us-en", searchProvider: "duckduckgo" }));
+  });
   it("loads both results and web destinations from the configured public backend", async () => {
     vi.stubEnv("VITE_API_BASE_URL", "https://bing-backend.onrender.com/");
     vi.stubEnv("BASE_URL", "/Bing-app/");

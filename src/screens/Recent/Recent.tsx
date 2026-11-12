@@ -226,10 +226,11 @@ export function Recent({ active = true, initialQuery = "", searchResetKey = 0, i
             </div>
           </CollapsingContent>
         ))}
-        {searching && suggestions.items.length > 0 && <div key="suggestions" role="region" aria-label="Search on Bing">
+        {searching && (suggestions.items.length > 0 || suggestions.source === "loading" || suggestions.source === "fallback") && <div key="suggestions" role="region" aria-label="Search on Bing">
           <AppList variant="section-header" title="Search on Bing" showRightControl={false} className={styles.sectionHeader}
             style={sectionSpacing(visibleTabs.length === 0 && populatedSections.length === 0)} />
           <SearchSuggestions query={query} items={suggestionItems} source={suggestions.source}
+            onRetry={searchInteractive && active ? suggestions.retry : undefined}
             className={styles.searchSuggestions} onSelect={searchInteractive ? submit : undefined} />
         </div>}
         </AnimatePresence>

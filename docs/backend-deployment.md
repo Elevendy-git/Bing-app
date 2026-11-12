@@ -66,7 +66,7 @@ and do not store queries, account identities, cookies or history.
 | `GET /health` | None | `{ "status": "ok" }` independent of upstream availability. |
 | `GET /api/search-suggestions` | `query` | Live autocomplete's `[query, suggestions]` JSON; Bing first, Google if Bing is unavailable. |
 | `GET /api/msn-feed` | Optional opaque `cursor` | Existing MSN public feed JSON and continuation cursor. |
-| `GET /api/bing-serp` | `query` | Sanitized Bing mobile results document and page metadata. |
+| `GET /api/bing-serp` | `query` | Bing mobile HTML; if unavailable, actual DuckDuckGo organic results with visible attribution and provider metadata. |
 | `GET /api/web-page` | `url` | Sanitized public article/page document and page metadata. |
 
 Autocomplete uses Bing's fixed public endpoint first, then Google's fixed public
@@ -74,6 +74,16 @@ autocomplete endpoint if Bing fails or returns an unusable response. Both share
 the existing four-second deadline and receive only the query and language, never
 the user's account, cookies or search history. The response retains at most five
 actual provider suggestions; no suggestions are invented.
+
+Search first requests Bing's mobile document with a four-second primary budget.
+If the document fails, requires verification or contains clearly unrelated
+results, it tries DuckDuckGo's fixed public HTML endpoint within a shared
+twelve-second deadline. The fallback excludes advertisements, accepts only safe
+HTTP(S) result destinations, and runs the same relevance check. Its document
+visibly names DuckDuckGo and preserves that provider's canonical URL in History
+and Tabs. If neither source is usable, the request fails rather than inventing
+results. The browser allows twenty seconds for the provider request and transfer;
+service startup readiness remains a separate wait.
 
 The service does not expose `/api/rewards`, account tokens, Microsoft cookies,
 `.local/` snapshots, source files, or arbitrary static files. Upstream requests

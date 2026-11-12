@@ -145,11 +145,12 @@ describe("Live suggestion data", () => {
   });
 
   it.each(["network", "http", "invalid"])("does not invent an AS row after %s failure and recovers", async (failure) => {
-    if (failure === "network") vi.mocked(fetch).mockRejectedValueOnce(new TypeError("offline"));
+    if (failure === "network") vi.mocked(fetch).mockRejectedValueOnce(new TypeError("offline")).mockRejectedValueOnce(new TypeError("offline"));
     if (failure === "http") vi.mocked(fetch).mockResolvedValueOnce({ ok: false } as Response);
     if (failure === "invalid") vi.mocked(fetch).mockResolvedValueOnce({ ok: true, json: async () => ({ error: "invalid" }) } as Response);
     const { result, rerender } = renderHook(({ query }) => useSearchSuggestions(query, true), { initialProps: { query: "Weather" } });
     await advance();
+    if (failure === "network") await advance(300);
     expect(result.current.source).toBe("fallback");
     expect(result.current.items).toEqual([]);
     rerender({ query: "weather today" });
@@ -162,7 +163,7 @@ describe("Live suggestion data", () => {
     vi.mocked(fetch).mockImplementationOnce(() => new Promise((resolve) => { resolveRequest = resolve; }));
     const { result } = renderHook(() => useSearchSuggestions("weather", true));
     await advance();
-    await advance(5000);
+    await advance(10000);
     expect(vi.mocked(fetch).mock.calls[0][1]?.signal?.aborted).toBe(true);
     expect(result.current.source).toBe("fallback");
     await act(async () => { resolveRequest(response("weather", ["late result"])); });
@@ -174,6 +175,45 @@ describe("Live suggestion data", () => {
     const { result } = renderHook(() => useSearchSuggestions("unusual query", true));
     await advance();
     expect(result.current).toMatchObject({ source: "live", items: [] });
+    await advance(10_000);
+    expect(fetch).toHaveBeenCalledOnce();
+  });
+
+  it("retries the same failed query without editing, using a stable retry callback", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({ ok: false } as Response);
+    const { result, rerender } = renderHook(({ query }) => useSearchSuggestions(query, true), { initialProps: { query: "weather" } });
+    const retry = result.current.retry;
+    await advance();
+    expect(result.current.source).toBe("fallback");
+    await act(async () => { retry(); });
+    await advance();
+    expect(result.current).toMatchObject({ source: "live", items: [{ query: "weather today" }] });
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(result.current.retry).toBe(retry);
+    rerender({ query: "news" });
+    expect(result.current.retry).toBe(retry);
+  });
+
+  it("recovers once from a transient network failure without exposing fabricated suggestions", async () => {
+    vi.mocked(fetch).mockRejectedValueOnce(new TypeError("offline"));
+    const { result } = renderHook(() => useSearchSuggestions("weather", true));
+    await advance();
+    expect(result.current).toMatchObject({ source: "loading", items: [] });
+    await advance(299);
+    expect(fetch).toHaveBeenCalledOnce();
+    await advance(1);
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(result.current.source).toBe("live");
+  });
+
+  it("cancels the brief network retry when input changes or the session becomes inactive", async () => {
+    vi.mocked(fetch).mockRejectedValueOnce(new TypeError("offline"));
+    const { rerender } = renderHook(({ active }) => useSearchSuggestions("weather", true, active), { initialProps: { active: true } });
+    await advance();
+    rerender({ active: false });
+    await advance(300);
+    expect(fetch).toHaveBeenCalledOnce();
+    expect(vi.getTimerCount()).toBe(0);
   });
 
   it("keeps Figma fixtures in passive Key screens without any network request", async () => {

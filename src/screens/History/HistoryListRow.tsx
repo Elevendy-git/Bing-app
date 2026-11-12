@@ -2,7 +2,7 @@ import { AppList, type AppListProps } from "../../components/AppList";
 import { Globe24Regular } from "@fluentui/react-icons";
 import { useState } from "react";
 import type { RecentEntry } from "../activity/types";
-import { bingSearchQuery } from "../../services/bingPage";
+import { searchPageQuery } from "../../services/bingPage";
 import { webUrl } from "../../services/webNavigation";
 import styles from "./History.module.css";
 
@@ -12,7 +12,7 @@ export function HistoryListRow({ entry, onOpenSearch, onOpenPage, ...props }: {
   onOpenSearch?: (query: string) => void;
   onOpenPage?: (url: string) => void;
 } & Omit<AppListProps, "title" | "subtitle" | "variant">) {
-  const query = onOpenSearch ? bingSearchQuery(entry.subtitle) : null;
+  const query = onOpenSearch ? searchPageQuery(entry.subtitle) : null;
   const url = onOpenPage ? webUrl(entry.subtitle) : null;
   const [failedLogo, setFailedLogo] = useState<string>();
   const logo = entry.logoSrc && failedLogo !== entry.logoSrc

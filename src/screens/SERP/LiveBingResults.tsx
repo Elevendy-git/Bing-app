@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { AppSearchBoxLoadState } from "../../components/AppSearchBox/SearchBoxProgress";
 import { publicApiUrl } from "../../services/apiUrl";
 import { awaitPublicApiReady } from "../../services/publicApiReady";
-import { bingPageIdentity, type BingPageSnapshot } from "../../services/bingPage";
+import { searchPageIdentity, type BingPageSnapshot } from "../../services/bingPage";
 import { resultDestination, webUrl, withIABNavigation, type IABFindRequest, type IABFindResult } from "../../services/webNavigation";
 import styles from "./LiveBingResults.module.css";
 
@@ -81,7 +81,9 @@ export function LiveBingResults({ query, url, active = true, onNavigate, onLoadS
     const load = async () => {
       if (import.meta.env.VITE_API_BASE_URL?.trim()) await awaitPublicApiReady(controller.signal);
       if (!active || controller.signal.aborted) return;
-      timeout = setTimeout(() => { controller.abort(); fail(); }, 10000);
+      // Search can try a second real provider within the backend's 12s budget;
+      // leave transport time for visitors on slower networks as well.
+      timeout = setTimeout(() => { controller.abort(); fail(); }, url ? 10000 : 20000);
       return fetch(publicApiUrl(url ? `/api/web-page?${new URLSearchParams({ url })}` : `/api/bing-serp?${new URLSearchParams({ query })}`), {
         signal: controller.signal, credentials: "omit", cache: "no-store", referrerPolicy: "no-referrer", headers: { Accept: "application/json" },
       });
@@ -94,12 +96,15 @@ export function LiveBingResults({ query, url, active = true, onNavigate, onLoadS
         if (!body || typeof body !== "object" || (url ? !("requestedUrl" in body) || body.requestedUrl !== url : !("query" in body) || body.query !== query)
           || !("html" in body) || typeof body.html !== "string" || !("fetchedAt" in body) || typeof body.fetchedAt !== "string") throw new Error("Invalid result");
         if (active && !controller.signal.aborted) {
+          const provider = "provider" in body ? body.provider : "bing";
+          if (!url && provider !== "bing" && provider !== "duckduckgo") throw new Error("Invalid search provider");
           const identity = url ? { sourceUrl: "sourceUrl" in body && typeof body.sourceUrl === "string" ? webUrl(body.sourceUrl) : null,
             faviconUrl: "faviconUrl" in body && typeof body.faviconUrl === "string" ? webUrl(body.faviconUrl) : null }
-            : bingPageIdentity(query, "sourceUrl" in body ? body.sourceUrl : undefined, "faviconUrl" in body ? body.faviconUrl : undefined);
+            : searchPageIdentity(query, "sourceUrl" in body ? body.sourceUrl : undefined, "faviconUrl" in body ? body.faviconUrl : undefined, provider as "bing" | "duckduckgo");
           if (!identity.sourceUrl) throw new Error("Invalid page URL");
           setResult({ html: body.html, fetchedAt: body.fetchedAt, query, requestId, ...identity, sourceUrl: identity.sourceUrl,
-            title: "title" in body && typeof body.title === "string" ? body.title : undefined });
+            title: "title" in body && typeof body.title === "string" ? body.title : undefined,
+            ...(url ? {} : { searchProvider: provider as "bing" | "duckduckgo" }) });
           onLoadStateChange?.("rendering", attempt);
         }
       }).catch(fail).finally(() => clearTimeout(timeout));
@@ -110,7 +115,7 @@ export function LiveBingResults({ query, url, active = true, onNavigate, onLoadS
     {url && <p className={styles.explanation}>You can try again or go back to your results.</p>}
     <button type="button" onClick={() => setAttempt((current) => current + 1)}>Try again</button></div>;
   if (!result || result.query !== query) return null;
-  return <iframe ref={frame} className={styles.frame} title={url ? `Web page: ${url}` : `Bing results for ${query}`}
+  return <iframe ref={frame} className={styles.frame} title={url ? `Web page: ${url}` : `${result.searchProvider === "duckduckgo" ? "DuckDuckGo" : "Bing"} results for ${query}`}
     srcDoc={bridgeEnabled ? withIABNavigation(result.html, channel, window.location.origin) : result.html}
     onLoad={(event) => {
       if (currentRequest.current !== result.requestId) return;
@@ -120,7 +125,8 @@ export function LiveBingResults({ query, url, active = true, onNavigate, onLoadS
       if (publishedRequest.current === result.requestId) return;
       publishedRequest.current = result.requestId;
       onPageReady?.({ html: result.html, ...(result.title ? { title: result.title } : {}), sourceUrl: result.sourceUrl, faviconUrl: result.faviconUrl, fetchedAt: result.fetchedAt,
-        viewportWidth: event.currentTarget.clientWidth || 402, viewportHeight: event.currentTarget.clientHeight || 668 });
+        viewportWidth: event.currentTarget.clientWidth || 402, viewportHeight: event.currentTarget.clientHeight || 668,
+        ...(result.searchProvider ? { searchProvider: result.searchProvider } : {}) });
     }}
     onError={() => {
       if (currentRequest.current !== result.requestId) return;
@@ -128,5 +134,5 @@ export function LiveBingResults({ query, url, active = true, onNavigate, onLoadS
       onLoadStateChange?.("error", attempt);
     }}
     sandbox={bridgeEnabled ? "allow-scripts" : ""} referrerPolicy="no-referrer" {...{ credentialless: "" }}
-    data-results-source={url ? "web-page-html" : "bing-mobile-html"} data-fetched-at={result.fetchedAt} />;
+    data-results-source={url ? "web-page-html" : result.searchProvider === "duckduckgo" ? "duckduckgo-html" : "bing-mobile-html"} data-fetched-at={result.fetchedAt} />;
 }

@@ -38,6 +38,10 @@
 .cardInset { padding-inline: var(--gnrc-layout-content-inset); }
 .listCard { width: 100%; border: 0; box-shadow: inset 0 0 0 .5px var(--gnrc-color-app-list-card-stroke); }
 .suggestions { padding-top: 12px; }
+.suggestionStatus { display: flex; min-height: 56px; padding: 8px 16px; align-items: center; gap: 12px; }
+.suggestionStatus p { flex: 1; margin: 0; color: var(--gnrc-color-app-list-foreground-secondary); font-size: 14px; line-height: 20px; }
+.suggestionStatus button { min-height: 44px; padding: 8px 0; border: 0; background: transparent; color: var(--gnrc-color-foreground-neutral-primary); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.suggestionStatus button:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; border-radius: 4px; }
 .bottom { position: relative; z-index: 3; flex: none; }
 .root .homeIndicator { z-index: 11; }
 .privateBar { position: relative; z-index: 1; display: flex; height: 48px; padding: 4px var(--gnrc-layout-content-inset); justify-content: flex-end; }
