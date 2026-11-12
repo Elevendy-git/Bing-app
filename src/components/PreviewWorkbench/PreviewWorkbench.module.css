@@ -15,6 +15,9 @@
   --gnrc-color-preview-shadow: rgb(25 31 43 / 10%);
   --gnrc-color-preview-gallery: #e9ecf0;
   --gnrc-preview-navigation-width: 232px;
+  --gnrc-workbench-height: 100dvh;
+  --gnrc-workbench-top: 0px;
+  --gnrc-workbench-resting-height: 100dvh;
 
   position: relative;
   display: flex;
@@ -59,6 +62,8 @@
 .viewContent[hidden],
 .collapsedToolbar[hidden] { display: none; }
 .viewContent { background: var(--gnrc-color-preview-stage); }
+.compactToolbar,
+.keyScreenCompactNavigation { display: none; }
 
 .sidebar,
 .libraryNavigation {
@@ -650,38 +655,71 @@
 }
 
 @media (max-width: 900px) {
-  .root { display: grid; grid-template-columns: 164px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; --gnrc-preview-navigation-width: 164px; }
-  .sidebar { width: 100%; grid-column: 1; grid-row: 1; }
-  .previewArea { grid-column: 2; grid-row: 1; }
-  .root[data-view="library"] .previewArea,
-  .root[data-view="keyscreens"] .previewArea { grid-column: 1 / -1; }
-  .settings { width: 100%; max-height: 40dvh; grid-column: 1 / -1; grid-row: 2; border-top: 1px solid var(--gnrc-color-preview-stroke); border-left: 0; }
-  .settingsHeader { height: 40px; flex-basis: 40px; }
-  .settingsBody { display: grid; padding: 12px 18px 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-  .viewOptions { grid-column: 1 / -1; }
-  .inspectorTitle { display: none; }
-  .inspectorSection, .settingsRow { margin: 0; padding: 0; border: 0; }
-  .deviceDetails { margin-top: 8px; }
-  .settingsRow { align-self: start; }
-  .libraryCompactNavigation { display: grid; grid-template-columns: minmax(0, 1fr); }
-  .libraryNavigation:has(.libraryCompactNavigation) .navigationTree { display: none; }
+  .root { --gnrc-preview-canvas-height: calc(var(--gnrc-workbench-resting-height, 100dvh) - 56px - env(safe-area-inset-top, 0px)); position: fixed; top: var(--gnrc-workbench-top, 0px); left: 0; display: flex; height: var(--gnrc-workbench-height, 100dvh); flex-direction: column; }
+  .compactToolbar {
+    display: flex;
+    min-width: 0;
+    min-height: calc(56px + env(safe-area-inset-top, 0px));
+    padding: calc(5px + env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px)) 6px max(12px, env(safe-area-inset-left, 0px));
+    flex: none;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--gnrc-color-preview-stroke);
+    background: var(--gnrc-color-preview-inspector);
+  }
+  .compactLogo { width: 28px; height: 28px; flex: none; }
+  .compactSelect { position: relative; display: flex; min-width: 0; max-width: 200px; flex: 1; }
+  .compactSelect select {
+    width: 100%; min-width: 0; height: 44px; padding: 0 26px 0 10px;
+    border: 0; border-radius: 9px; appearance: none;
+    background: var(--gnrc-color-preview-gallery); color: var(--gnrc-color-preview-foreground);
+    font: inherit; font-size: 16px; font-weight: 500; line-height: 22px;
+    text-overflow: ellipsis;
+  }
+  .compactSelect > svg { position: absolute; top: 12px; right: 6px; pointer-events: none; }
+  .compactPageSelect { max-width: none; }
+  .compactPageSelect select { background: transparent; }
+  .compactInspectorButton { display: grid; width: 44px; height: 44px; margin-left: auto; padding: 0; flex: none; place-items: center; border: 0; border-radius: 10px; background: transparent; color: var(--gnrc-color-preview-foreground); }
+  .compactInspectorButton:active { background: var(--gnrc-color-preview-selected); }
+  .compactSelect select:focus-visible, .compactInspectorButton:focus-visible, .compactReset:focus-visible,
+  .keyScreenCompactNavigation select:focus-visible { outline: 2px solid var(--gnrc-color-preview-focus); outline-offset: -2px; }
+  .stage { padding: 0; }
+  /* Only the retained live app fills a real mobile viewport. Gallery models stay intact. */
+  .stage > [data-live-preview] { width: 100% !important; height: 100% !important; margin: 0; }
+  [data-live-preview] > .device { width: 100% !important; height: 100% !important; transform: none !important; }
+  [data-live-preview] > .device > .deviceShell { display: none; }
+  [data-live-preview] .screen, [data-live-preview] .statusOverlay { width: 100% !important; height: 100% !important; left: 0 !important; top: 0 !important; }
+  [data-live-preview] .screen { mask-image: none !important; -webkit-mask-image: none !important; }
+  [data-live-preview] { --gnrc-ios-safe-bottom: max(16px, env(safe-area-inset-bottom, 0px)); }
+  [data-live-preview] input:not([readonly]) { font-size: 16px; }
+  .settings[data-embedded] { width: 100%; min-height: 0; flex: none; border: 0; background: transparent; }
+  .settings[data-embedded] .settingsBody { padding: 0 0 20px; overflow: visible; }
+  .settings[data-embedded] .inspectorTitle { margin-top: 0; padding: 0 0 16px; font-size: 17px; }
+  .settings[data-embedded] .inspectorSection { padding: 20px 0; }
+  .settings[data-embedded] .inspectorSection h4, .settings[data-embedded] .settingsRow > span { font-size: 14px; }
+  .settings[data-embedded] .deviceField output { padding: 12px; font-size: 16px; }
+  .settings[data-embedded] .deviceDetails dd { font-size: 14px; }
+  .settings[data-embedded] .settingsOption { min-height: 60px; font-size: 14px; }
+  .compactReset { display: flex; min-height: 48px; margin-top: 20px; padding: 10px 12px; align-items: center; justify-content: center; gap: 10px; border: 0; border-radius: 10px; background: var(--gnrc-color-preview-gallery); color: var(--gnrc-color-preview-foreground); font: inherit; font-size: 16px; }
+  .library { flex-direction: column; }
+  .libraryNavigation { width: 100%; max-height: none; flex: none; border-right: 0; border-bottom: 1px solid var(--gnrc-color-preview-stroke); background: var(--gnrc-color-preview-inspector); }
+  .libraryNavigation .brand, .libraryNavigation .sidebarHeading, .libraryNavigation .navigationTree { display: none; }
+  .libraryNavigation .sidebarBody { padding: 10px 16px 12px; gap: 10px; overflow: visible; }
+  .keyScreenCompactNavigation { display: flex; min-width: 0; align-items: center; gap: 12px; color: var(--gnrc-color-preview-muted); font-size: 14px; }
+  .keyScreenCompactNavigation select { min-width: 0; height: 44px; padding: 0 12px; flex: 1; border: 1px solid var(--gnrc-color-preview-stroke); border-radius: 10px; background: var(--gnrc-color-preview-surface); color: var(--gnrc-color-preview-foreground); font: inherit; font-size: 16px; }
+  .libraryCompactNavigation { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .libraryNavigation:has(.libraryCompactNavigation) .libraryCompactNavigation { display: grid; }
+  .librarySearch { height: 44px; }
+  .librarySearch input, .libraryCompactNavigation select { font-size: 16px; }
+  .libraryCompactNavigation select { height: 44px; }
+  .libraryCompactNavigation label { gap: 2px; font-size: 12px; }
+  .searchClear { width: 40px; height: 40px; }
+  .gallery { padding: 20px 16px max(24px, env(safe-area-inset-bottom, 0px)); }
+  .componentPreview { padding: 16px 12px; }
+  .componentGrid { gap: 20px; }
 }
 
-@media (max-width: 600px) {
-  .root { display: flex; flex-direction: column; }
-  .sidebar { flex: 0 0 auto; border-right: 0; border-bottom: 1px solid var(--gnrc-color-preview-stroke); }
-  .brand { min-height: 56px; padding: 12px 16px 8px; }
-  .sidebarBody { padding: 4px 12px 12px; }
-  .sidebar .navigationTree { flex-direction: row; overflow-x: auto; }
-  .sidebar .navigationItem { width: auto; flex: none; padding-inline: 12px; }
-  .library { flex-direction: column; }
-  .libraryNavigation { width: 100%; max-height: 220px; flex: 0 0 auto; border-right: 0; border-bottom: 1px solid var(--gnrc-color-preview-stroke); }
-  .libraryCompactNavigation { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-  .libraryNavigation .navigationTree { display: flex; overflow-x: auto; gap: 4px; }
-  .libraryNavigation .navigationItem { width: auto; flex: none; }
-  .stage { padding: 16px 12px; }
-  .settings { flex: 0 0 auto; }
-  .settingsBody { padding-inline: 16px; gap: 12px; }
-  .deviceDetails > div { align-items: flex-start; flex-direction: column; gap: 0; }
-  .gallery { padding: 24px 16px; }
+@media (max-width: 360px) {
+  .compactToolbar { gap: 4px; padding-inline: 8px; }
+  .compactLogo { width: 24px; height: 24px; }
 }

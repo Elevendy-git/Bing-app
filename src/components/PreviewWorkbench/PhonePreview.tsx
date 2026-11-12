@@ -51,7 +51,7 @@ export function PhonePreview({ children, theme, label = "Bing app preview" }: Ph
 
   return (
     <div ref={stageRef} className={styles.stage}>
-      <PhoneFrame theme={theme} scale={scale} label={label}>{children}</PhoneFrame>
+      <PhoneFrame theme={theme} scale={scale} label={label} livePreview>{children}</PhoneFrame>
     </div>
   );
 }

@@ -93,6 +93,12 @@ export function PreviewKeyScreens({ screens, theme, navigationHeader }: {
         {navigationHeader}
         <div className={workbenchStyles.sidebarBody}>
           <h2 className={workbenchStyles.sidebarHeading}>Key screens</h2>
+          <label className={workbenchStyles.keyScreenCompactNavigation}>
+            <span>Section</span>
+            <select aria-label="Key screen section" value={currentGroup ?? ""} onChange={event => selectGroup(event.target.value)}>
+              {groupEntries.map(([title]) => <option key={title} value={title}>{title}</option>)}
+            </select>
+          </label>
           <div className={workbenchStyles.navigationTree}>
             {groupEntries.map(([title], index) => <button key={title} type="button"
               className={workbenchStyles.navigationItem} aria-label={`Show ${title} group`}

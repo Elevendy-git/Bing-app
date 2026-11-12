@@ -15,12 +15,26 @@ import styles from "./Homepage.module.css";
 
 const sunny = new URL("./assets/sunny.svg", import.meta.url).href;
 
-// Search starts 332 px below the status safe area. Clamp its position independently
-// of the native scroll surface so edge overscroll can never move the pinned input.
-const SEARCH_STICKY_OFFSET = HOMEPAGE_SEARCH_TRAVEL;
 const SEARCH_COLLAPSE_TRAVEL = 96;
+const GLANCE_GAP = 63;
 const INITIAL_SCROLL_OFFSETS = { top: 0, scrolled: HOMEPAGE_SCROLL_DOWN } as const;
-const headerOffset = (scrollTop: number) => Math.max(0, Math.min(SEARCH_STICKY_OFFSET, scrollTop));
+
+// Keep the existing UIScrollView-like coordinated content/composer behavior:
+// https://developer.apple.com/documentation/uikit/uiscrollview
+// https://developer.apple.com/design/human-interface-guidelines/motion
+// Rechecked 12 November 2026. Apple documents gesture continuity and cancellation,
+// not these dimensions. The 72px preferred minimum, 440px reserve, 228px minimum
+// chrome/composer space and 16px gap are spatial tuning for short web canvases;
+// existing iosMotion timings remain unchanged.
+function homepageGeometry(height: number) {
+  const preferredTravel = Math.max(72, Math.round(height - 440));
+  const availableTravel = Math.max(8, Math.round(height - 228));
+  const searchTravel = height > 0 ? Math.min(HOMEPAGE_SEARCH_TRAVEL, preferredTravel, availableTravel) : HOMEPAGE_SEARCH_TRAVEL;
+  const glanceGap = Math.max(16, Math.round(GLANCE_GAP * searchTravel / HOMEPAGE_SEARCH_TRAVEL));
+  // Keep the docked Glance/feed at y=138/238 as the initial hero gets shorter.
+  const scrollDown = searchTravel + glanceGap + HOMEPAGE_SCROLL_DOWN - HOMEPAGE_SEARCH_TRAVEL - GLANCE_GAP;
+  return { searchTravel, glanceGap, scrollDown };
+}
 
 const homepageGlanceCards: readonly GlanceCardItem[] = [
   { id: "rewards", variant: "rewards" },
@@ -59,34 +73,75 @@ export function Homepage({ timeSource = "fixed", feedSource = "preview", interac
   const feedActions = useFeedFollow(initialFeedOverlay);
   const reducedMotion = useReducedMotion();
   const toastMotion = interactiveFeed && !reducedMotion ? iosMotion.toast : iosMotion.instant;
+  const rootRef = useRef<HTMLElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const searchSlotRef = useRef<HTMLDivElement>(null);
+  const [canvasHeight, setCanvasHeight] = useState(0);
+  const geometry = homepageGeometry(canvasHeight);
+  const geometryRef = useRef(geometry);
   const lastSearchOffset = useRef<number>();
   const [isScrolled, setIsScrolled] = useState(initialState === "scrolled");
   const scrolledRef = useRef(isScrolled);
   const syncSearchPosition = useCallback((position: number) => {
     const slot = searchSlotRef.current;
-    const offset = headerOffset(position);
+    const { searchTravel } = geometryRef.current;
+    const offset = Math.max(0, Math.min(searchTravel, position));
     if (!slot || offset === lastSearchOffset.current) return;
     lastSearchOffset.current = offset;
-    const progress = Math.max(0, (offset - (SEARCH_STICKY_OFFSET - SEARCH_COLLAPSE_TRAVEL)) / SEARCH_COLLAPSE_TRAVEL);
+    const collapseTravel = Math.min(SEARCH_COLLAPSE_TRAVEL, searchTravel);
+    const progress = Math.max(0, (offset - (searchTravel - collapseTravel)) / collapseTravel);
     const collapse = progress * progress * (3 - 2 * progress);
     // Position and height share the scroll frame. React only updates at the dock
     // boundary, so the entire feed is not reconciled for each motion sample.
-    slot.style.transform = `translateY(${SEARCH_STICKY_OFFSET - offset}px)`;
+    slot.style.transform = `translateY(${searchTravel - offset}px)`;
     slot.style.setProperty("--gnrc-homepage-composer-height", `${64 - 8 * collapse}px`);
-    const scrolled = offset === SEARCH_STICKY_OFFSET;
+    const scrolled = offset === searchTravel;
     if (scrolledRef.current !== scrolled) {
       scrolledRef.current = scrolled;
       setIsScrolled(scrolled);
     }
   }, []);
-  const scrollToTop = useHomepageScrollSnap(scrollRef, syncSearchPosition, scrollSnapEnabled && !searchConcealed && !feedActions.menuPresented);
+  const scrollToTop = useHomepageScrollSnap(scrollRef, syncSearchPosition,
+    scrollSnapEnabled && !searchConcealed && !feedActions.menuPresented, geometry);
+
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const measure = () => {
+      // Hidden workbench views have no layout. Retain their last usable geometry.
+      if (root.clientHeight > 0) setCanvasHeight(root.clientHeight);
+    };
+    measure();
+    const observer = typeof ResizeObserver === "undefined" ? undefined : new ResizeObserver(measure);
+    observer?.observe(root);
+    window.addEventListener("resize", measure);
+    return () => { observer?.disconnect(); window.removeEventListener("resize", measure); };
+  }, []);
+
+  useLayoutEffect(() => {
+    const content = scrollRef.current;
+    const previous = geometryRef.current;
+    geometryRef.current = geometry;
+    if (!content) return;
+    const position = content.scrollTop;
+    if (previous.searchTravel !== geometry.searchTravel || previous.scrollDown !== geometry.scrollDown) {
+      // Keep hero progress or the same feed location, including after a hidden
+      // view returns. Resizing must not restore the initial preset or remount it.
+      content.scrollTop = position <= previous.searchTravel
+        ? position * geometry.searchTravel / previous.searchTravel
+        : position < previous.scrollDown
+          ? geometry.searchTravel + (position - previous.searchTravel)
+            * (geometry.scrollDown - geometry.searchTravel) / (previous.scrollDown - previous.searchTravel)
+          : geometry.scrollDown + position - previous.scrollDown;
+    }
+    lastSearchOffset.current = undefined;
+    syncSearchPosition(content.scrollTop);
+  }, [geometry.searchTravel, geometry.scrollDown, syncSearchPosition]);
 
   useLayoutEffect(() => {
     const content = scrollRef.current;
     if (!content) return;
-    const offset = INITIAL_SCROLL_OFFSETS[initialState];
+    const offset = initialState === "scrolled" ? geometryRef.current.scrollDown : 0;
     const applyInitialPosition = () => {
       content.scrollTop = offset;
       // A closed dialog or hidden workbench view has no scrollable layout yet.
@@ -105,8 +160,11 @@ export function Homepage({ timeSource = "fixed", feedSource = "preview", interac
   const avatar = <Avatar {...profileAvatar} variant={privateMode ? "private" : profileAvatar?.variant ?? "image"} size="default" />;
 
   return (
-    <main className={`${styles.root} ${isScrolled ? styles.scrolled : ""}`} aria-label="Bing homepage"
-      style={iosMotionCss as CSSProperties} data-live-motion={!reducedMotion && Boolean(onNavigate) || undefined}>
+    <main ref={rootRef} className={`${styles.root} ${isScrolled ? styles.scrolled : ""}`} aria-label="Bing homepage"
+      style={{ ...iosMotionCss, "--gnrc-homepage-hero-height": `${geometry.searchTravel}px`,
+        "--gnrc-homepage-glance-gap": `${geometry.glanceGap}px` } as CSSProperties}
+      data-live-motion={!reducedMotion && Boolean(onNavigate) || undefined}
+      data-compact-hero={geometry.searchTravel < 72 || undefined}>
       <div className={styles.scene} aria-hidden={feedActions.menuPresented || undefined} {...(feedActions.menuPresented ? { inert: "" } : {})}>
         <div className={styles.wallpaper} aria-hidden="true" />
         <div className={styles.searchBackdrop} aria-hidden="true" />

@@ -120,7 +120,7 @@ export function PreviewLibraryNavigation({ groups, selection, onSelect, query, o
               const category = PREVIEW_LIBRARY_CATEGORIES.find((item) => item.id === event.target.value);
               select(category ? { kind: "category", id: category.id } : { kind: "all" });
             }}>
-              <option value="all">{allLabel} ({groups.length})</option>
+              <option value="all">{query.trim() ? "All results" : "All items"} ({groups.length})</option>
               {sections.map((category) => <option value={category.id} key={category.id}>{category.label} ({category.groups.length})</option>)}
             </select>
           </label>

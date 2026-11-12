@@ -6,6 +6,10 @@ import { PreviewKeyScreens } from "./PreviewKeyScreens";
 import { PreviewLibrary } from "./PreviewLibrary";
 import { PreviewSettings } from "./PreviewSettings";
 import { PreviewWorkbenchBrand } from "./PreviewWorkbenchBrand";
+import { CompactWorkbenchToolbar } from "./CompactWorkbenchToolbar";
+import { WorkbenchSheet } from "./WorkbenchSheet";
+import { useCompactWorkbench } from "./useCompactWorkbench";
+import { useWorkbenchViewport } from "./useWorkbenchViewport";
 import {
   PREVIEW_PROTOTYPE_PAGES, PreviewPrototypeNavigationProvider, PreviewPrototypeNavigationTarget,
   usePreviewPrototypeNavigation,
@@ -43,6 +47,9 @@ function WorkbenchContent({
   const [prototypeRevision, setPrototypeRevision] = useState(0);
   const [settingsOpen, setSettingsOpen] = useState(true);
   const [focusSettings, setFocusSettings] = useState(false);
+  const [mobileSettingsOpen, setMobileSettingsOpen] = useState(false);
+  const compact = useCompactWorkbench();
+  const viewportStyle = useWorkbenchViewport(compact);
   const settingsButtonRef = useRef<HTMLButtonElement>(null);
   const settingsId = useId();
   const theme = usePreviewTheme(appearance);
@@ -55,13 +62,18 @@ function WorkbenchContent({
   const closeSettings = useCallback(() => {
     setSettingsOpen(false);
   }, []);
+  const closeMobileSettings = useCallback(() => setMobileSettingsOpen(false), []);
+  useEffect(() => { if (!compact) setMobileSettingsOpen(false); }, [compact]);
   useEffect(() => {
-    if (!settingsOpen) settingsButtonRef.current?.focus();
-  }, [settingsOpen]);
+    if (!compact && !settingsOpen) settingsButtonRef.current?.focus();
+  }, [compact, settingsOpen]);
 
   return (
-    <div className={styles.root} data-product="consumer" data-theme={theme} data-view={view}>
-      {view === "prototype" && <aside className={styles.sidebar} aria-label="Prototype navigation">
+    <div className={styles.root} data-product="consumer" data-theme={theme} data-view={view} style={viewportStyle}>
+      {compact && <CompactWorkbenchToolbar view={view} onViewChange={setView}
+        page={currentPage} pageTitle={currentPage === "serp" ? "IAB" : pageTitle} navigationAvailable={available} onNavigate={requestNavigation}
+        settingsId={settingsId} settingsOpen={mobileSettingsOpen} onOpenSettings={() => setMobileSettingsOpen(true)} />}
+      {!compact && view === "prototype" && <aside className={styles.sidebar} aria-label="Prototype navigation">
         <PreviewWorkbenchBrand />
         <div className={styles.sidebarBody}>
           <nav className={styles.navigationTree} aria-label="Prototype pages">
@@ -73,7 +85,7 @@ function WorkbenchContent({
         </div>
       </aside>}
       <div className={styles.previewArea}>
-        <div className={styles.collapsedToolbar} hidden={settingsOpen}>
+        <div className={styles.collapsedToolbar} hidden={compact || settingsOpen}>
           {view === "prototype" && <button type="button" className={styles.iconButton} aria-label="Reset prototype"
             title="Clear prototype activity and return to Homepage" onClick={resetPrototype}>
             <ArrowCounterclockwise20Regular aria-hidden="true" />
@@ -99,13 +111,19 @@ function WorkbenchContent({
         )}
         {view === "library" && <PreviewLibrary theme={theme} groups={componentGroups} navigationHeader={<PreviewWorkbenchBrand />} />}
       </div>
-      {settingsOpen && (
+      {!compact && settingsOpen && (
         <PreviewSettings
           id={settingsId} view={view} appearance={appearance}
           title={inspectorTitle} onResetPrototype={resetPrototype}
           focusOnMount={focusSettings} onViewChange={setView} onAppearanceChange={setAppearance} onClose={closeSettings}
         />
       )}
+      {compact && <WorkbenchSheet id={settingsId} title="Inspector" open={mobileSettingsOpen} onClose={closeMobileSettings}>
+        <PreviewSettings id={`${settingsId}-content`} view={view} appearance={appearance}
+          title={inspectorTitle} onResetPrototype={() => { resetPrototype(); closeMobileSettings(); }}
+          focusOnMount={false} onViewChange={setView} onAppearanceChange={setAppearance} onClose={closeMobileSettings}
+          embedded responsiveDevice={view === "prototype"} />
+      </WorkbenchSheet>}
     </div>
   );
 }

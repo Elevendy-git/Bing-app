@@ -618,3 +618,40 @@ the initiating click because browser APIs can require transient user activation;
 they do not wait for the sheet exit animation. Clipboard success feedback follows
 the resolved API result, and cancelling native sharing produces no success toast.
 Browser API behavior is governed by the web platform, not an iOS timing constant.
+
+
+## Compact workbench and native input — 12 November 2026
+
+Rechecked [Apple HIG: Sheets](https://developer.apple.com/design/human-interface-guidelines/sheets)
+and [UISheetPresentationController](https://developer.apple.com/documentation/uikit/uisheetpresentationcontroller).
+The analogy for the mobile Inspector is a scoped modal task over the retained
+workspace, with a dimmed background and an explicit close action. Apple documents
+sheet anatomy, modal ownership, detents and dismissal; these sources do not publish
+an exact iOS 27 presentation duration or easing curve. The web sheet reuses
+`iosMotion.sheet` (420 ms) for translation and `iosMotion.fade` (200 ms) for the
+independent scrim. These are existing web tuning, not Apple system constants.
+There is no grabber because this version does not implement a drag gesture/detents.
+Retarget the same MotionValues on reversal, retain native dialog inertness through
+exit, cancel stale exit callbacks, and restore launcher focus after release.
+Reduce Motion uses `iosMotion.instant` with no translation.
+
+Compact live inputs use the browser/device keyboard, referencing
+[Apple HIG: Keyboards](https://developer.apple.com/design/human-interface-guidelines/keyboards)
+and [UIKeyboardLayoutGuide](https://developer.apple.com/documentation/uikit/uikeyboardlayoutguide).
+Native keyboard motion is owned by the browser/OS; the prototype adds no imitation
+keyboard timing or extra 332 px spacer on these devices. VisualViewport changes
+update available layout directly. Existing accessory/footer transitions retain
+the shared presets, and Recent's empty illustration retains its resting canvas
+position. Desktop and passive specimens keep the existing simulated keyboard.
+Browser support and permission/focus rules can vary; desktop responsive QA cannot
+establish exact iPhone Safari keyboard behavior.
+
+Homepage geometry now references the measured unscaled canvas height, preserving
+its current hero progress or feed position when resized. Checked
+[Apple HIG: Motion](https://developer.apple.com/design/human-interface-guidelines/motion)
+and [UIScrollView](https://developer.apple.com/documentation/uikit/uiscrollview).
+The analogy is preserving scroll context when the available viewport changes.
+The 332 px travel/63 px Glance gap at 874 px, smaller-height clamps and 30% snap
+threshold are web prototype spatial tuning. Existing 320 ms settling, curves,
+interruptibility and reduced-motion behavior are unchanged. No Apple-published
+scroll or keyboard animation constant is inferred.

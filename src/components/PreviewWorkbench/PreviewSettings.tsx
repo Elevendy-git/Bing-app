@@ -26,19 +26,23 @@ interface PreviewSettingsProps {
   onAppearanceChange: (appearance: PreviewAppearance) => void;
   onClose: () => void;
   onResetPrototype: () => void;
+  embedded?: boolean;
+  responsiveDevice?: boolean;
 }
 
 export function PreviewSettings({
   id, view, appearance, title, focusOnMount,
-  onViewChange, onAppearanceChange, onClose, onResetPrototype,
+  onViewChange, onAppearanceChange, onClose, onResetPrototype, embedded = false, responsiveDevice = false,
 }: PreviewSettingsProps) {
   const closeRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
+    if (embedded) return;
     if (focusOnMount) closeRef.current?.focus();
-  }, [focusOnMount]);
+  }, [focusOnMount, embedded]);
 
   useEffect(() => {
+    if (embedded) return;
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape" || event.defaultPrevented) return;
       event.preventDefault();
@@ -46,11 +50,11 @@ export function PreviewSettings({
     };
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
+  }, [onClose, embedded]);
 
   return (
-    <aside id={id} className={styles.settings} aria-label="Settings">
-      <header className={styles.settingsHeader}>
+    <aside id={id} className={styles.settings} data-embedded={embedded || undefined} aria-label="Settings">
+      {!embedded && <header className={styles.settingsHeader}>
         <h2>Inspector</h2>
         <div className={styles.headerActions}>
           {view === "prototype" && <button type="button" className={styles.iconButton} aria-label="Reset prototype"
@@ -61,9 +65,9 @@ export function PreviewSettings({
             <Dismiss20Regular aria-hidden="true" />
           </button>
         </div>
-      </header>
+      </header>}
       <div className={styles.settingsBody}>
-          <div className={styles.viewOptions} role="group" aria-label="Preview view">
+          {!embedded && <div className={styles.viewOptions} role="group" aria-label="Preview view">
             {PREVIEW_VIEWS.map((option) => {
               return (
                 <button key={option.value} type="button" className={styles.viewOption}
@@ -72,13 +76,13 @@ export function PreviewSettings({
                 </button>
               );
             })}
-          </div>
+          </div>}
         <h3 className={styles.inspectorTitle}>{title}</h3>
         {view !== "library" && <section className={styles.inspectorSection} aria-label="Preview device">
           <h4>Device</h4>
-          <div className={styles.deviceField}><output>{PREVIEW_DEVICE.name}</output></div>
+          <div className={styles.deviceField}><output>{responsiveDevice ? "This device" : PREVIEW_DEVICE.name}</output></div>
           <dl className={styles.deviceDetails}>
-            <div><dt>Viewport</dt><dd>{PREVIEW_DEVICE.screenWidth} × {PREVIEW_DEVICE.screenHeight} px</dd></div>
+            <div><dt>Viewport</dt><dd>{responsiveDevice ? "Fits your screen" : `${PREVIEW_DEVICE.screenWidth} × ${PREVIEW_DEVICE.screenHeight} px`}</dd></div>
           </dl>
         </section>}
         <div className={styles.settingsRow}>
@@ -96,6 +100,9 @@ export function PreviewSettings({
             })}
           </div>
         </div>
+        {embedded && view === "prototype" && <button type="button" className={styles.compactReset} onClick={onResetPrototype}>
+          <ArrowCounterclockwise20Regular aria-hidden="true" /> Reset prototype
+        </button>}
       </div>
     </aside>
   );

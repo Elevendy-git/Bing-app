@@ -87,8 +87,26 @@ controls in the Inspector; Reset and Close sit in its header. The fixed iPhone
 18 Pro geometry is shown as read-only device information. The phone fits the
 available canvas automatically and keeps the product's typography separate from
 the workbench font. Below 1100 px the side columns narrow; at 900 px and below
-the Inspector docks at the bottom. Library content remains capped at 1120 px and
-scrolls independently.
+a compact 56 px toolbar replaces the sidebar and persistent Inspector. The toolbar
+uses native view/page selectors; Inspector opens as a modal bottom sheet. It shares
+the desktop settings, starts closed, and dismisses before returning focus to its
+launcher. Reset remains inside Inspector. Library content remains capped at 1120 px
+and scrolls independently.
+
+At 900 px and below, the live Prototype fills the available browser canvas without
+phone artwork or scale. The same PhoneFrame/status-overlay host and app subtree
+remain mounted across viewport and view changes. Passive Screens retain their phone
+models, native section selection follows gallery scroll, and Library offers compact
+search/category/item controls. Touch controls are at least 44 px; editable fields
+and native selectors use at least 16 px text to avoid input zoom.
+
+Compact live input uses the device/browser keyboard through `KeyboardEnvironment`;
+Search, Recent, language selection and Find no longer mount or reserve a simulated
+keyboard there. Desktop and passive examples retain the supplied iOS keyboard.
+`useWorkbenchViewport` follows VisualViewport resize/pan while ignoring pinch zoom,
+with a `100dvh` fallback. Recent empty artwork keeps its resting canvas position
+while the keyboard covers the lower part. Hardware-keyboard users in a narrow window
+can type normally without an onscreen simulation.
 
 Search spans the entire Library even when an individual component was selected.
 Selecting a result narrows the query. Clear or Escape restores all items and
@@ -147,7 +165,9 @@ expose six List types and preserve selection when switching.
 
 - Key screens use fixed 9:41; Prototype uses system time.
 - Homepage keeps one search input outside its native scrolling surface. Its
-  position clamps at 332 px; height follows the same scroll sample, shrinking
+  position clamps at 332 px on the 874 px canvas; shorter live viewports reduce
+  the hero and Glance gap to keep search/feed above the footer. Height follows
+  the same scroll sample, shrinking
   from 64 to 56 px over the final 96 px of travel.
 - Compact search has 16 px horizontal insets (370 px on the 402 px screen).
 - Wallpaper fades into the solid feed background over 280 ms. Dark mode's 5%

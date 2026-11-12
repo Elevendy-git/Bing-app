@@ -14,6 +14,54 @@ afterEach(() => {
 });
 
 describe("Homepage scrolling", () => {
+  it("keeps the query and feed location through short, hidden and standard canvas sizes", () => {
+    const observers = new Map<Element, () => void>();
+    vi.stubGlobal("ResizeObserver", class {
+      constructor(private callback: () => void) {}
+      observe(target: Element) { observers.set(target, this.callback); }
+      disconnect() {}
+    });
+    render(<Homepage />);
+    const root = screen.getByRole("main", { name: "Bing homepage" });
+    const content = screen.getByRole("region", { name: "Homepage content" });
+    const input = screen.getByRole("searchbox", { name: "Search Bing" });
+    const article = screen.getAllByRole("article")[0];
+    const resize = (height: number) => {
+      Object.defineProperty(root, "clientHeight", { configurable: true, value: height });
+      act(() => observers.get(root)?.());
+    };
+    fireEvent.change(input, { target: { value: "weekend ideas" } });
+    fireEvent.scroll(content, { target: { scrollTop: 1500 } });
+
+    resize(450);
+    expect(root.style.getPropertyValue("--gnrc-homepage-hero-height")).toBe("72px");
+    expect(root.style.getPropertyValue("--gnrc-homepage-glance-gap")).toBe("16px");
+    expect(content.scrollTop).toBe(1193);
+    expect(screen.getByRole("search").parentElement).toHaveStyle({ transform: "translateY(0px)" });
+    resize(0);
+    expect(content.scrollTop).toBe(1193);
+    expect(root.style.getPropertyValue("--gnrc-homepage-hero-height")).toBe("72px");
+    resize(300);
+    expect(content.scrollTop).toBe(1193);
+    resize(264);
+    expect(content.scrollTop).toBe(1157);
+    expect(root.style.getPropertyValue("--gnrc-homepage-hero-height")).toBe("36px");
+    expect(root).toHaveAttribute("data-compact-hero", "true");
+    resize(874);
+    expect(content.scrollTop).toBe(1500);
+    expect(root.style.getPropertyValue("--gnrc-homepage-hero-height")).toBe("332px");
+    expect(root.style.getPropertyValue("--gnrc-homepage-glance-gap")).toBe("63px");
+    expect(root).not.toHaveAttribute("data-compact-hero");
+    expect(screen.getByRole("searchbox")).toBe(input);
+    expect(input).toHaveValue("weekend ideas");
+    expect(screen.getAllByRole("article")[0]).toBe(article);
+
+    fireEvent.scroll(content, { target: { scrollTop: 0 } });
+    resize(300);
+    expect(screen.getByRole("search").parentElement).toHaveStyle({ transform: "translateY(72px)" });
+    expect(screen.getByRole("search")).not.toHaveClass(searchStyles.compact);
+  });
+
   it("waits for a hidden dialog to become scrollable before restoring its preview position", () => {
     let visible = false;
     const offsets = new WeakMap<Element, number>();

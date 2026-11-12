@@ -5,7 +5,6 @@ import { iosMotion } from "../../motion/iosMotion";
 export const HOMEPAGE_SEARCH_TRAVEL = 332;
 // Shareout 1:20253: composer y=62, Glance cards y=138, feed y=238.
 export const HOMEPAGE_SCROLL_DOWN = 384;
-const SNAP_THRESHOLD = HOMEPAGE_SEARCH_TRAVEL * 0.3;
 const SCROLL_IDLE_MS = 60;
 
 /** Settle a downward hero gesture into the supplied scrolled screen, without snapping the feed. */
@@ -13,6 +12,10 @@ export function useHomepageScrollSnap(
   scrollRef: RefObject<HTMLDivElement>,
   onPositionChange: (position: number) => void,
   enabled: boolean,
+  { searchTravel = HOMEPAGE_SEARCH_TRAVEL, scrollDown = HOMEPAGE_SCROLL_DOWN }: {
+    searchTravel?: number;
+    scrollDown?: number;
+  } = {},
 ) {
   const reducedMotion = useReducedMotion();
   const returnToTop = useRef<() => void>(() => {});
@@ -49,18 +52,18 @@ export function useHomepageScrollSnap(
     };
     const settle = () => {
       const position = content.scrollTop;
-      if (held || animation || direction <= 0 || position < SNAP_THRESHOLD || position >= HOMEPAGE_SCROLL_DOWN
-        || !content.clientHeight || content.scrollHeight - content.clientHeight < HOMEPAGE_SCROLL_DOWN
+      if (held || animation || direction <= 0 || position < searchTravel * 0.3 || position >= scrollDown
+        || !content.clientHeight || content.scrollHeight - content.clientHeight < scrollDown
         || content.closest("[inert], [hidden]")) return;
       direction = 0;
       if (reducedMotion) {
-        update(HOMEPAGE_SCROLL_DOWN);
+        update(scrollDown);
         return;
       }
-      animation = animate(position, HOMEPAGE_SCROLL_DOWN, {
+      animation = animate(position, scrollDown, {
         ...iosMotion.scrollSnap,
         onUpdate: update,
-        onComplete: () => { animation = undefined; update(HOMEPAGE_SCROLL_DOWN); },
+        onComplete: () => { animation = undefined; update(scrollDown); },
       });
     };
     const schedule = () => {
@@ -133,7 +136,7 @@ export function useHomepageScrollSnap(
       content.removeEventListener("touchcancel", onTouchCancel);
       content.removeEventListener("keydown", onKeyDown);
     };
-  }, [scrollRef, onPositionChange, enabled, reducedMotion]);
+  }, [scrollRef, onPositionChange, enabled, reducedMotion, searchTravel, scrollDown]);
 
   return useCallback(() => returnToTop.current(), []);
 }

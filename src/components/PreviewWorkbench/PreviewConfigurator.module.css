@@ -139,6 +139,11 @@
   flex: none;
 }
 
+@media (max-width: 900px) {
+  .typeSelect { min-height: 44px; font-size: 16px; }
+  .modeButton { min-height: 44px; }
+}
+
 @container preview-configurator (max-width: 679px) {
   .layout {
     grid-template-columns: minmax(0, 1fr);

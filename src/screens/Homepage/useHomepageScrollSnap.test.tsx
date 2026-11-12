@@ -25,6 +25,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   cleanup();
+  vi.unstubAllGlobals();
   vi.useRealTimers();
 });
 
@@ -47,6 +48,36 @@ function currentAnimation() {
 }
 
 describe("Homepage hero snap", () => {
+  it("uses the short hero's threshold and destination, and cancels stale settling on resize", () => {
+    const observers = new Map<Element, () => void>();
+    vi.stubGlobal("ResizeObserver", class {
+      constructor(private callback: () => void) {}
+      observe(target: Element) { observers.set(target, this.callback); }
+      disconnect() {}
+    });
+    render(<Homepage />);
+    const root = screen.getByRole("main", { name: "Bing homepage" });
+    const content = scrollSurface();
+    const resize = (height: number) => {
+      Object.defineProperty(root, "clientHeight", { configurable: true, value: height });
+      act(() => observers.get(root)?.());
+    };
+    resize(450);
+    scrollDown(content, 21.5);
+    idle();
+    expect(motion.animate).not.toHaveBeenCalled();
+    scrollDown(content, 21.6);
+    idle();
+    expect(motion.animate).toHaveBeenCalledWith(21.6, 77, expect.objectContaining({ duration: 0.32 }));
+    act(() => currentAnimation().onUpdate(36));
+    resize(874);
+    expect(stop).toHaveBeenCalledOnce();
+    expect(content.scrollTop).toBe(166);
+    expect(screen.getByRole("search").parentElement).toHaveStyle({ transform: "translateY(166px)" });
+    idle();
+    expect(motion.animate).toHaveBeenCalledOnce();
+  });
+
   it("returns Home to the hero with synchronized motion without remounting existing feed cards", () => {
     const navigate = vi.fn();
     render(<Homepage onNavigate={navigate} />);

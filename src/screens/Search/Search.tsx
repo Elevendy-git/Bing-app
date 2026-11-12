@@ -6,6 +6,7 @@ import { IOSStatusBar } from "../../components/IOSStatusBar";
 import { IOSKeyboard } from "../../components/IOSKeyboard";
 import { IOSHomeIndicator } from "../../components/IOSHomeIndicator";
 import { IOS_METRICS } from "../../components/IOSNative/iosMetrics";
+import { usePrototypeKeyboard } from "../../components/IOSNative/KeyboardEnvironment";
 import { Switcher } from "../../components/Switcher";
 import { iosMotion, iosMotionCss } from "../../motion/iosMotion";
 import { CrossfadeContent, useOverlayPresence } from "../../motion/MotionPresence";
@@ -58,8 +59,9 @@ export function Search({ initialState = "zero-input", initialHistoryState = "def
   const privateMode = controlledPrivateMode ?? localPrivateMode;
   const [keyboard, setKeyboard] = useState({ visible: initialState !== "zero-input" && initialHistoryState !== "confirm-clear", navigation: Boolean(transitionOrigin) });
   const keyboardVisible = keyboard.visible && active;
+  const { nativeKeyboard, keyboardHeight } = usePrototypeKeyboard();
   const restingBottomHeight = 48 + IOS_METRICS.bottomSafeArea;
-  const keyboardBottomHeight = 48 + IOS_METRICS.keyboardHeight;
+  const keyboardBottomHeight = 48 + keyboardHeight;
   const privateIntroVisible = privateMode && !query.trim();
   const inputRef = useRef<HTMLInputElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -218,16 +220,16 @@ export function Search({ initialState = "zero-input", initialHistoryState = "def
             onSelectedChange={interactive && screenActive ? togglePrivateMode : undefined} /><span aria-hidden="true">InPrivate</span>
         </span>
       </motion.div>
-      <motion.div className={styles.keyboardSurface} aria-hidden={!keyboardVisible || !screenActive || undefined}
+      {!nativeKeyboard && <motion.div className={styles.keyboardSurface} aria-hidden={!keyboardVisible || !screenActive || undefined}
         {...(!keyboardVisible || !screenActive ? { inert: "" } : {})}
-        initial={animate ? { y: IOS_METRICS.keyboardHeight } : false} animate={{ y: keyboardVisible ? 0 : IOS_METRICS.keyboardHeight }}
-        exit={{ y: IOS_METRICS.keyboardHeight, transition: navigationMotion }} transition={keyboardMotion}>
+        initial={animate ? { y: keyboardHeight } : false} animate={{ y: keyboardVisible ? 0 : keyboardHeight }}
+        exit={{ y: keyboardHeight, transition: navigationMotion }} transition={keyboardMotion}>
         <IOSKeyboard showHomeIndicator={false} onType={interactive ? type : undefined} onDelete={interactive ? removeCharacter : undefined}
           value={query} active={interactive && screenActive && keyboardVisible && !historyOverlay.presented}
           suggestions={keyboardSuggestions(query, suggestions)} onSelectSuggestion={interactive ? replaceQuery : undefined}
           onDictation={interactive ? dictate : undefined}
           returnKey={onSubmit ? "search" : "return"} onReturn={interactive && onSubmit ? () => submit(query) : undefined} />
-      </motion.div>
+      </motion.div>}
     </motion.div>
     <AnimatePresence onExitComplete={historyOverlay.finishExit}>
       {clearHistoryOpen && <ClearSearchHistoryDialog interactive={interactive}

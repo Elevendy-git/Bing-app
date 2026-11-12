@@ -5,6 +5,7 @@ import { CollapsingContent, MotionPresence } from "../../motion/MotionPresence";
 import { iosMotion } from "../../motion/iosMotion";
 import { IABFooter, AppList, AppListCard, AppSearchBox, HistoryMenu, IOSHomeIndicator, IOSKeyboard, IOSStatusBar, TabsCard, type AppFooterProps } from "../../components";
 import { IOS_METRICS } from "../../components/IOSNative/iosMetrics";
+import { usePrototypeKeyboard } from "../../components/IOSNative/KeyboardEnvironment";
 import { ScreenFooter } from "../ScreenFooter";
 import { NewTabButton } from "../NewTabButton";
 import { RECENT_BOOKMARKS, RECENT_CONVERSATIONS, RECENT_SITES, RECENT_TABS } from "./Recent.data";
@@ -89,6 +90,7 @@ export function Recent({ active = true, initialQuery = "", searchResetKey = 0, i
   const interactive = Boolean(onNavigate);
   const searchInteractive = Boolean(onSearchSubmit) && !privateMode;
   const keyboardVisible = searchInteractive && active && focused;
+  const { nativeKeyboard, keyboardHeight } = usePrototypeKeyboard();
   const keyboardMotion = searchInteractive && !reducedMotion ? iosMotion.keyboard : iosMotion.instant;
   const footerHeight = 52 + IOS_METRICS.bottomSafeArea;
   const animate = interactive && !searching && !reducedMotion;
@@ -132,7 +134,7 @@ export function Recent({ active = true, initialQuery = "", searchResetKey = 0, i
   });
   const openHistoryMenu = (entryId: string, button: HTMLButtonElement) => {
     historyOverlay.openItem(entryId, button, { height: 56,
-      bottomInset: keyboardVisible ? IOS_METRICS.keyboardHeight : footerHeight });
+      bottomInset: keyboardVisible ? keyboardHeight : footerHeight });
     dismissKeyboard();
   };
   const closeTab = (id: string) => {
@@ -149,7 +151,7 @@ export function Recent({ active = true, initialQuery = "", searchResetKey = 0, i
   };
   return (
     <motion.main ref={root} className={styles.root} aria-label="Recent page" data-keyboard-visible={keyboardVisible} data-private-mode={privateMode}
-      initial={false} animate={{ paddingBottom: keyboardVisible ? IOS_METRICS.keyboardHeight : footerHeight }} transition={keyboardMotion}>
+      initial={false} animate={{ paddingBottom: keyboardVisible ? keyboardHeight : footerHeight }} transition={keyboardMotion}>
       <header className={styles.header} {...(historyOverlay.presented ? { inert: "" } : {})}>
         <IOSStatusBar timeSource={timeSource} className={styles.statusBar} tone={privateMode ? "light" : "inherit"} />
         {!privateMode && <div className={styles.searchRegion}>
@@ -242,9 +244,9 @@ export function Recent({ active = true, initialQuery = "", searchResetKey = 0, i
       </div>
         : <ScreenFooter selectedTab="collections" labels={{ collections: "Recent" }} onSelectedTabChange={onNavigate} showHomeIndicator={false} />}
       </div>
-      {searchInteractive && <motion.div className={styles.keyboardSurface} aria-hidden={!keyboardVisible || undefined}
+      {searchInteractive && !nativeKeyboard && <motion.div className={styles.keyboardSurface} aria-hidden={!keyboardVisible || undefined}
         {...(!keyboardVisible ? { inert: "" } : {})}
-        initial={false} animate={{ y: keyboardVisible ? 0 : IOS_METRICS.keyboardHeight }} transition={keyboardMotion}
+        initial={false} animate={{ y: keyboardVisible ? 0 : keyboardHeight }} transition={keyboardMotion}
         onPointerDown={event => event.preventDefault()}>
         <IOSKeyboard showHomeIndicator={false} returnKey="search"
           value={input} active={keyboardVisible && !historyOverlay.presented}

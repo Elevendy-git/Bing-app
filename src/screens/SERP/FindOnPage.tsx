@@ -3,7 +3,7 @@ import { ChevronDown24Regular, ChevronUp24Regular } from "@fluentui/react-icons"
 import { motion, useIsPresent, useReducedMotion } from "motion/react";
 import { AppSearchBox } from "../../components/AppSearchBox";
 import { IOSKeyboard } from "../../components/IOSKeyboard";
-import { getIOSKeyboardHeight } from "../../components/IOSNative/iosMetrics";
+import { usePrototypeKeyboard } from "../../components/IOSNative/KeyboardEnvironment";
 import { iosMotion } from "../../motion/iosMotion";
 import { MotionPresence } from "../../motion/MotionPresence";
 import { useSearchInput } from "../Search/useSearchInput";
@@ -20,6 +20,7 @@ export function FindOnPage({ state, active }: { state: FindOnPageState; active: 
   const inputRef = useRef<HTMLInputElement>(null);
   const doneRef = useRef<HTMLButtonElement>(null);
   const [keyboard, setKeyboard] = useState(true);
+  const { nativeKeyboard, keyboardHeight } = usePrototypeKeyboard(false);
   const present = useIsPresent();
   const reducedMotion = useReducedMotion();
   const enabled = active && present;
@@ -50,7 +51,7 @@ export function FindOnPage({ state, active }: { state: FindOnPageState; active: 
       <button type="button" aria-label="Next match" disabled={!enabled || !state.total} onMouseDown={event => event.preventDefault()} onClick={state.onNext}><ChevronDown24Regular /></button>
       <button ref={doneRef} type="button" disabled={!enabled} onClick={state.onDismiss}>Done</button>
     </div>
-    <motion.div className={styles.keyboardSpace} initial={active && !reducedMotion ? { height: 0 } : false} animate={{ height: keyboard ? getIOSKeyboardHeight(false) : 0 }}
+    {!nativeKeyboard && <motion.div className={styles.keyboardSpace} initial={active && !reducedMotion ? { height: 0 } : false} animate={{ height: keyboard ? keyboardHeight : 0 }}
       transition={reducedMotion ? iosMotion.instant : iosMotion.keyboard}>
       <motion.div className={styles.keyboard} initial={active && !reducedMotion ? { y: "100%" } : false} animate={{ y: keyboard ? 0 : "100%" }}
         transition={reducedMotion ? iosMotion.instant : iosMotion.keyboard} aria-hidden={!keyboard || undefined} {...(!keyboard ? { inert: "" } : {})}>
@@ -58,6 +59,6 @@ export function FindOnPage({ state, active }: { state: FindOnPageState; active: 
           onType={active ? editing.type : undefined} onDelete={active ? editing.removeCharacter : undefined}
           onReturn={active ? dismissKeyboard : undefined} onDictation={active ? editing.dictate : undefined} />
       </motion.div>
-    </motion.div>
+    </motion.div>}
   </MotionPresence>;
 }

@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, type InputHTMLAttributes, type RefObject, type TouchEvent, type WheelEvent } from "react";
 import { SEARCH_QUERY_MAX_LENGTH } from "../../services/searchSuggestions";
 import { deleteBackward, limitTextLength } from "../../utils/textEditing";
+import { usePrototypeKeyboard } from "../../components/IOSNative/KeyboardEnvironment";
 
 /** Shared editing and drag-to-dismiss behavior; each screen owns keyboard presentation. */
 export function useSearchInput({ value, onChange, inputRef, enabled, keyboardVisible, onKeyboardVisibleChange, onSubmit }: {
@@ -12,6 +13,7 @@ export function useSearchInput({ value, onChange, inputRef, enabled, keyboardVis
   onKeyboardVisibleChange: (visible: boolean) => void;
   onSubmit: (value: string) => void;
 }) {
+  const { nativeKeyboard } = usePrototypeKeyboard();
   const pendingSelection = useRef<number | null>(null);
   const scrollTouch = useRef<{ x: number; y: number }>();
   useLayoutEffect(() => {
@@ -57,7 +59,7 @@ export function useSearchInput({ value, onChange, inputRef, enabled, keyboardVis
     edit(`${before && !/\s$/.test(before) ? " " : ""}${text}${after && !/^[\s.,!?;:]/.test(after) ? " " : ""}`);
   };
   const inputProps: InputHTMLAttributes<HTMLInputElement> = {
-    inputMode: "none", enterKeyHint: "search", autoComplete: "off", autoCorrect: "off", spellCheck: false,
+    inputMode: nativeKeyboard ? "search" : "none", enterKeyHint: "search", autoComplete: "off", autoCorrect: "off", spellCheck: false,
     maxLength: SEARCH_QUERY_MAX_LENGTH,
     onFocus: () => { if (enabled) onKeyboardVisibleChange(true); },
     onBlur: () => { if (enabled) onKeyboardVisibleChange(false); },

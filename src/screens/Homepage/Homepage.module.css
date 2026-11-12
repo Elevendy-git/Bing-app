@@ -1,4 +1,6 @@
 .root {
+  --gnrc-homepage-hero-height: 332px;
+  --gnrc-homepage-glance-gap: 63px;
   --gnrc-color-homepage-sky: #d4ebff;
   --gnrc-color-homepage-sky-transparent: rgb(207 233 255 / 0%);
   --gnrc-color-homepage-horizon: #bad7f1;
@@ -85,7 +87,7 @@
 
 .hero {
   display: flex;
-  height: 332px;
+  height: var(--gnrc-homepage-hero-height, 332px);
   /* Together with the row's 8 px bottom inset, keep 24 px above search. */
   padding-bottom: 16px;
   flex-direction: column;
@@ -93,7 +95,7 @@
 }
 
 .titleBar {
-  /* Stay at the safe-area edge until scrollTop 260, then leave with search
+  /* Stay at the safe-area edge until the hero's last 72px, then leave with search
      while the hero's bottom padding preserves the gap below the controls. */
   position: sticky;
   top: 0;
@@ -104,6 +106,9 @@
   align-items: center;
   gap: 16px;
 }
+
+/* Extremely short landscape canvases prioritize the field above the footer. */
+.root[data-compact-hero] .titleBar { visibility: hidden; }
 
 .weather {
   display: flex;
@@ -163,12 +168,12 @@
 .scrolled .wallpaper { opacity: 0; }
 .scrolled .statusBar { color: var(--gnrc-color-foreground-neutral-primary); background: var(--gnrc-color-homepage-feed-background); }
 .scrolled .searchBackdrop { opacity: 1; }
-.scrolled .glanceCards { margin-top: 60px; margin-bottom: 0; padding-top: 4px; padding-bottom: 0; }
+.scrolled .glanceCards { margin-top: calc(var(--gnrc-homepage-glance-gap, 63px) - 3px); margin-bottom: 0; padding-top: 4px; padding-bottom: 0; }
 
 .glanceCards {
   width: 100%;
   box-sizing: border-box;
-  margin-top: 63px;
+  margin-top: var(--gnrc-homepage-glance-gap, 63px);
   padding-inline: var(--gnrc-layout-content-inset);
   scroll-padding-inline: var(--gnrc-layout-content-inset);
 }

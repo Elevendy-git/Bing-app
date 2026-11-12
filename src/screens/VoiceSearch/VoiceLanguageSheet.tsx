@@ -2,7 +2,8 @@ import { useLayoutEffect, useRef, useState } from "react";
 import { Checkmark24Regular, Dismiss20Regular, Search24Regular } from "@fluentui/react-icons";
 import { motion, useIsPresent, useReducedMotion } from "motion/react";
 import { IOSKeyboard } from "../../components/IOSKeyboard/IOSKeyboard";
-import { getIOSKeyboardHeight, IOS_METRICS } from "../../components/IOSNative/iosMetrics";
+import { IOS_METRICS } from "../../components/IOSNative/iosMetrics";
+import { usePrototypeKeyboard } from "../../components/IOSNative/KeyboardEnvironment";
 import { iosMotion } from "../../motion/iosMotion";
 import { useSearchInput } from "../Search/useSearchInput";
 import styles from "./VoiceLanguageSheet.module.css";
@@ -25,6 +26,7 @@ export function VoiceLanguageSheet({ language = "en-US", interactive = false, on
   const [selected, setSelected] = useState(language);
   const [query, setQuery] = useState("");
   const [keyboard, setKeyboard] = useState(false);
+  const { nativeKeyboard, keyboardHeight } = usePrototypeKeyboard(false);
   const root = useRef<HTMLElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const present = useIsPresent();
@@ -82,7 +84,7 @@ export function VoiceLanguageSheet({ language = "en-US", interactive = false, on
         </button>}
       </div></div>
       <motion.div className={styles.content} {...editing.scrollHandlers}
-        animate={{ paddingBottom: IOS_METRICS.bottomSafeArea + (keyboard ? getIOSKeyboardHeight(false) : 0) }}
+        animate={{ paddingBottom: IOS_METRICS.bottomSafeArea + (keyboard ? keyboardHeight : 0) }}
         transition={animate ? iosMotion.keyboard : iosMotion.instant}>
         <div role="radiogroup" aria-label="Speech languages">
           {showDefault && <div className={styles.group}><h2>Default</h2><div className={styles.card}>{row("en-US", "English", true)}</div></div>}
@@ -92,13 +94,13 @@ export function VoiceLanguageSheet({ language = "en-US", interactive = false, on
           {!showDefault && !filtered.length && <p className={styles.empty} role="status">No languages found</p>}
         </div>
       </motion.div>
-      <motion.div className={styles.keyboard} aria-hidden={!keyboard || undefined} {...(!keyboard ? { inert: "" } : {})}
+      {!nativeKeyboard && <motion.div className={styles.keyboard} aria-hidden={!keyboard || undefined} {...(!keyboard ? { inert: "" } : {})}
         initial={false} animate={{ y: keyboard ? 0 : "100%" }} transition={animate ? iosMotion.keyboard : iosMotion.instant}>
         <IOSKeyboard value={query} returnKey="done" showSuggestions={false} showHomeIndicator={false} active={enabled && keyboard}
           onType={enabled ? editing.type : undefined} onDelete={enabled ? editing.removeCharacter : undefined}
           onReturn={enabled ? () => { editing.dismissKeyboard(); root.current?.focus({ preventScroll: true }); } : undefined}
           onDictation={enabled ? editing.dictate : undefined} />
-      </motion.div>
+      </motion.div>}
     </motion.section>
   </div>;
 }

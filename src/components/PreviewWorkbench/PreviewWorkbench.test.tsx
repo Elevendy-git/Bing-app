@@ -1,6 +1,8 @@
-import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { useState } from "react";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { PreviewWorkbench } from "./PreviewWorkbench";
+import { usePublishPreviewPrototypeNavigation, type PreviewPrototypePage } from "./PreviewPrototypeNavigation";
 import { previewComponentGroups } from "../../previewCatalog";
 
 // JSDOM does not implement native dialogs. Browser QA covers modal focus containment.
@@ -29,6 +31,42 @@ function renderWorkbench() {
       <input aria-label="Prototype draft" />
     </PreviewWorkbench>,
   );
+}
+
+function mockWorkbenchMedia(compact = false) {
+  const compactMedia = Object.assign(new EventTarget(), { matches: compact });
+  const darkMedia = Object.assign(new EventTarget(), { matches: false });
+  const otherMedia = Object.assign(new EventTarget(), {
+    matches: false,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+  });
+  vi.stubGlobal("matchMedia", vi.fn((query: string) => query === "(max-width: 900px)" ? compactMedia
+    : query === "(prefers-color-scheme: dark)" ? darkMedia : otherMedia));
+  const update = (media: typeof compactMedia, matches: boolean) => act(() => {
+    media.matches = matches;
+    media.dispatchEvent(new Event("change"));
+  });
+  return {
+    darkMedia,
+    setCompact: (matches: boolean) => update(compactMedia, matches),
+    setSystemDark: (matches: boolean) => update(darkMedia, matches),
+  };
+}
+
+function NavigablePrototype() {
+  const [page, setPage] = useState<PreviewPrototypePage>("home");
+  usePublishPreviewPrototypeNavigation(page, setPage);
+  return <>
+    <output aria-label="Current prototype page">{page}</output>
+    <input aria-label="Prototype draft" />
+  </>;
+}
+
+function renderCompactWorkbench() {
+  return render(<PreviewWorkbench title="Homepage" componentGroups={previewComponentGroups}>
+    <NavigablePrototype />
+  </PreviewWorkbench>);
 }
 
 describe("PreviewWorkbench", () => {
@@ -248,13 +286,7 @@ describe("PreviewWorkbench", () => {
   });
 
   it("follows system changes while keeping an explicit theme override until System is restored", () => {
-    const media = new EventTarget();
-    Object.assign(media, { matches: false });
-    vi.stubGlobal("matchMedia", vi.fn(() => media));
-    const setSystemDark = (matches: boolean) => act(() => {
-      Object.assign(media, { matches });
-      media.dispatchEvent(new Event("change"));
-    });
+    const { darkMedia, setSystemDark } = mockWorkbenchMedia();
     const { unmount } = renderWorkbench();
     const preview = screen.getByRole("region", { name: "Bing app preview" });
     expect(preview).toHaveAttribute("data-theme", "light");
@@ -266,7 +298,7 @@ describe("PreviewWorkbench", () => {
     expect(preview).toHaveAttribute("data-theme", "light");
     fireEvent.click(screen.getByRole("button", { name: "System" }));
     expect(preview).toHaveAttribute("data-theme", "dark");
-    const removeListener = vi.spyOn(media, "removeEventListener");
+    const removeListener = vi.spyOn(darkMedia, "removeEventListener");
     unmount();
     expect(removeListener).toHaveBeenCalledWith("change", expect.any(Function));
   });
@@ -278,5 +310,65 @@ describe("PreviewWorkbench", () => {
     expect(screen.getByRole("button", { name: "Open settings" })).toHaveFocus();
     fireEvent.click(screen.getByRole("button", { name: "Open settings" }));
     expect(screen.getByRole("button", { name: "Close settings" })).toHaveFocus();
+  });
+
+  it("uses compact view and page controls without losing the live prototype between views", () => {
+    mockWorkbenchMedia(true);
+    renderCompactWorkbench();
+    expect(screen.queryByRole("complementary", { name: "Prototype navigation" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "Inspector" })).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Open inspector")).toHaveAttribute("aria-expanded", "false");
+    const draft = screen.getByRole("textbox", { name: "Prototype draft" });
+    fireEvent.change(draft, { target: { value: "weekend trip" } });
+    fireEvent.change(screen.getByLabelText("Prototype page"), { target: { value: "recent" } });
+    expect(screen.getByLabelText("Current prototype page")).toHaveTextContent("recent");
+    expect(screen.getByLabelText("Prototype page")).toHaveValue("recent");
+
+    fireEvent.change(screen.getByLabelText("Workbench view"), { target: { value: "keyscreens" } });
+    expect(screen.getByRole("region", { name: "Key screens" })).toBeVisible();
+    expect(screen.queryByLabelText("Prototype page")).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Workbench view"), { target: { value: "library" } });
+    expect(screen.getByRole("region", { name: "Component library" })).toBeVisible();
+    fireEvent.change(screen.getByLabelText("Workbench view"), { target: { value: "prototype" } });
+    expect(screen.getByRole("textbox", { name: "Prototype draft" })).toBe(draft);
+    expect(draft).toHaveValue("weekend trip");
+    expect(screen.getByLabelText("Prototype page")).toHaveValue("recent");
+  });
+
+  it("shares appearance and reset through the mobile Inspector", async () => {
+    mockWorkbenchMedia(true);
+    renderCompactWorkbench();
+    fireEvent.change(screen.getByRole("textbox", { name: "Prototype draft" }), { target: { value: "clear me" } });
+    fireEvent.click(screen.getByLabelText("Open inspector"));
+    const inspector = screen.getByRole("dialog", { name: "Inspector" });
+    expect(within(inspector).getByText("Fits your screen")).toBeVisible();
+    expect(within(inspector).queryByRole("group", { name: "Preview view" })).not.toBeInTheDocument();
+    fireEvent.click(within(inspector).getByRole("button", { name: "Dark" }));
+    expect(screen.getByRole("region", { name: "Bing app preview" })).toHaveAttribute("data-theme", "dark");
+    fireEvent.click(within(inspector).getByRole("button", { name: "Reset prototype" }));
+    expect(screen.getByRole("textbox", { name: "Prototype draft" })).toHaveValue("");
+    expect(screen.getByLabelText("Open inspector")).toHaveAttribute("aria-expanded", "false");
+    await waitFor(() => expect(screen.queryByRole("dialog", { name: "Inspector" })).not.toBeInTheDocument());
+  });
+
+  it("dismisses the mobile Inspector on desktop resize while retaining the same live app", () => {
+    const { setCompact } = mockWorkbenchMedia(true);
+    renderCompactWorkbench();
+    const draft = screen.getByRole("textbox", { name: "Prototype draft" });
+    fireEvent.change(draft, { target: { value: "keep across resize" } });
+    fireEvent.change(screen.getByLabelText("Prototype page"), { target: { value: "history" } });
+    fireEvent.click(screen.getByLabelText("Open inspector"));
+    expect(screen.getByRole("dialog", { name: "Inspector" })).toBeVisible();
+    setCompact(false);
+    expect(screen.queryByRole("dialog", { name: "Inspector" })).not.toBeInTheDocument();
+    expect(screen.getByRole("complementary", { name: "Settings" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Open History page" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("textbox", { name: "Prototype draft" })).toBe(draft);
+    expect(draft).toHaveValue("keep across resize");
+    setCompact(true);
+    expect(screen.queryByRole("dialog", { name: "Inspector" })).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Open inspector")).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getByLabelText("Prototype page")).toHaveValue("history");
+    expect(screen.getByRole("textbox", { name: "Prototype draft" })).toBe(draft);
   });
 });
