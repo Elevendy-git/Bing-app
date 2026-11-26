@@ -74,7 +74,16 @@ Refresh reloads only the current document, preserving the rest of the tab's stac
 Copy and Share use the current canonical URL; native sharing is used when available,
 otherwise Share copies the link with explicit feedback. Search settings and
 Feedback open their official Bing browser destinations; the prototype does not
-submit feedback itself. Both menu variants are available in Library → Overlays → Menu.
+submit feedback itself. Both menu variants are available in Library → Overlays → Menu
+and Key screens → IAB.
+
+Key screens → IAB includes the Weather reference, SERP loading/menu/InPrivate/error,
+webpage default/bookmarked/loading/menu/InPrivate/error, and Find on page. These
+fixed presets reuse the live chrome, menus, Find controls and shared error component.
+The webpage artwork reuses the existing OpenAI Figma screenshot from Tabs Card,
+cropped to exclude its old App header and footer. Loading frames keep a blank
+document and static progress line. Presets do not fetch pages, focus inputs, write
+activity or perform browser actions, including in the enlarged preview.
 
 Find on page opens after the sheet exits and reuses the Search input and iOS
 keyboard. Literal, case-insensitive matches are highlighted inside the current

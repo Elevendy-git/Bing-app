@@ -115,7 +115,7 @@ export function SERP({ query = "Weather", timeSource = "fixed", onEditQuery, onV
     </section>
     <div className={styles.footer}>
       <AnimatePresence mode="wait" onExitComplete={findPresence.finishExit}>
-        {find ? <FindOnPage key="find" state={find} active={enabled && !menu.presented} />
+        {find ? <FindOnPage key="find" state={find} active={interactive && enabled && !menu.presented} />
           : <IABFooter key="browser-footer" {...navigation} navigationLabel={navigation.navigationLabel ?? (webPage ? "In-app browser navigation" : undefined)} />}
       </AnimatePresence>
       <IOSHomeIndicator />

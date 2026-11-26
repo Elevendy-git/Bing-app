@@ -1,0 +1,3 @@
+/* Existing 1170 × 2532 Figma screenshot: the webpage begins at y=310.
+   The IAB viewport clips the old app header/footer while reusing its page artwork. */
+.webpageReference { display: block; width: 100%; height: auto; transform: translateY(-12.2432859%); }

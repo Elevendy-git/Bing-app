@@ -4,6 +4,7 @@ import { publicApiUrl } from "../../services/apiUrl";
 import { awaitPublicApiReady } from "../../services/publicApiReady";
 import { searchPageIdentity, type BingPageSnapshot } from "../../services/bingPage";
 import { resultDestination, webUrl, withIABNavigation, type IABFindRequest, type IABFindResult } from "../../services/webNavigation";
+import { BrowserLoadError } from "./BrowserLoadError";
 import styles from "./LiveBingResults.module.css";
 
 type Result = Omit<BingPageSnapshot, "viewportWidth" | "viewportHeight"> & { query: string; requestId: number };
@@ -111,9 +112,7 @@ export function LiveBingResults({ query, url, active = true, onNavigate, onLoadS
     return () => { active = false; ++currentRequest.current; clearTimeout(timeout); controller.abort(); };
   }, [query, url, attempt, onLoadStateChange]);
 
-  if (error) return <div className={styles.message} role="alert"><p>{url ? "This page can’t be previewed" : "Couldn’t load results"}</p>
-    {url && <p className={styles.explanation}>You can try again or go back to your results.</p>}
-    <button type="button" onClick={() => setAttempt((current) => current + 1)}>Try again</button></div>;
+  if (error) return <BrowserLoadError webPage={Boolean(url)} onRetry={() => setAttempt((current) => current + 1)} />;
   if (!result || result.query !== query) return null;
   return <iframe ref={frame} className={styles.frame} title={url ? `Web page: ${url}` : `${result.searchProvider === "duckduckgo" ? "DuckDuckGo" : "Bing"} results for ${query}`}
     srcDoc={bridgeEnabled ? withIABNavigation(result.html, channel, window.location.origin) : result.html}

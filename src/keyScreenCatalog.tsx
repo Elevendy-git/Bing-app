@@ -1,6 +1,7 @@
 import { BingAppPrototype } from "./screens/BingAppPrototype";
 import { Search } from "./screens/Search";
 import { SERP } from "./screens/SERP";
+import { SERPKeyScreen } from "./screens/SERP/SERP.examples";
 import { Recent } from "./screens/Recent";
 import { Tabs } from "./screens/Tabs";
 import { History } from "./screens/History";
@@ -36,6 +37,17 @@ export const previewKeyScreens: readonly PreviewScreen[] = [
   { id: "voice-offline", title: "Voice · Offline", group: "Voice Search", content: <VoiceSearch state="offline" /> },
   { id: "voice-language", title: "Voice · Speech language", group: "Voice Search", content: <VoiceLanguagePreview /> },
   { id: "serp-weather", title: "SERP · Weather", group: "IAB", content: <SERP /> },
+  { id: "serp-loading", title: "SERP · Loading", group: "IAB", content: <SERPKeyScreen state="serp-loading" /> },
+  { id: "serp-menu", title: "SERP · Menu", group: "IAB", content: <SERPKeyScreen state="serp-menu" /> },
+  { id: "serp-private", title: "SERP · InPrivate", group: "IAB", content: <SERPKeyScreen state="serp-private" /> },
+  { id: "serp-error", title: "SERP · Error", group: "IAB", content: <SERPKeyScreen state="serp-error" /> },
+  { id: "iab-webpage", title: "Webpage", group: "IAB", content: <SERPKeyScreen state="webpage" /> },
+  { id: "iab-webpage-bookmarked", title: "Webpage · Bookmarked", group: "IAB", content: <SERPKeyScreen state="webpage-bookmarked" /> },
+  { id: "iab-webpage-loading", title: "Webpage · Loading", group: "IAB", content: <SERPKeyScreen state="webpage-loading" /> },
+  { id: "iab-webpage-menu", title: "Webpage · Menu", group: "IAB", content: <SERPKeyScreen state="webpage-menu" /> },
+  { id: "iab-webpage-private", title: "Webpage · InPrivate", group: "IAB", content: <SERPKeyScreen state="webpage-private" /> },
+  { id: "iab-webpage-error", title: "Webpage · Error", group: "IAB", content: <SERPKeyScreen state="webpage-error" /> },
+  { id: "iab-find", title: "Webpage · Find on page", group: "IAB", content: <SERPKeyScreen state="find" /> },
   { id: "recent", title: "Recent", group: "Recent", content: <BingAppPrototype initialPage="recent" /> },
   { id: "recent-search-focus", title: "Recent · Search focus", group: "Recent", content: <Recent initialSearchFocused /> },
   { id: "recent-search-matches", title: "Recent · Search matches", group: "Recent", content: <Recent initialQuery="Open" selectedTabId={null} /> },
